@@ -1,0 +1,18 @@
+
+# Composer dependencies
+/vendor/
+
+# Local configuration files
+.env
+config/settings.local.php
+
+# Log files
+*.log
+logs/
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
