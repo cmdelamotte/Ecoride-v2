@@ -1,0 +1,395 @@
+:root {
+    /* Initialisation de ma charte graphique via des variables */
+    --white: #FDFFFC;
+    --bg: #795548;
+    --text-color: #424242;
+    --headline: #097BB3;
+    --blue: #1167A1;
+    --light-blue: #A9CCE3;
+    --brown: #6D4618;
+    --light-brown: #926122;
+    /* Initialisation de mes styles de texte via des variables */
+    --font-family-heading: "Poppins", Arial, sans-serif;
+    --font-family-text: "Lato", Arial, sans-serif;
+    --font-size-heading: 1.5rem;
+    --font-size-text: 1.25rem;
+    --font-size-forms: 1.12rem;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 900;
+}
+
+html {
+    height: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-heading);
+}
+
+h1 {
+    font-size: var(--font-size-heading);
+}
+
+body, p, span, li, a, textarea {
+    font-family: var(--font-family-text);
+    font-size: var(--font-size-text);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--bg);
+
+    /* Stylisation du body pour le filigrane du background */
+    position: relative;
+    z-index: 0;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+
+    background-image: url(../../img/pattern-tile.svg);
+    background-repeat: repeat;
+    opacity: 0.2;
+}
+
+main {
+    flex-grow: 1;
+}
+
+/* Classe utilitaire pour la stylisation de mes liens et leur interactivité */
+.link {
+    color: var(--brown); 
+    text-decoration: none;
+    transition: color 0.15s ease-in-out, text-decoration 0.15s ease-in-out;
+}
+
+.link:hover,
+.link:focus {
+    color: var(--light-brown);
+    text-decoration: underline;
+}
+
+.navbar {
+    min-height: 64px;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--light-blue);
+}
+
+.navbar span{
+    color: var(--headline);
+    font-weight: var(--font-weight-extrabold);
+    font-size: var(--font-size-heading)
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+}
+
+
+.navbar-brand img {
+    max-height: 55px; 
+    width: auto;
+}
+
+.navbar-nav .nav-link {
+    color: var(--headline);
+    font-weight: var(--font-weight-normal);
+    text-decoration: none;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    transition: color 0.15s ease-in-out, font-weight 0.15s ease-in-out;
+}
+
+/* Interactivité:  Ajouter les styles :hover, :focus pour sélecteurs d'écrans  */
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:focus {
+    color: var(--light-blue); /* Couleur de survol */
+    text-decoration: underline;
+}
+
+/* Epaicissement du lien si actif */
+.navbar-nav .nav-link.active {
+    color: var(--headline);
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+}
+
+/* Personnalisation Toggler : Utilise ma couleur --headline via stroke SVG */
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23097BB3' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+footer {
+    background-color: var(--white);
+    border-top: 1px solid var(--light-blue);
+}
+
+footer a[href^="mailto:"] {
+    white-space: nowrap;
+}
+
+.social-link:hover,
+.social-link:focus {
+    color: var(--light-brown); 
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+/* Stylisation home */
+
+/* Stylisation bannière */
+.banner-container {
+    min-height: 40vh;
+    color: var(--white);
+
+    /* === Superposition Filtre + Image === */
+    background-image:
+        /* 1. Le filtre noir semi-transparent (30% opacité) */
+        linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3)), url('../../img/banner-forest-road.jpg');
+
+    /* === Gestion de l'image de fond (Crop/Responsive) === */
+    background-size: cover;
+    background-position: center 70%;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.banner-title {
+    font-family: var(--font-family-heading);
+    font-weight: var(--font-weight-bold);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.banner-subtitle {
+    font-family: var(--font-family-text);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.form-section {
+    background-color: transparent;
+}
+
+.homepage-search {
+    border-bottom: 1px solid var(--light-blue);
+}
+
+/* Stylisation des champs de formulaires */
+
+/* Style pour chaque bloc input */
+.form-input-custom {
+    background-color: var(--white);
+    border-radius: 50px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--light-blue);
+}
+
+/* Couleur de l'icône dans le bloc */
+.form-input-custom i {
+    color: var(--brown);
+}
+
+/* Style de l'input LUI-MÊME */
+.form-control-custom {
+    border: none; 
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    outline: none;
+    width: 100%;
+    color: var(--brown);
+}
+/* Empêche le navigateur d'ajouter son propre style au focus */
+.form-control-custom:focus {
+    border-color: transparent;
+    box-shadow: none;
+    outline: none;
+}
+/* Style du placeholder */
+.form-control-custom::placeholder {
+    color: var(--light-brown);
+    opacity: 1;
+}
+
+/* Style des boutons */
+
+.btn {
+    border-radius: 50px;
+    padding: 0.6rem 1.5rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-forms)
+}
+.primary-btn {
+    background-color: var(--light-blue);
+    border-color: var(--blue);
+    color: var(--text-color);
+}
+.primary-btn:hover {
+    background-color: var(--headline);
+    border-color: var(--headline);
+    color: var(--white)
+}
+
+.secondary-btn {
+    background-color: var(--brown);
+    border-color: var(--white);
+    color: var(--white);
+}
+.secondary-btn:hover {
+    background-color: var(--light-brown);
+    border-color: var(--brown);
+    color: var(--white)
+}
+
+/* Stylisation cartes home page */
+
+.card {
+    background-color: var(--white);
+}
+
+/* Style de l'icône */
+.presentation-icon {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.card {
+    border-radius: 3%;
+    border: 2px solid var(--light-blue);
+    box-shadow: offset-x offset-y blur-radius spread-radius couleur;
+    box-shadow: 0 0.125rem 0.25rem rgba(169, 204, 227, 1);
+}
+
+/* Style du texte de carte */
+.card-text {
+    color: var(--text-color);
+    font-size: var(--font-size-text);
+    line-height: 1.6;
+}
+
+/* Stylisation du formulaire d'inscription */
+
+.auth-form{
+    border-top: 1px solid var(--light-blue);
+    margin-top: 1.5rem;
+}
+
+.auth-link-bar {
+    background-color: var(--white);
+    padding: 0.75rem 1.25rem;
+}
+
+/* Style de la page de résultats de recherche */
+
+.form-label {
+    color: var(--brown)
+}
+
+    /* Style de la pagination */
+.pagination .page-link {
+    color: var(--blue);
+    background-color: var(--white);
+    border-color: var(--light-blue);
+}
+    
+    /* Style de la page ACTIVE */
+    .pagination .page-item.active .page-link {
+        color: var(--white);
+        background-color: var(--blue);
+        border-color: var(--blue);
+        z-index: 1;
+    }
+
+    .pagination .page-link:hover {
+        background-color: var(--light-blue);
+        color: var(--headline);
+    }
+
+.form-select-custom {
+    border: none;
+    box-shadow: none;
+    outline: none;
+    width: 100%;
+    color: var(--brown);
+    font-family: var(--font-family-text);
+    font-size: var(--font-size-forms);
+    cursor: pointer;
+}
+
+/* Style page Covoiturages */
+.nav-tabs {
+    border-bottom: 1px solid var(--light-blue);
+}
+
+.nav-tabs .nav-link {
+    color: var(--blue);
+    margin-bottom: -1px;    /* Pour que la bordure de l'onglet actif se superpose bien */
+    border: 1px solid transparent; /* Nécessaire pour que la taille soit la même que .active */
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    background-color: rgba(253, 255, 252, 0.3); /* var(--white) avec 30% d'opacité */
+    font-weight: var(--font-weight-medium);
+}
+
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+    color: var(--headline);
+    border-color: var(--light-blue);
+    background-color: rgba(253, 255, 252, 0.5); /* var(--white) avec 50% d'opacité au survol */
+    isolation: isolate;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link.active:hover,
+.nav-tabs .nav-link.active:focus {
+    color: var(--headline);
+    background-color: var(--white); 
+    border-color: var(--light-blue) var(--light-blue) var(--white);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Style de modal pour les avis */
+
+.rating-stars > i {
+    font-size: 1.5rem; 
+    color: var(--bs-gray-400);
+    cursor: pointer;
+    padding: 0 0.15rem;
+    transition: color 0.2s ease-in-out;
+}
+.rating-stars > i:hover,
+.rating-stars > i.selected,
+.rating-stars:hover > i.hover-selected { 
+    color: var(--bs-warning);
+}
+
+/* Style de labels */
+
+.label-custom{
+    color: black;
+}
+
+.form-check-input:disabled + .form-check-label {
+    opacity: 1;
+    color: var(--text-color);
+}

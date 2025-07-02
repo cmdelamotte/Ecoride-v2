@@ -1,0 +1,20 @@
+
+
+{
+    "name": "ecoride/ecoride-v2",
+    "description": "Projet de covoiturage Ecoride refactorisé en MVC.",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Votre Nom",
+            "email": "votre.email@example.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
+
