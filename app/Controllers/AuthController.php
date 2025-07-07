@@ -126,23 +126,95 @@ class AuthController extends Controller
 
         $errors = [];
 
-        // Validation des données.
+        // --- Début des validations renforcées ---
+
+        // Validation des champs obligatoires
         if (empty($username) || empty($email) || empty($password) || empty($confirmPassword) || empty($firstName) || empty($lastName) || empty($phoneNumber) || empty($birthDate)) {
             $errors[] = 'Veuillez remplir tous les champs.';
         }
+
+        // Validation de l'email
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'L\'adresse email n\'est pas valide.';
         }
-        if ($password !== $confirmPassword) {
-            $errors[] = 'Les mots de passe ne correspondent pas.';
+
+        // Validation du nom d'utilisateur
+        if (strlen($username) < 2) {
+            $errors[] = 'Le nom d\'utilisateur doit contenir au moins 2 caractères.';
+        } elseif (!preg_match("/^[a-zA-Z0-9\s'-]+$/", $username)) { // Regex corrigée
+            $errors[] = 'Le nom d\'utilisateur contient des caractères non autorisés.';
         }
-        // Ajouter d'autres validations (longueur mot de passe, format numéro de téléphone, date de naissance, etc.)
+
+        // Validation du prénom
+        if (strlen($firstName) < 2) {
+            $errors[] = 'Le prénom doit contenir au moins 2 caractères.';
+        } elseif (!preg_match("/^[a-zA-Z\s'-]+$/", $firstName)) { // Regex corrigée
+            $errors[] = 'Le prénom contient des caractères non autorisés.';
+        }
+
+        // Validation du nom de famille
+        if (strlen($lastName) < 2) {
+            $errors[] = 'Le nom de famille doit contenir au moins 2 caractères.';
+        } elseif (!preg_match("/^[a-zA-Z\s'-]+$/", $lastName)) { // Regex corrigée
+            $errors[] = 'Le nom de famille contient des caractères non autorisés.';
+        }
+
+        // Phone Number (exemple de validation simple, à affiner si besoin)
+        if (empty($phoneNumber)) {
+            $errors[] = 'Le numéro de téléphone est requis.';
+        } elseif (!preg_match("/^[0-9]{10}$/", $phoneNumber)) {
+            $errors[] = 'Le numéro de téléphone doit contenir 10 chiffres.';
+        }
+
+        // Validation de la date de naissance
+        if (empty($birthDate)) {
+            $errors[] = 'La date de naissance est requise.';
+        } else {
+            $birthDateObj = \DateTime::createFromFormat('Y-m-d', $birthDate);
+            $today = new \DateTime();
+            $minAgeDate = (new \DateTime())->modify('-16 years');
+
+            if (!$birthDateObj || $birthDateObj->format('Y-m-d') !== $birthDate) {
+                $errors[] = 'La date de naissance n\'est pas valide (format YYYY-MM-DD attendu).';
+            } elseif ($birthDateObj > $today) {
+                $errors[] = 'La date de naissance ne peut pas être dans le futur.';
+            } elseif ($birthDateObj > $minAgeDate) {
+                $errors[] = 'Vous devez avoir au moins 16 ans pour vous inscrire.';
+            }
+        }
+
+        // Validation du mot de passe
+        if (empty($password)) {
+            $errors[] = 'Le mot de passe est requis.';
+        } elseif ($password !== $confirmPassword) {
+            $errors[] = 'Les mots de passe ne correspondent pas.';
+        } elseif (strlen($password) < 8) {
+            $errors[] = 'Le mot de passe doit contenir au moins 8 caractères.';
+        } else {
+            // Vérifie la complexité du mot de passe si la longueur minimale est respectée
+            // Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial.
+            if (!preg_match('/[A-Z]/', $password) ||
+                !preg_match('/[a-z]/', $password) ||
+                !preg_match('/[0-9]/', $password) ||
+                !preg_match("/[^a-zA-Z0-9\s]/", $password)) {
+                $errors[] = 'Le mot de passe doit contenir au moins 8 caractères, incluant majuscule, minuscule, chiffre et caractère spécial.';
+            }
+        }
+
+        // --- Fin des validations renforcées ---
 
         // Vérifie si l'email ou le nom d'utilisateur existe déjà.
-        if ($this->userModel->findByEmailOrUsername($email) || $this->userModel->findByEmailOrUsername($username)) {
-            $errors[] = 'Cet email ou nom d\'utilisateur est déjà utilisé.';
+        // Ces vérifications sont faites après les validations de format pour éviter des requêtes inutiles.
+        if (empty($errors)) { // Effectue ces vérifications seulement si aucune erreur de format n'est présente
+            if ($this->userModel->findByEmailOrUsername($email)) {
+                $errors[] = 'Cet email est déjà utilisé.';
+            }
+            if ($this->userModel->findByEmailOrUsername($username)) {
+                $errors[] = 'Ce nom d\'utilisateur est déjà utilisé.';
+            }
         }
 
+        // Si des erreurs sont présentes, les afficher et arrêter le processus.
         if (!empty($errors)) {
             $this->render('auth/register', ['pageTitle' => 'Inscription', 'errors' => $errors, 'oldInput' => $_POST]);
             return;
@@ -173,11 +245,9 @@ class AuthController extends Controller
             $_SESSION['user_id'] = $userId;
             $_SESSION['username'] = $username;
             $_SESSION['user_roles'] = ['ROLE_USER', 'ROLE_PASSENGER']; // Assigner les rôles appropriés
-            error_log("AuthController: User " . $username . " registered and session set. Redirecting to /account.");
             header('Location: /account'); // Rediriger vers la page de compte
             exit();
         } else {
-            
             $this->render('auth/register', ['pageTitle' => 'Inscription', 'error' => 'Une erreur est survenue lors de l\'inscription.']);
         }
     }
@@ -242,55 +312,55 @@ class AuthController extends Controller
         $user = $this->userModel->findByEmailOrUsername($email);
 
         if ($user) {
-            // Générer un token unique et une date d'expiration.
-            $token = bin2hex(random_bytes(32)); // Token de 64 caractères hexadécimaux
-            $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Expire dans 1 heure
+             // Générer un token unique et une date d'expiration.
+             $token = bin2hex(random_bytes(32)); // Token de 64 caractères hexadécimaux
+             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Expire dans 1 heure
 
-            // Stocker le token et sa date d'expiration dans la base de données.
+             // Stocker le token et sa date d'expiration dans la base de données.
             $this->userModel->updateResetToken($user['id'], $token, $expiresAt);
 
-            // Construire le lien de réinitialisation.
+             // Construire le lien de réinitialisation.
             $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/reset-password?token=' . $token;
-
-            // TODO: Envoyer l'email avec le lien de réinitialisation.
-            // Pour l'instant, nous allons juste afficher le lien pour le débogage.
-            // En production, utiliser PHPMailer comme dans l'ancien projet.
+             // TODO: Envoyer l'email avec le lien de réinitialisation.
+             // Pour l'instant, nous allons juste afficher le lien pour le débogage.
+             // En production, utiliser PHPMailer comme dans l'ancien projet.
             $this->render('auth/forgot-password', [
                 'pageTitle' => 'Mot de passe oublié',
-                'success' => 'Un lien de réinitialisation a été envoyé à votre adresse email (vérifiez votre console pour le lien de débogage).',
+                'success' => 'Un lien de réinitialisation a été envoyé à votre adresse email
+                (vérifiez votre console pour le lien de débogage).',
                 'debugLink' => $resetLink // À retirer en production
             ]);
 
-        } else {
+            } else {
             // Ne pas indiquer si l'email n'existe pas pour des raisons de sécurité (éviter l'énumération d'utilisateurs).
-            $this->render('auth/forgot-password', ['pageTitle' => 'Mot de passe oublié', 'success' => 'Si votre adresse email est enregistrée chez nous, un lien de réinitialisation vous a été envoyé.']);
+            $this->render('auth/forgot-password', ['pageTitle' => 'Mot de passe oublié',
+       'success' => 'Si votre adresse email est enregistrée chez nous, un lien de réinitialisation
+       vous a été envoyé.']);
         }
-    }
 
-    /**
-     * Affiche le formulaire de réinitialisation de mot de passe.
-     * Correspond à la route GET /reset-password?token=XYZ.
-     */
+     }
+
+     /**
+      * Affiche le formulaire de réinitialisation de mot de passe.
+      * Correspond à la route GET /reset-password?token=XYZ.
+      */
     public function resetPasswordForm()
     {
         $token = $_GET['token'] ?? '';
-
         if (empty($token)) {
             header('Location: /forgot-password');
             exit();
         }
-
         // Vérifie si le token est valide et n'a pas expiré.
         $user = $this->userModel->findByResetToken($token);
-
         if (!$user) {
-            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de passe', 'error' => 'Le lien de réinitialisation est invalide ou a expiré.']);
+            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de
+       passe', 'error' => 'Le lien de réinitialisation est invalide ou a expiré.']);
             return;
         }
-
-        $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de passe', 'token' => $token]);
+        $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de
+       passe', 'token' => $token]);
     }
-
     /**
      * Traite la soumission du formulaire de réinitialisation de mot de passe.
      * Correspond à la route POST /reset-password.
@@ -301,13 +371,10 @@ class AuthController extends Controller
             header('Location: /forgot-password');
             exit();
         }
-
         $token = $_POST['token'] ?? '';
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
-
         $errors = [];
-
         if (empty($token) || empty($password) || empty($confirmPassword)) {
             $errors[] = 'Veuillez remplir tous les champs.';
         }
@@ -315,33 +382,32 @@ class AuthController extends Controller
             $errors[] = 'Les mots de passe ne correspondent pas.';
         }
         // Ajouter d'autres validations de mot de passe (complexité, longueur, etc.)
-
         if (!empty($errors)) {
-            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de passe', 'token' => $token, 'errors' => $errors]);
+            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de
+       passe', 'token' => $token, 'errors' => $errors]);
             return;
         }
-
         $user = $this->userModel->findByResetToken($token);
-
         if (!$user) {
-            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de passe', 'error' => 'Le lien de réinitialisation est invalide ou a expiré.']);
+            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de
+       passe', 'error' => 'Le lien de réinitialisation est invalide ou a expiré.']);
             return;
         }
-
         // Hashage du nouveau mot de passe.
         $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
-
         // Met à jour le mot de passe et invalide le token.
         $updated = $this->userModel->update($user['id'], [
             'password_hash' => $newPasswordHash,
             'reset_token' => null,
             'reset_token_expires_at' => null
         ]);
-
         if ($updated) {
-            $this->render('auth/login', ['pageTitle' => 'Connexion', 'success' => 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.']);
+            $this->render('auth/login', ['pageTitle' => 'Connexion', 'success' => 'Votre mot
+       de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.']);
         } else {
-            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de passe', 'token' => $token, 'error' => 'Une erreur est survenue lors de la réinitialisation de votre mot de passe.']);
+            $this->render('auth/reset-password', ['pageTitle' => 'Réinitialisation de mot de
+       passe', 'token' => $token, 'error' => 'Une erreur est survenue lors de la réinitialisation de
+       votre mot de passe.']);
         }
     }
 }

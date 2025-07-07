@@ -11,21 +11,25 @@
             <div class="col-12 col-md-10 col-lg-8">
                 <form action="/register" method="POST">
                     <div class="row g-3">
-                        <?php if (isset($errors) && !empty($errors)): ?>
+                        <?php
+                        // Consolidation des messages d'erreur
+                        $displayErrors = [];
+                        if (isset($errors) && is_array($errors) && !empty($errors)) {
+                            $displayErrors = array_merge($displayErrors, $errors);
+                        }
+                        if (isset($error) && is_string($error) && !empty($error)) {
+                            $displayErrors[] = $error;
+                        }
+
+                        if (!empty($displayErrors)):
+                        ?>
                             <div class="col-12 mt-3">
                                 <div class="alert alert-danger" role="alert">
                                     <ul>
-                                        <?php foreach ($errors as $error): ?>
-                                            <li><?= htmlspecialchars($error) ?></li>
+                                        <?php foreach ($displayErrors as $err): ?>
+                                            <li><?= htmlspecialchars($err) ?></li>
                                         <?php endforeach; ?>
                                     </ul>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (isset($error) && !empty($error)): // Pour les erreurs non-tableau ?>
-                            <div class="col-12 mt-3">
-                                <div class="alert alert-danger" role="alert">
-                                    <?= htmlspecialchars($error) ?>
                                 </div>
                             </div>
                         <?php endif; ?>
