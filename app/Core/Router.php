@@ -28,8 +28,6 @@ class Router
         // __DIR__ fait référence au répertoire du fichier actuel (app/Core).
         // Nous remontons d'un niveau (à app/) puis nous allons chercher routes.php.
         $this->routes = require __DIR__ . '/../routes.php';
-        // DEBUG: Vérifier si les routes sont bien chargées
-        error_log("Router: Routes loaded. Count: " . count($this->routes));
     }
 
     /**
@@ -48,13 +46,9 @@ class Router
         if (empty($uri)) {
             $uri = '/';
         }
-        // DEBUG: Afficher l'URI traitée
-        error_log("Router: Processing URI: " . $uri);
 
         // Récupère la méthode HTTP de la requête (ex: 'GET', 'POST')
         $method = $_SERVER['REQUEST_METHOD'];
-        // DEBUG: Afficher la méthode HTTP
-        error_log("Router: Request Method: " . $method);
 
         // Initialise les variables pour stocker la route trouvée et ses paramètres
         $foundRoute = null;
@@ -62,9 +56,6 @@ class Router
 
         // Parcourt toutes les routes définies pour trouver une correspondance
         foreach ($this->routes as $route) {
-            // DEBUG: Afficher la route en cours de vérification
-            error_log("Router: Checking route path: " . $route['path'] . " (Method: " . ($route['http_method'] ?? 'ANY') . ")");
-
             // Construit une expression régulière pour faire correspondre les routes dynamiques.
             // Par exemple, '/rides/{id}' devient '#^/rides/([0-9]+)$#'.
             // {id} est remplacé par un groupe de capture pour les chiffres (\d+).
@@ -72,21 +63,13 @@ class Router
             $pattern = preg_replace('#/{([a-zA-Z0-9_]+)}#', '/([a-zA-Z0-9_]+)', $route['path']);
             // Ajoute les ancres de début (^) et de fin ($) pour s'assurer que toute la chaîne correspond.
             $pattern = '#^' . $pattern . '$#';
-            // DEBUG: Afficher le pattern regex généré
-            error_log("Router: Generated pattern: " . $pattern);
 
             // Tente de faire correspondre l'URI de la requête avec le pattern de la route.
             // Si une correspondance est trouvée, les valeurs capturées sont stockées dans $matches.
             if (preg_match($pattern, $uri, $matches)) {
-                // DEBUG: Correspondance de l'URI trouvée
-                error_log("Router: URI matched pattern for route: " . $route['path']);
-                error_log("Router: Matches: " . print_r($matches, true));
-
                 // Vérifie si la méthode HTTP de la route correspond à la méthode de la requête.
                 // Si 'http_method' n'est pas définie dans la route, elle correspond à n'importe quelle méthode.
                 if (!isset($route['http_method']) || strtoupper($route['http_method']) === $method) {
-                    // DEBUG: Correspondance de la méthode HTTP trouvée
-                    error_log("Router: HTTP method matched for route: " . $route['path']);
                     $foundRoute = $route;
                     // Supprime le premier élément de $matches (qui est l'URI complète) pour ne garder que les paramètres capturés.
                     array_shift($matches);
@@ -100,7 +83,7 @@ class Router
 
         // Si aucune route correspondante n'a été trouvée
         if ($foundRoute === null) {
-            error_log("Router: No matching route found for URI: " . $uri . " and Method: " . $method);
+            
             // Redirige vers la page 404 via le ErrorController.
             $this->handleError('notFound');
             return;

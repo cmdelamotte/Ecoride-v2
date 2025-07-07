@@ -28,6 +28,7 @@ class Database
 
         try {
             $this->pdo = new PDO($dsn, $user, $pass, $options);
+            
         } catch (PDOException $e) {
             // En cas d'erreur de connexion, logguer l'erreur et arrêter l'application
             // En production, il serait préférable de ne pas afficher le message d'erreur directement à l'utilisateur

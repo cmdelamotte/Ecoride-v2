@@ -69,9 +69,10 @@ class User
         try {
             // Prépare la requête SQL pour rechercher par email ou username.
             // Utilise OR pour vérifier les deux champs. Les placeholders sont essentiels ici.
-            $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier OR username = :identifier");
-            // Lie la même valeur au deux placeholders.
-            $stmt->bindParam(':identifier', $identifier, PDO::PARAM_STR);
+            $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier_email OR username = :identifier_username");
+            
+            $stmt->bindParam(':identifier_email', $identifier, PDO::PARAM_STR);
+            $stmt->bindParam(':identifier_username', $identifier, PDO::PARAM_STR);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
