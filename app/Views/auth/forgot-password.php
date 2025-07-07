@@ -1,57 +1,52 @@
-<?php
-/**
- * Vue pour le formulaire de demande de réinitialisation de mot de passe.
- * Permet aux utilisateurs de demander un lien de réinitialisation via leur adresse email.
- */
+<section class="banner-container position-relative text-white text-center">
+    <div class="container">
+        <h1 class="banner-title display-4 mb-3">Mot de passe oublié ?</h1>
+        <p class="banner-subtitle lead">Entrez votre email pour recevoir un lien de réinitialisation</p>
+    </div>
+</section>
 
-// Inclut le layout principal de l'application pour une structure HTML cohérente.
-include __DIR__ . '/../layout.php';
-?>
-
-<?php ob_start(); // Démarre la mise en mémoire tampon pour capturer le contenu de la page ?>
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header text-center">Mot de passe oublié</div>
-                <div class="card-body">
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <?= htmlspecialchars($error) ?>
-                        </div>
-                    <?php endif; ?>
-                    <?php if (isset($success)): ?>
-                        <div class="alert alert-success" role="alert">
-                            <?= htmlspecialchars($success) ?>
-                        </div>
-                    <?php endif; ?>
-                    <form action="/forgot-password" method="POST">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Votre adresse email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Envoyer le lien de réinitialisation</button>
-                        </div>
-                        <?php if (isset($debugLink)): // À retirer en production ?>
-                            <div class="alert alert-info mt-3">
-                                Lien de débogage (à retirer en production) : <a href="<?= htmlspecialchars($debugLink) ?>" target="_blank"><?= htmlspecialchars($debugLink) ?></a>
+<section class="form-section auth-form py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <form action="/forgot-password" method="POST">
+                    <div class="row g-3">
+                        <?php if (isset($error)): ?>
+                            <div class="col-12 mt-3">
+                                <div class="alert alert-danger" role="alert">
+                                    <?= htmlspecialchars($error) ?>
+                                </div>
                             </div>
                         <?php endif; ?>
-                        <div class="text-center mt-3">
-                            <a href="/login">Retour à la connexion</a>
+                        <?php if (isset($success)): ?>
+                            <div class="col-12 mt-3">
+                                <div class="alert alert-success" role="alert">
+                                    <?= htmlspecialchars($success) ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="col-12">
+                            <label for="email" class="visually-hidden">Email</label>
+                            <div class="form-input-custom d-flex align-items-center">
+                                <i class="bi bi-envelope me-2"></i>
+                                <input type="email" class="form-control-custom flex-grow-1" id="email" name="email" placeholder="Votre adresse email" aria-label="Adresse email" required>
+                            </div>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="col-10 mx-auto">
+                            <div class="d-grid">
+                                <button type="submit" class="btn primary-btn">Envoyer le lien de réinitialisation</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
-
-<?php
-$content = ob_get_clean(); // Récupère le contenu mis en mémoire tampon
-
-// Inclut le footer du layout principal.
-include __DIR__ . '/../partials/footer.php';
-?>
+    <div class="auth-link-bar mb-4 mt-4">
+        <p class="mb-0 text-center">
+            Retourner à la page de <a href="/login" class="link">Connexion</a>
+        </p>
+    </div>
+</section>

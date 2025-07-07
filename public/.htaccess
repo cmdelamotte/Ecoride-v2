@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Redirige toutes les requêtes qui ne sont pas des fichiers ou des répertoires existants
+    # vers index.php. Cela permet à notre contrôleur frontal de gérer toutes les routes.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>

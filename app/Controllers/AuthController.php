@@ -173,10 +173,11 @@ class AuthController extends Controller
             $_SESSION['user_id'] = $userId;
             $_SESSION['username'] = $username;
             $_SESSION['user_roles'] = ['ROLE_USER', 'ROLE_PASSENGER']; // Assigner les rôles appropriés
-
+            error_log("AuthController: User " . $username . " registered and session set. Redirecting to /account.");
             header('Location: /account'); // Rediriger vers la page de compte
             exit();
         } else {
+            
             $this->render('auth/register', ['pageTitle' => 'Inscription', 'error' => 'Une erreur est survenue lors de l\'inscription.']);
         }
     }
