@@ -12,21 +12,29 @@
                 <form action="/reset-password" method="POST">
                     <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
                     <div class="row g-3">
-                        <?php if (isset($errors) && !empty($errors)): ?>
+                        <?php 
+                        // Affiche les erreurs générales (non liées à un champ spécifique)
+                        $generalErrors = [];
+                        if (isset($errors) && is_array($errors)) {
+                            if (isset($errors['token'])) {
+                                $generalErrors[] = $errors['token'];
+                            }
+                            if (isset($errors['general'])) {
+                                $generalErrors[] = $errors['general'];
+                            }
+                        }
+                        if (isset($error) && !empty($error)) { // Pour les erreurs passées comme simple chaîne
+                            $generalErrors[] = $error;
+                        }
+
+                        if (!empty($generalErrors)) : ?>
                             <div class="col-12 mt-3">
                                 <div class="alert alert-danger" role="alert">
                                     <ul>
-                                        <?php foreach ($errors as $error): ?>
-                                            <li><?= htmlspecialchars($error) ?></li>
+                                        <?php foreach ($generalErrors as $err) : ?>
+                                            <li><?= htmlspecialchars($err) ?></li>
                                         <?php endforeach; ?>
                                     </ul>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (isset($error) && !empty($error)): // Pour les erreurs non-tableau ?>
-                            <div class="col-12 mt-3">
-                                <div class="alert alert-danger" role="alert">
-                                    <?= htmlspecialchars($error) ?>
                                 </div>
                             </div>
                         <?php endif; ?>
@@ -35,19 +43,29 @@
                             <label for="password" class="visually-hidden">Nouveau mot de passe</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-key me-2"></i>
-                                <input type="password" class="form-control-custom flex-grow-1" id="password" name="password" placeholder="Nouveau mot de passe" aria-label="Nouveau mot de passe" aria-describedby="password-help-reset" required autocomplete="new-password">
+                                <input type="password" class="form-control-custom flex-grow-1 <?php echo isset($errors['password']) ? 'is-invalid' : '' ?>" id="password" name="password" placeholder="Nouveau mot de passe" aria-label="Nouveau mot de passe" aria-describedby="password-help-reset" required autocomplete="new-password">
                             </div>
                             <small id="password-help-reset" class="form-text text-muted ps-1">
                                 Le mot de passe doit contenir au moins 8 caractères, incluant majuscule, minuscule, chiffre et caractère spécial.
                             </small>
+                            <?php if (isset($errors['password'])) : ?>
+                                <div class="invalid-feedback d-block">
+                                    <?= htmlspecialchars($errors['password']) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="col-12">
                             <label for="confirm_password" class="visually-hidden">Confirmer le nouveau mot de passe</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-key-fill me-2"></i>
-                                <input type="password" class="form-control-custom flex-grow-1" id="confirm_password" name="confirm_password" placeholder="Confirmer le nouveau mot de passe" aria-label="Confirmer le nouveau mot de passe" required autocomplete="new-password">
+                                <input type="password" class="form-control-custom flex-grow-1 <?php echo isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" id="confirm_password" name="confirm_password" placeholder="Confirmer le nouveau mot de passe" aria-label="Confirmer le nouveau mot de passe" required autocomplete="new-password">
                             </div>
+                            <?php if (isset($errors['confirm_password'])) : ?>
+                                <div class="invalid-feedback d-block">
+                                    <?= htmlspecialchars($errors['confirm_password']) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="col-10 mx-auto mt-2">

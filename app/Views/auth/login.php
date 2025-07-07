@@ -30,7 +30,7 @@
                             <label for="identifier" class="visually-hidden">Pseudo ou email</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-person me-2"></i>
-                                <input type="text" class="form-control-custom flex-grow-1" id="identifier" name="identifier" placeholder="Pseudo ou email" aria-label="Pseudo ou email" required autocomplete="username">
+                                <input type="text" class="form-control-custom flex-grow-1" id="identifier" name="identifier" placeholder="Pseudo ou email" aria-label="Pseudo ou email" value="<?= htmlspecialchars($oldInput['identifier'] ?? '') ?>" required autocomplete="username">
                             </div>
                         </div>
 

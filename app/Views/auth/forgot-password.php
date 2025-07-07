@@ -30,7 +30,7 @@
                             <label for="email" class="visually-hidden">Email</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-envelope me-2"></i>
-                                <input type="email" class="form-control-custom flex-grow-1" id="email" name="email" placeholder="Votre adresse email" aria-label="Adresse email" required>
+                                <input type="email" class="form-control-custom flex-grow-1" id="email" name="email" placeholder="Votre adresse email" aria-label="Adresse email" value="<?= htmlspecialchars($oldInput['email'] ?? '') ?>" required>
                             </div>
                         </div>
 
