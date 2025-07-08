@@ -2,244 +2,184 @@
 
 namespace App\Models;
 
-use App\Core\Database;
-use PDO;
-use PDOException;
-
 /**
- * Classe User
- * Représente le modèle pour la gestion des utilisateurs dans la base de données.
- * Cette classe est responsable de toutes les opérations CRUD (Create, Read, Update, Delete)
- * liées à la table 'users'. Elle interagit directement avec la base de données
- * via l'objet PDO obtenu du Singleton Database.
+ * Modèle User (POPO - Plain Old PHP Object)
+ *
+ * Représente une entité utilisateur. Cette classe n'est qu'une structure de données.
+ * Elle contient uniquement des propriétés privées pour encapsuler les données,
+ * et des getters/setters publics pour y accéder et les modifier de manière contrôlée.
+ *
+ * Le but est de séparer clairement les données de la logique métier.
+ * Cette classe ne doit JAMAIS contenir de logique de base de données (pas de requêtes SQL)
+ * ou de logique métier complexe. C'est le rôle des Services.
  */
 class User
 {
-    /**
-     * @var PDO $db L'instance de la connexion PDO à la base de données.
-     *              Cette propriété est initialisée via le constructeur en utilisant le Singleton Database.
-     */
-    private PDO $db;
+    // J'utilise des propriétés privées pour respecter le principe d'encapsulation.
+    // Les types `?` indiquent que la propriété peut être `null`, ce qui est utile
+    // pour les entités qui ne sont pas encore persistées en base de données.
+    private ?int $id = null;
+    private ?string $username = null;
+    private ?string $email = null;
+    private ?string $password_hash = null;
+    private ?string $first_name = null;
+    private ?string $last_name = null;
+    private ?string $profile_picture_path = null;
+    private ?string $role = null;
+    private ?string $status = null;
+    private ?string $reset_token = null;
+    private ?string $reset_token_expires_at = null;
+    private ?string $created_at = null;
+    private ?string $updated_at = null;
 
-    /**
-     * Constructeur du modèle User.
-     * Initialise la propriété $db avec l'instance de connexion PDO.
-     */
-    public function __construct()
+    // --- GETTERS ---
+    // Les getters permettent un accès en lecture seule aux propriétés.
+
+    public function getId(): ?int
     {
-        $this->db = Database::getInstance()->getConnection();
+        return $this->id;
     }
 
-    /**
-     * Trouve un utilisateur par son ID.
-     *
-     * @param int $id L'ID de l'utilisateur à rechercher.
-     * @return array|false Un tableau associatif représentant l'utilisateur si trouvé, false sinon.
-     */
-    public function findById(int $id): array|false
+    public function getUsername(): ?string
     {
-        try {
-            // Prépare la requête SQL pour sélectionner un utilisateur par son ID.
-            // L'utilisation d'un placeholder ':id' et de requêtes préparées prévient les injections SQL.
-            $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id");
-            // Lie la valeur de l'ID au placeholder ':id'. PDO s'occupe de l'échappement.
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            // Exécute la requête préparée.
-            $stmt->execute();
-            // Récupère la première ligne du résultat sous forme de tableau associatif.
-            // PDO::FETCH_ASSOC garantit que les clés du tableau sont les noms des colonnes.
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            // En cas d'erreur PDO, logguer l'erreur pour le débogage.
-            // En production, il est crucial de ne pas exposer les détails de l'erreur à l'utilisateur.
-            error_log("Error in findById: " . $e->getMessage());
-            return false;
-        }
+        return $this->username;
     }
 
-    /**
-     * Trouve un utilisateur par son email ou son nom d'utilisateur.
-     * Utilisé principalement pour l'authentification.
-     *
-     * @param string $identifier L'email ou le nom d'utilisateur de l'utilisateur à rechercher.
-     * @return array|false Un tableau associatif représentant l'utilisateur si trouvé, false sinon.
-     */
-    public function findByEmailOrUsername(string $identifier): array|false
+    public function getEmail(): ?string
     {
-        try {
-            // Prépare la requête SQL pour rechercher par email ou username.
-            // Utilise OR pour vérifier les deux champs. Les placeholders sont essentiels ici.
-            $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier_email OR username = :identifier_username");
-            
-            $stmt->bindParam(':identifier_email', $identifier, PDO::PARAM_STR);
-            $stmt->bindParam(':identifier_username', $identifier, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error in findByEmailOrUsername: " . $e->getMessage());
-            return false;
-        }
+        return $this->email;
     }
 
-    /**
-     * Crée un nouvel utilisateur dans la base de données.
-     *
-     * @param array $data Un tableau associatif contenant les données de l'utilisateur.
-     *                    Ex: ['username' => 'john_doe', 'email' => 'john@example.com', 'password_hash' => '...'].
-     * @return int|false L'ID du nouvel utilisateur inséré si succès, false sinon.
-     */
-    public function create(array $data): int|false
+    public function getPasswordHash(): ?string
     {
-        try {
-            // Construit dynamiquement la liste des colonnes et des placeholders pour la requête INSERT.
-            $columns = implode(', ', array_keys($data));
-            $placeholders = ':' . implode(', :', array_keys($data));
-
-            $sql = "INSERT INTO users ($columns) VALUES ($placeholders)";
-            $stmt = $this->db->prepare($sql);
-
-            // Lie chaque valeur du tableau $data à son placeholder correspondant.
-            foreach ($data as $key => $value) {
-                // Détermine le type PDO pour une liaison sécurisée.
-                $paramType = match (true) {
-                    is_int($value) => PDO::PARAM_INT,
-                    is_bool($value) => PDO::PARAM_BOOL,
-                    is_null($value) => PDO::PARAM_NULL,
-                    default => PDO::PARAM_STR,
-                };
-                $stmt->bindValue(':' . $key, $value, $paramType);
-            }
-
-            $stmt->execute();
-            // Retourne l'ID de la dernière ligne insérée. Utile pour les opérations suivantes.
-            return (int)$this->db->lastInsertId();
-        } catch (PDOException $e) {
-            error_log("Error in create user: " . $e->getMessage());
-            return false;
-        }
+        return $this->password_hash;
     }
 
-    /**
-     * Met à jour les informations d'un utilisateur existant.
-     *
-     * @param int $id L'ID de l'utilisateur à mettre à jour.
-     * @param array $data Un tableau associatif des champs à mettre à jour et de leurs nouvelles valeurs.
-     * @return bool True si la mise à jour a réussi, false sinon.
-     */
-    public function update(int $id, array $data): bool
+    public function getFirstName(): ?string
     {
-        if (empty($data)) {
-            return false; // Aucune donnée à mettre à jour.
-        }
-
-        try {
-            // Construit dynamiquement la partie SET de la requête UPDATE.
-            // Ex: 'field1 = :field1, field2 = :field2'
-            $setParts = [];
-            foreach ($data as $key => $value) {
-                $setParts[] = "{$key} = :{$key}";
-            }
-            $setClause = implode(', ', $setParts);
-
-            $sql = "UPDATE users SET {$setClause} WHERE id = :id";
-            $stmt = $this->db->prepare($sql);
-
-            // Lie les valeurs des données au placeholders.
-            foreach ($data as $key => $value) {
-                $paramType = match (true) {
-                    is_int($value) => PDO::PARAM_INT,
-                    is_bool($value) => PDO::PARAM_BOOL,
-                    is_null($value) => PDO::PARAM_NULL,
-                    default => PDO::PARAM_STR,
-                };
-                $stmt->bindValue(':' . $key, $value, $paramType);
-            }
-            // Lie l'ID de l'utilisateur pour la clause WHERE.
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error in update user: " . $e->getMessage());
-            return false;
-        }
+        return $this->first_name;
     }
 
-    /**
-     * Supprime un utilisateur de la base de données.
-     *
-     * @param int $id L'ID de l'utilisateur à supprimer.
-     * @return bool True si la suppression a réussi, false sinon.
-     */
-    public function delete(int $id): bool
+    public function getLastName(): ?string
     {
-        try {
-            $stmt = $this->db->prepare("DELETE FROM users WHERE id = :id");
-            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error in delete user: " . $e->getMessage());
-            return false;
-        }
+        return $this->last_name;
     }
 
-    /**
-     * Récupère tous les utilisateurs.
-     *
-     * @return array Un tableau d'utilisateurs, potentiellement vide.
-     */
-    public function findAll(): array
+    public function getProfilePicturePath(): ?string
     {
-        try {
-            $stmt = $this->db->query("SELECT * FROM users");
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error in findAll users: " . $e->getMessage());
-            return [];
-        }
+        return $this->profile_picture_path;
     }
 
-    /**
-     * Met à jour le token de réinitialisation de mot de passe et son expiration pour un utilisateur.
-     *
-     * @param int $userId L'ID de l'utilisateur.
-     * @param string|null $token Le token de réinitialisation (ou null pour le supprimer).
-     * @param string|null $expiresAt La date d'expiration du token (format Y-m-d H:i:s, ou null).
-     * @return bool True si la mise à jour a réussi, false sinon.
-     */
-    public function updateResetToken(int $userId, ?string $token, ?string $expiresAt): bool
+    public function getRole(): ?string
     {
-        try {
-            $stmt = $this->db->prepare(
-                "UPDATE users SET reset_token = :token, reset_token_expires_at = :expires_at WHERE id = :user_id"
-            );
-            $stmt->bindParam(':token', $token, PDO::PARAM_STR);
-            $stmt->bindParam(':expires_at', $expiresAt, PDO::PARAM_STR);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error updating reset token: " . $e->getMessage());
-            return false;
-        }
+        return $this->role;
     }
 
-    /**
-     * Trouve un utilisateur par son token de réinitialisation de mot de passe.
-     *
-     * @param string $token Le token de réinitialisation.
-     * @return array|false Un tableau associatif représentant l'utilisateur si trouvé, false sinon.
-     */
-    public function findByResetToken(string $token): array|false
+    public function getStatus(): ?string
     {
-        try {
-            $stmt = $this->db->prepare(
-                "SELECT * FROM users WHERE reset_token = :token AND reset_token_expires_at > NOW()"
-            );
-            $stmt->bindParam(':token', $token, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error finding user by reset token: " . $e->getMessage());
-            return false;
-        }
+        return $this->status;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->reset_token;
+    }
+
+    public function getResetTokenExpiresAt(): ?string
+    {
+        return $this->reset_token_expires_at;
+    }
+
+    public function getCreatedAt(): ?string
+    {
+        return $this->created_at;
+    }
+
+    public function getUpdatedAt(): ?string
+    {
+        return $this->updated_at;
+    }
+
+    // --- SETTERS ---
+    // Les setters permettent de modifier les propriétés.
+    // Le `return $this;` permet le "chaînage" des méthodes (fluent interface),
+    // ce qui rend le code plus lisible et concis. Ex: $user->setEmail(...)->setUsername(...);
+
+    public function setId(?int $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function setUsername(?string $username): self
+    {
+        $this->username = $username;
+        return $this;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function setPasswordHash(?string $password_hash): self
+    {
+        $this->password_hash = $password_hash;
+        return $this;
+    }
+
+    public function setFirstName(?string $first_name): self
+    {
+        $this->first_name = $first_name;
+        return $this;
+    }
+
+    public function setLastName(?string $last_name): self
+    {
+        $this->last_name = $last_name;
+        return $this;
+    }
+
+    public function setProfilePicturePath(?string $profile_picture_path): self
+    {
+        $this->profile_picture_path = $profile_picture_path;
+        return $this;
+    }
+
+    public function setRole(?string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    public function setStatus(?string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    public function setResetToken(?string $reset_token): self
+    {
+        $this->reset_token = $reset_token;
+        return $this;
+    }
+
+    public function setResetTokenExpiresAt(?string $reset_token_expires_at): self
+    {
+        $this->reset_token_expires_at = $reset_token_expires_at;
+        return $this;
+    }
+
+    public function setCreatedAt(?string $created_at): self
+    {
+        $this->created_at = $created_at;
+        return $this;
+    }
+
+    public function setUpdatedAt(?string $updated_at): self
+    {
+        $this->updated_at = $updated_at;
+        return $this;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Services\UserService;
 use App\Services\ValidationService;
 
 /**
@@ -13,11 +13,11 @@ use App\Services\ValidationService;
  */
 class AuthService
 {
-    private User $userModel;
+    private UserService $userService;
 
     public function __construct()
     {
-        $this->userModel = new User();
+        $this->userService = new UserService();
     }
 
     /**
@@ -35,10 +35,10 @@ class AuthService
 
         // 2. Vérifier si l'email ou le nom d'utilisateur existe déjà
         if (empty($errors)) {
-            if ($this->userModel->findByEmailOrUsername($data['email'])) {
+            if ($this->userService->findByEmailOrUsername($data['email'])) {
                 $errors['email'] = 'Cet email est déjà utilisé.';
             }
-            if ($this->userModel->findByEmailOrUsername($data['username'])) {
+            if ($this->userService->findByEmailOrUsername($data['username'])) {
                 $errors['username'] = 'Ce nom d\'utilisateur est déjà utilisé.';
             }
         }
@@ -63,12 +63,11 @@ class AuthService
         ];
 
         // 4. Créer l'utilisateur
-        $userId = $this->userModel->create($userData);
+        $userId = $this->userService->create($userData);
 
         if ($userId) {
-            $userData['id'] = $userId;
-            unset($userData['password_hash']); // Ne pas renvoyer le hash
-            return ['success' => true, 'user' => $userData];
+            $user = $this->userService->findById($userId);
+            return ['success' => true, 'user' => $user];
         } else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la création du compte.']];
         }
@@ -77,10 +76,10 @@ class AuthService
     /**
      * Tente de connecter un utilisateur.
      *
-     * @param array \$data Les données brutes du formulaire (identifier, password).
-     * @return array Un tableau contenant le statut de succès, et les données ou un message d'erreur.
+     * @param array $data Les données brutes du formulaire (identifier, password).
+     * @return array Un tableau contenant le statut de succès, et les données ou un message d\'erreur.
      *               Ex: ['success' => true, 'user' => [...]].
-     *               Ex: ['success' => false, 'error' => 'Message d'erreur'].
+     *               Ex: ['success' => false, 'error' => 'Message d\'erreur'].
      */
     public function attemptLogin(array $data): array
     {
@@ -91,22 +90,21 @@ class AuthService
             return ['success' => false, 'error' => 'Veuillez remplir tous les champs.'];
         }
 
-        $user = $this->userModel->findByEmailOrUsername($identifier);
+        $user = $this->userService->findByEmailOrUsername($identifier);
 
         if (!$user) {
             return ['success' => false, 'error' => 'Identifiant ou mot de passe incorrect.'];
         }
 
-        if (!password_verify($password, $user['password_hash'])) {
+        if (!password_verify($password, $user->getPasswordHash())) {
             return ['success' => false, 'error' => 'Identifiant ou mot de passe incorrect.'];
         }
 
         // On pourrait ajouter une vérification du statut du compte ici (ex: banni, non activé)
-        // if ($user['account_status'] !== 'active') {
+        // if ($user->getStatus() !== 'active') {
         //     return ['success' => false, 'error' => 'Votre compte est inactif.'];
         // }
 
-        unset($user['password_hash']); // Sécurité : ne jamais renvoyer le hash
         return ['success' => true, 'user' => $user];
     }
 
@@ -148,7 +146,7 @@ class AuthService
             return ['success' => false, 'error' => 'Veuillez entrer une adresse email valide.'];
         }
 
-        $user = $this->userModel->findByEmailOrUsername($email);
+        $user = $this->userService->findByEmailOrUsername($email);
 
         // Pour des raisons de sécurité, on ne révèle pas si l'email existe.
         // On exécute la logique uniquement si l'utilisateur est trouvé.
@@ -156,7 +154,10 @@ class AuthService
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-            $this->userModel->updateResetToken($user['id'], $token, $expiresAt);
+            $this->userService->update($user->getId(), [
+                'reset_token' => $token,
+                'reset_token_expires_at' => $expiresAt
+            ]);
 
             $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/reset-password?token=' . $token;
 
@@ -172,7 +173,7 @@ class AuthService
      * Valide un token de réinitialisation de mot de passe.
      *
      * @param string $token Le token à valider.
-     * @return array Résultat avec le statut et l'utilisateur si valide, ou un message d'erreur.
+     * @return array Résultat avec le statut et l'utilisateur si valide, ou un message d\'erreur.
      */
     public function validateResetToken(string $token): array
     {
@@ -180,7 +181,7 @@ class AuthService
             return ['success' => false, 'error' => 'Jeton de réinitialisation manquant.'];
         }
 
-        $user = $this->userModel->findByResetToken($token);
+        $user = $this->userService->findByResetToken($token);
 
         if (!$user) {
             return ['success' => false, 'error' => 'Le lien de réinitialisation est invalide ou a expiré.'];
@@ -215,14 +216,14 @@ class AuthService
             return ['success' => false, 'errors' => $errors];
         }
 
-        $user = $this->userModel->findByResetToken($token);
+        $user = $this->userService->findByResetToken($token);
 
         if (!$user) {
             return ['success' => false, 'errors' => ['token' => 'Le lien de réinitialisation est invalide ou a expiré.']];
         }
 
         $newPasswordHash = password_hash($password, PASSWORD_DEFAULT);
-        $updated = $this->userModel->update($user['id'], [
+        $updated = $this->userService->update($user->getId(), [
             'password_hash' => $newPasswordHash,
             'reset_token' => null,
             'reset_token_expires_at' => null
@@ -230,7 +231,8 @@ class AuthService
 
         if ($updated) {
             return ['success' => true];
-        } else {
+        }
+        else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la mise à jour du mot de passe.']];
         }
     }

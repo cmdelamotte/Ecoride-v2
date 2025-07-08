@@ -42,9 +42,9 @@ class AuthController extends Controller
 
         if ($result['success']) {
             $user = $result['user'];
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['user_roles'] = ['ROLE_USER']; // À remplacer par les vrais rôles plus tard
+            $_SESSION['user_id'] = $user->getId();
+            $_SESSION['username'] = $user->getUsername();
+            $_SESSION['user_roles'] = [$user->getRole()]; // Utiliser le rôle du modèle
 
             header('Location: /account');
             exit();
@@ -77,9 +77,9 @@ class AuthController extends Controller
         if ($result['success']) {
             // Inscription réussie : connecter l'utilisateur automatiquement.
             $user = $result['user'];
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['user_roles'] = ['ROLE_USER', 'ROLE_PASSENGER']; // Assigner les rôles appropriés
+            $_SESSION['user_id'] = $user->getId();
+            $_SESSION['username'] = $user->getUsername();
+            $_SESSION['user_roles'] = [$user->getRole()]; // Utiliser le rôle du modèle
             header('Location: /account'); // Rediriger vers la page de compte
             exit();
         } else {
