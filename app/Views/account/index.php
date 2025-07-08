@@ -121,7 +121,59 @@ $pageScripts = ['/js/accountPageHandler.js'];
 
                         <!-- Le formulaire d'ajout/modification de véhicule sera géré en JS -->
                         <div id="vehicle-form-container" class="card card-body mb-3 d-none">
-                           <p>Le formulaire d'ajout de véhicule apparaîtra ici.</p>
+                            <form id="vehicle-form"> 
+                                <h3 class="h6 form-label border-bottom pb-3 mb-3" id="vehicle-form-title">Ajouter un Véhicule</h3>
+                                <input type="hidden" id="editing-vehicle-id" name="editing_vehicle_id" value="">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="vehicle-brand-select" class="form-label">Marque</label> <div class="form-input-custom d-flex align-items-center"> 
+                                            <select class="form-select-custom flex-grow-1" id="vehicle-brand-select" name="brand_id" aria-label="Marque du véhicule" required>
+                                                <option value="" selected disabled>Marques de véhicule</option>
+                                                </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-model" class="form-label">Modèle</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <input type="text" class="form-control-custom flex-grow-1" id="vehicle-model" name="vehicle_model" placeholder="Modèle" aria-label="Modèle du véhicule" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-color" class="form-label">Couleur</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <input type="text" class="form-control-custom flex-grow-1" id="vehicle-color" name="vehicle_color" placeholder="Couleur" aria-label="Couleur du véhicule">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-license-plate" class="form-label">Plaque d'immatriculation</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <input type="text" class="form-control-custom flex-grow-1" id="vehicle-license-plate" name="vehicle_license_plate" placeholder="Plaque d'immatriculation (Ex: AA-123-BB)" aria-label="Plaque d'immatriculation" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-registration-date" class="form-label">Date de 1ère immatriculation</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <input type="date" class="form-control-custom flex-grow-1" id="vehicle-registration-date" name="vehicle_registration_date" aria-label="Date de 1ère immatriculation">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-seats" class="form-label">Nombre de places disponibles (hors chauffeur)</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <input type="number" class="form-control-custom flex-grow-1" id="vehicle-seats" name="vehicle_seats" placeholder="Nombre de places disponibles" aria-label="Nombre de places disponibles" min="1" max="8" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="form-check form-check-custom-vehicle">
+                                            <input class="form-check-input" type="checkbox" id="vehicle-electric" name="vehicle_electric">
+                                            <label class="form-check-label" for="vehicle-electric">Véhicule électrique (pour trajets écologiques)</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 text-center mt-3">
+                                        <button type="button" id="cancel-vehicle-form-btn" class="btn secondary-btn me-2">Annuler</button>
+                                        <button type="submit" id="save-vehicle-btn" class="btn primary-btn">Enregistrer Véhicule</button>
+                                    </div>
+                                </div>
+                            </form> 
                         </div>
 
                         <!-- La logique de ce formulaire (soumission en JS) sera implémentée plus tard -->

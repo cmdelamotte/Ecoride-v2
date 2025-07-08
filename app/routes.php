@@ -26,6 +26,14 @@ return [
         'roles' => []
     ],
     [
+        'path' => '/api/get_brands',
+        'http_method' => 'GET', // API pour récupérer toutes les marques de véhicules
+        'controller' => 'BrandController',
+        'method' => 'getBrands',
+        'auth' => false,
+        'roles' => []
+    ],
+    [
         'path' => '/contact',
         'http_method' => 'GET', // Affichage du formulaire de contact
         'controller' => 'ContactController',
