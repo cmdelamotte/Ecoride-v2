@@ -330,7 +330,7 @@ footer a[href^="mailto:"] {
     box-shadow: none;
     outline: none;
     width: 100%;
-    color: var(--brown);
+    color: var(--text-color); /* Changé de --brown à --text-color */
     font-family: var(--font-family-text);
     font-size: var(--font-size-forms);
     cursor: pointer;

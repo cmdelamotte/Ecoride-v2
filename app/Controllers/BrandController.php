@@ -26,11 +26,21 @@ class BrandController extends Controller
      */
     public function getBrands()
     {
+        error_log("BrandController: Appel de getBrands.");
         // Je récupère toutes les marques via le service.
         $brands = $this->brandService->findAll();
+        error_log("BrandController: Marques récupérées: " . count($brands));
+
+        // Je transforme les objets Brand en tableaux associatifs pour la sérialisation JSON.
+        $brandsAsArray = [];
+        foreach ($brands as $brand) {
+            $brandsAsArray[] = [
+                'id' => $brand->getId(),
+                'name' => $brand->getName()
+            ];
+        }
 
         // Je renvoie la liste des marques au format JSON.
-        // Le format attendu par le JS de l'ancien code était { success: true, brands: [...] }
-        $this->jsonResponse(['success' => true, 'brands' => $brands]);
+        $this->jsonResponse(['success' => true, 'brands' => $brandsAsArray]);
     }
 }

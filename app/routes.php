@@ -177,6 +177,14 @@ return [
         'auth' => true,
         'roles' => []
     ],
+    [
+        'path' => '/account/add-vehicle',
+        'http_method' => 'POST', // Ajout d'un véhicule
+        'controller' => 'UserController',
+        'method' => 'addVehicle',
+        'auth' => true,
+        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER'] // Seuls les chauffeurs peuvent ajouter un véhicule
+    ],
 
     // ---------------------------------------------------------------------
     // Routes pour la gestion des trajets (RideController)

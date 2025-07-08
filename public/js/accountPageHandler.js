@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fonction pour peupler le sélecteur de marques
     async function populateBrandSelect() {
         if (!vehicleBrandSelect) {
-            console.warn("L'élément select pour les marques n'a pas été trouvé.");
             return;
         }
         vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Chargement des marques...</option>';
@@ -40,10 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Aucune marque disponible</option>';
-                console.warn("Aucune marque récupérée ou API échec.", data.message || '');
             }
         } catch (error) {
-            console.error("Erreur fetch des marques:", error);
             vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Erreur chargement marques</option>';
         }
     }
@@ -76,8 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
             vehicleFormContainer.classList.remove('d-none');
             addVehicleBtn.classList.add('d-none');
             if (vehicleBrandSelect) vehicleBrandSelect.focus();
-        } else {
-            console.warn("Éléments manquants pour initialiser showVehicleForm.");
         }
     }
 
@@ -95,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function displayUserVehicles(vehiclesData) {
         if (!vehiclesList) {
-            console.warn("Élément pour la liste des véhicules non trouvé.");
             return;
         }
         vehiclesList.innerHTML = ''; // Vide la liste existante
@@ -193,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(error => {
-                console.error('Erreur lors de la mise à jour du rôle:', error);
                 alert('Une erreur de communication est survenue.');
             })
             .finally(() => {
@@ -240,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(error => {
-                console.error('Erreur lors de la mise à jour des préférences:', error);
                 alert('Une erreur de communication est survenue.');
             })
             .finally(() => {
@@ -259,5 +251,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cancelVehicleFormBtn) {
         cancelVehicleFormBtn.addEventListener('click', hideVehicleForm);
+    }
+
+    if (vehicleForm) {
+        vehicleForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const submitButton = vehicleForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enregistrement...';
+
+            const formData = new FormData(vehicleForm);
+            const vehicleData = {
+                brand_id: parseInt(formData.get('brand_id')),
+                model: formData.get('vehicle_model'),
+                color: formData.get('vehicle_color'),
+                license_plate: formData.get('vehicle_license_plate'),
+                registration_date: formData.get('vehicle_registration_date'),
+                passenger_capacity: parseInt(formData.get('vehicle_seats')),
+                is_electric: formData.get('vehicle_electric') === 'on' ? true : false,
+            };
+
+            try {
+                const response = await fetch('/account/add-vehicle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(vehicleData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    hideVehicleForm();
+                    // Recharger la liste des véhicules après l'ajout
+                    // Pour l'instant, on recharge la page, mais on pourra faire mieux plus tard
+                    window.location.reload(); 
+                } else {
+                    let errorMessage = data.error || 'Erreur lors de l\'ajout du véhicule.';
+                    if (data.errors) {
+                        for (const key in data.errors) {
+                            errorMessage += `\n- ${key}: ${data.errors[key]}`;
+                        }
+                    }
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                alert('Une erreur de communication est survenue.');
+            }
+            finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Enregistrer Véhicule';
+            }
+        });
     }
 });

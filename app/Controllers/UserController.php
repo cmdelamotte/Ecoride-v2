@@ -147,4 +147,67 @@ class UserController extends Controller
             $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.'], 500);
         }
     }
+
+    /**
+     * Gère l'ajout d'un nouveau véhicule pour l'utilisateur connecté.
+     */
+    public function addVehicle()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
+            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
+            return;
+        }
+
+        // Validation des données du véhicule (simplifiée pour l'exemple)
+        $brandId = filter_var($data['brand_id'] ?? null, FILTER_VALIDATE_INT);
+        $modelName = htmlspecialchars(trim($data['model'] ?? '')); // Renommé en modelName
+        $color = htmlspecialchars(trim($data['color'] ?? ''));
+        $licensePlate = htmlspecialchars(trim($data['license_plate'] ?? '')); // Renommé en licensePlate
+        $registrationDate = htmlspecialchars(trim($data['registration_date'] ?? '')); // Renommé en registrationDate
+        $passengerCapacity = filter_var($data['passenger_capacity'] ?? null, FILTER_VALIDATE_INT);
+        $isElectric = filter_var($data['is_electric'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $energyType = htmlspecialchars(trim($data['energy_type'] ?? '')); // Ajout de energyType
+
+        $errors = [];
+        if (!$brandId) $errors['brand_id'] = 'La marque est requise.';
+        if (empty($modelName)) $errors['model'] = 'Le modèle est requis.';
+        if (empty($licensePlate)) $errors['license_plate'] = "La plaque d'immatriculation est requise.";
+        if (!$passengerCapacity || $passengerCapacity < 1 || $passengerCapacity > 8) $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
+
+        if (!empty($errors)) {
+            $this->jsonResponse(['success' => false, 'errors' => $errors], 400);
+            return;
+        }
+
+        $vehicleData = [
+            'user_id' => $userId,
+            'brand_id' => $brandId,
+            'model_name' => $modelName, // Utilise model_name
+            'color' => $color,
+            'license_plate' => $licensePlate, // Utilise license_plate
+            'registration_date' => $registrationDate, // Utilise registration_date
+            'passenger_capacity' => $passengerCapacity,
+            'is_electric' => $isElectric,
+            'energy_type' => $energyType // Utilise energy_type
+        ];
+
+        $vehicleId = $this->vehicleService->create($vehicleData);
+
+        if ($vehicleId) {
+            // Récupérer le véhicule complet avec le nom de la marque pour le renvoyer au frontend
+            $newVehicle = $this->vehicleService->findById($vehicleId); // Nécessite une méthode findById dans VehicleService
+            $this->jsonResponse(['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle]);
+        } else {
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de l\'ajout du véhicule.'], 500);
+        }
+    }
 }
