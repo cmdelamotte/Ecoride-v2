@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelVehicleFormBtn = document.getElementById('cancel-vehicle-form-btn');
     const vehicleFormTitle = document.getElementById('vehicle-form-title');
     const editingVehicleIdInput = document.getElementById('editing-vehicle-id');
+    const vehiclesList = document.getElementById('vehicles-list');
 
     // Fonction pour peupler le sélecteur de marques
     async function populateBrandSelect() {
@@ -60,11 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (vehicleBrandSelect) vehicleBrandSelect.value = vehicleData.brand_id || "";
 
                 // Pré-remplissage des autres champs (à adapter si les noms de champs changent)
-                document.getElementById('vehicle-model').value = vehicleData.model_name || "";
+                document.getElementById('vehicle-model').value = vehicleData.model || ""; // Utilise vehicleData.model
                 document.getElementById('vehicle-color').value = vehicleData.color || "";
-                document.getElementById('vehicle-license-plate').value = vehicleData.license_plate || "";
-                document.getElementById('vehicle-registration-date').value = vehicleData.registration_date || "";
-                document.getElementById('vehicle-seats').value = vehicleData.passenger_capacity || "";
+                document.getElementById('vehicle-license-plate').value = vehicleData.registration_number || ""; // Utilise registration_number
+                document.getElementById('vehicle-registration-date').value = vehicleData.year || ""; // Utilise year
+                document.getElementById('vehicle-seats').value = vehicleData.available_seats || ""; // Utilise available_seats
                 document.getElementById('vehicle-electric').checked = vehicleData.is_electric || false;
 
             } else {
@@ -88,10 +89,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Affiche la liste des véhicules de l'utilisateur.
+     * @param {Array} vehiclesData - Les données des véhicules.
+     */
+    function displayUserVehicles(vehiclesData) {
+        if (!vehiclesList) {
+            console.warn("Élément pour la liste des véhicules non trouvé.");
+            return;
+        }
+        vehiclesList.innerHTML = ''; // Vide la liste existante
+
+        if (!vehiclesData || vehiclesData.length === 0) {
+            vehiclesList.innerHTML = '<p class="text-muted">Vous n\'avez pas encore de véhicule enregistré.</p>';
+            return;
+        }
+
+        const template = document.createElement('template');
+        template.innerHTML = `
+            <div class="vehicle-item card card-body mb-2">
+                <p class="mb-1">
+                    <span class="form-label">Marque :</span> <span class="vehicle-brand-display"></span><br>
+                    <span class="form-label">Modèle :</span> <span class="vehicle-model-display"></span> - 
+                    <span class="form-label">Plaque :</span> <span class="vehicle-plate-display"></span>
+                </p>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary edit-vehicle-btn">Modifier</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger mt-1 mt-sm-0 ms-sm-1 delete-vehicle-btn">Supprimer</button>
+                </div>
+            </div>
+        `;
+
+        vehiclesData.forEach(vehicle => {
+            const clone = template.content.cloneNode(true);
+            const vehicleElement = clone.querySelector('.vehicle-item');
+            if (vehicleElement) {
+                // Stocke les données complètes du véhicule dans les data-attributes pour l'édition future
+                vehicleElement.setAttribute('data-vehicle-id', vehicle.id);
+                vehicleElement.setAttribute('data-brand-id', vehicle.brand_id);
+                vehicleElement.setAttribute('data-model', vehicle.model);
+                vehicleElement.setAttribute('data-plate', vehicle.registration_number);
+                vehicleElement.setAttribute('data-color', vehicle.color || "");
+                vehicleElement.setAttribute('data-year', vehicle.year);
+                vehicleElement.setAttribute('data-seats', vehicle.available_seats);
+                // Note: is_electric n'est pas dans le modèle Vehicle pour l'instant, à ajouter si nécessaire
+
+                // Affiche les données
+                vehicleElement.querySelector('.vehicle-brand-display').textContent = vehicle.brand_name;
+                vehicleElement.querySelector('.vehicle-model-display').textContent = vehicle.model;
+                vehicleElement.querySelector('.vehicle-plate-display').textContent = vehicle.registration_number;
+
+                vehiclesList.appendChild(clone);
+            }
+        });
+    }
 
     // Appel de la fonction au chargement de la page si le sélecteur existe
     if (vehicleBrandSelect) {
         populateBrandSelect();
+    }
+
+    // Appel de la fonction pour afficher les véhicules au chargement de la page
+    // La variable `initialVehiclesData` est injectée par PHP dans la vue.
+    if (vehiclesList && typeof initialVehiclesData !== 'undefined') {
+        displayUserVehicles(initialVehiclesData);
     }
 
     if (roleForm) {
@@ -190,12 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Écouteurs d'événements pour le formulaire de véhicule
-    // Ces écouteurs ne seront attachés que si la section chauffeur est visible
-    if (driverInfoSection && addVehicleBtn && cancelVehicleFormBtn) {
+    if (addVehicleBtn) {
         addVehicleBtn.addEventListener('click', () => {
             showVehicleForm(false); // Mode ajout
         });
+    }
 
+    if (cancelVehicleFormBtn) {
         cancelVehicleFormBtn.addEventListener('click', hideVehicleForm);
     }
 });

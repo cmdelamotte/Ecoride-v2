@@ -232,3 +232,10 @@ $pageScripts = ['/js/accountPageHandler.js'];
 </div>
 
 <!-- D'autres modales (ex: pour les véhicules) pourront être ajoutées ici plus tard -->
+
+<script>
+    // J'injecte les données des véhicules directement dans le JavaScript.
+    // C'est une méthode simple pour passer des données du backend au frontend
+    // sans avoir besoin d'un appel API supplémentaire au chargement de la page.
+    const initialVehiclesData = <?= json_encode($vehicles ?? []) ?>;
+</script>

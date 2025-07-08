@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\UserService;
+use App\Services\VehicleService;
 
 /**
  * Classe UserController
@@ -14,11 +15,13 @@ use App\Services\UserService;
 class UserController extends Controller
 {
     private UserService $userService;
+    private VehicleService $vehicleService;
 
     public function __construct()
     {
         parent::__construct();
         $this->userService = new UserService();
+        $this->vehicleService = new VehicleService();
     }
 
     /**
@@ -52,10 +55,14 @@ class UserController extends Controller
             exit();
         }
 
-        // Je passe l'objet User à la vue pour qu'elle puisse afficher les informations.
+        // Je récupère les véhicules de l'utilisateur
+        $vehicles = $this->vehicleService->findByUserId($userId);
+
+        // Je passe l'objet User et les véhicules à la vue pour qu'elle puisse afficher les informations.
         $this->render('account/index', [
             'pageTitle' => 'Mon Compte',
-            'user' => $user
+            'user' => $user,
+            'vehicles' => $vehicles
         ]);
     }
 
