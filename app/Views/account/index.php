@@ -150,6 +150,7 @@ $pageScripts = ['/js/accountPageHandler.js'];
                 </div>
                 <div class="auth-link-bar mt-2">
                     <p class="mb-0 text-center"><a href="/logout" class="link" id="logout-account-btn">Se déconnecter</a></p>
+                </div>
 
             </div>
         </div>
