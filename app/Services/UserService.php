@@ -67,9 +67,16 @@ class UserService
     public function findByEmailOrUsername(string $identifier): ?User
     {
         try {
-            $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier OR username = :identifier");
-            $stmt->bindParam(':identifier', $identifier, PDO::PARAM_STR);
-            $stmt->execute();
+            // J'utilise des placeholders nommés uniques pour plus de clarté et de compatibilité.
+            $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email OR username = :username");
+            
+            // Je passe un tableau associatif à execute(). PDO va lier chaque clé du tableau
+            // au placeholder correspondant. C'est une manière propre et efficace de faire.
+            $stmt->execute([
+                'email' => $identifier,
+                'username' => $identifier
+            ]);
+
             $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
             $user = $stmt->fetch();
 
