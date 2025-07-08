@@ -1,45 +1,179 @@
 <?php
 /**
  * Vue pour la page du compte utilisateur.
- * Affiche les informations de l'utilisateur connecté et fournit des liens
- * pour la gestion du compte.
+ * Affiche les informations de l'utilisateur, permet de gérer son rôle,
+ * ses véhicules et ses préférences.
  *
  * @var \App\Models\User $user L'objet utilisateur contenant les données à afficher.
  */
+
+// Je prépare les données pour l'affichage, en prévoyant des valeurs par défaut
+// et en protégeant contre le XSS. C'est une bonne pratique de le faire en haut du fichier.
+$username = htmlspecialchars($user->getUsername() ?? '[N/A]');
+$lastName = htmlspecialchars($user->getLastName() ?? '[N/A]');
+$firstName = htmlspecialchars($user->getFirstName() ?? '[N/A]');
+$email = htmlspecialchars($user->getEmail() ?? '[N/A]');
+$birthDate = $user->getBirthDate() ? htmlspecialchars(date('d/m/Y', strtotime($user->getBirthDate()))) : 'Non renseignée';
+$phone = htmlspecialchars($user->getPhoneNumber() ?? 'Non renseigné');
+$credits = htmlspecialchars($user->getCredits() ?? '0');
+$functionalRole = $user->getFunctionalRole(); // Pas besoin de htmlspecialchars pour la logique interne
+
 ?>
 
-<div class="container mt-5">
-    <div class="row">
-        <!-- Colonne de navigation latérale -->
-        <div class="col-md-3">
-            <div class="list-group">
-                <a href="/account" class="list-group-item list-group-item-action active">Informations Personnelles</a>
-                <a href="/account/vehicles" class="list-group-item list-group-item-action">Mes Véhicules</a>
-                <a href="/my-rides" class="list-group-item list-group-item-action">Mes Trajets</a>
-                <a href="/my-bookings" class="list-group-item list-group-item-action">Mes Réservations</a>
-                <a href="/account/reviews" class="list-group-item list-group-item-action">Mes Avis</a>
-            </div>
-            <hr>
-            <a href="/logout" class="btn btn-danger w-100">Déconnexion</a>
-        </div>
+<section class="banner-container position-relative text-white text-center">
+    <div class="container">
+        <h1 class="banner-title display-4 mb-3">Mon Espace</h1>
+        <p class="banner-subtitle lead">Gérez vos informations et préférences</p>
+    </div>
+</section>
 
-        <!-- Colonne de contenu principal -->
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Informations Personnelles</h3>
+<section class="form-section account-section py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-8">
+
+                <!-- CARTE INFORMATIONS PERSONNELLES -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">Informations Personnelles</h2>
+                        <button type="button" id="delete-account-btn" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteAccountModal">
+                            <i class="bi bi-trash3"></i> Supprimer votre compte
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <span class="form-label">Pseudo :</span>
+                            <span id="account-username-display" class="fw-bold"><?= $username ?></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="form-label">Nom :</span>
+                            <span id="account-last-name-display" class="fw-bold"><?= $lastName ?></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="form-label">Prénom :</span>
+                            <span id="account-first-name-display" class="fw-bold"><?= $firstName ?></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="form-label">Email :</span>
+                            <span id="account-email-display" class="fw-bold"><?= $email ?></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="form-label">Date de naissance :</span>
+                            <span id="account-birthdate-display" class="fw-bold"><?= $birthDate ?></span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="form-label">Téléphone :</span>
+                            <span id="account-phone-display" class="fw-bold"><?= $phone ?></span>
+                        </div>
+                        <p><span class="form-label">Crédits EcoRide :</span> <span id="account-credits" class="fw-bold"><?= $credits ?></span></p>
+                        <div id="personal-info-actions">
+                            <!-- TODO: Créer les routes et pages pour ces liens -->
+                            <a href="/account/edit-info" class="btn secondary-btn btn-sm mt-2">Modifier mes informations</a>
+                            <a href="/account/edit-password" class="btn btn-outline-danger btn-sm mt-2">Changer de mot de passe</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p><strong>Nom d'utilisateur :</strong> <?= htmlspecialchars($user->getUsername()) ?></p>
-                    <p><strong>Email :</strong> <?= htmlspecialchars($user->getEmail()) ?></p>
-                    <p><strong>Prénom :</strong> <?= htmlspecialchars($user->getFirstName() ?? 'Non renseigné') ?></p>
-                    <p><strong>Nom de famille :</strong> <?= htmlspecialchars($user->getLastName() ?? 'Non renseigné') ?></p>
-                    
-                    <hr>
-                    <a href="/account/edit" class="btn btn-primary">Modifier mes informations</a>
-                    <a href="/account/edit-password" class="btn btn-secondary">Changer mon mot de passe</a>
+
+                <!-- CARTE GESTION DU RÔLE -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0">Mon Rôle sur EcoRide</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- La logique de ce formulaire (soumission en JS) sera implémentée plus tard -->
+                        <form id="role-form">
+                            <p class="form-label">Comment souhaitez-vous utiliser EcoRide ?</p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="user_role_form" id="passenger-role" value="passenger" <?= ($functionalRole === 'passenger') ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="passenger-role"> En tant que Passager</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="user_role_form" id="driver-role" value="driver" <?= ($functionalRole === 'driver') ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="driver-role"> En tant que Chauffeur</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="user_role_form" id="passenger_driver-role" value="passenger_driver" <?= ($functionalRole === 'passenger_driver') ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="passenger_driver-role"> Les deux ! (Passager et Chauffeur)</label>
+                            </div>
+                            <button type="submit" class="btn primary-btn mt-3">Enregistrer mon rôle</button>
+                        </form>
+                    </div>
                 </div>
+
+                <!-- CARTE INFORMATIONS CHAUFFEUR (logique d'affichage et contenu à implémenter) -->
+                <div id="driver-info-section" class="card mb-4 <?= ($functionalRole === 'driver' || $functionalRole === 'passenger_driver') ? '' : 'd-none' ?>">
+                    <div class="card-header">
+                        <h2 class="h5 mb-0">Informations Chauffeur</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- La gestion des véhicules (liste, ajout, etc.) sera implémentée ici dans une future étape -->
+                        <h3 class="h6 form-label">Mes Véhicules</h3>
+                        <div id="vehicles-list">
+                            <!-- La liste des véhicules sera chargée ici en JS -->
+                            <p class="text-muted">Le chargement des véhicules sera bientôt disponible.</p>
+                        </div>
+                        <button type="button" id="add-vehicle-btn" class="btn secondary-btn btn-sm mb-3">
+                            <i class="bi bi-plus-circle me-1"></i> Ajouter un véhicule
+                        </button>
+
+                        <!-- Le formulaire d'ajout/modification de véhicule sera géré en JS -->
+                        <div id="vehicle-form-container" class="card card-body mb-3 d-none">
+                           <p>Le formulaire d'ajout de véhicule apparaîtra ici.</p>
+                        </div>
+
+                        <!-- La logique de ce formulaire (soumission en JS) sera implémentée plus tard -->
+                        <form id="driver-preferences-form">
+                            <h3 class="h6 form-label mt-4">Mes Préférences de Conduite</h3>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pref-smoker" name="pref_smoker" <?= $user->getDriverPrefSmoker() ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="pref-smoker">Accepte les fumeurs</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pref-animals" name="pref_animals" <?= $user->getDriverPrefAnimals() ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="pref-animals">Accepte les animaux</label>
+                            </div>
+                            <div class="mt-2">
+                                <label for="pref-custom" class="form-label-sm">Autres préférences :</label>
+                                <textarea class="form-control form-control-custom" id="pref-custom" name="pref_custom" rows="2"><?= htmlspecialchars($user->getDriverPrefCustom() ?? '') ?></textarea>
+                            </div>
+                            <button type="submit" class="btn primary-btn mt-3">Enregistrer les Préférences</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="auth-link-bar mt-4">
+                    <!-- Le lien pointe vers la future page "Mes Trajets" -->
+                    <p class="mb-0 text-center"><a href="/your-rides" class="link">Voir mon historique de trajets</a></p>
+                </div>
+                <div class="auth-link-bar mt-2">
+                    <p class="mb-0 text-center"><a href="/logout" class="link" id="logout-account-btn">Se déconnecter</a></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MODALE DE SUPPRESSION DE COMPTE -->
+<div class="modal fade" id="confirmDeleteAccountModal" tabindex="-1" aria-labelledby="confirmDeleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteAccountModalLabel">Confirmer la suppression du compte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer définitivement votre compte EcoRide ?</p>
+                <p class="text-danger fw-bold">Attention : Cette action est irréversible.</p>
+                <p>Toutes vos données, y compris vos crédits, trajets et historique, seront supprimés.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <!-- Ce bouton déclenchera une action JS qui appellera une route API -->
+                <button type="button" id="confirm-delete-btn" class="btn btn-danger">Oui, supprimer mon compte</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- D'autres modales (ex: pour les véhicules) pourront être ajoutées ici plus tard -->
