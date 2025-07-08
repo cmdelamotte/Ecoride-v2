@@ -58,4 +58,86 @@ class UserController extends Controller
             'user' => $user
         ]);
     }
+
+    /**
+     * Gère la mise à jour du rôle fonctionnel de l'utilisateur via une requête API (AJAX).
+     */
+    public function updateRole()
+    {
+        // Je m'assure que la méthode est bien POST pour la sécurité.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
+            return;
+        }
+
+        // Je récupère le corps de la requête qui est en JSON.
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $newRole = $data['role'] ?? null;
+        $userId = $_SESSION['user_id'] ?? null;
+
+        // Validation des données
+        if (!$userId) {
+            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
+            return;
+        }
+
+        $allowedRoles = ['passenger', 'driver', 'passenger_driver'];
+        if (!$newRole || !in_array($newRole, $allowedRoles)) {
+            $this->jsonResponse(['success' => false, 'error' => 'Rôle non valide'], 400);
+            return;
+        }
+
+        // Appel au service pour mettre à jour les données
+        $success = $this->userService->update($userId, ['functional_role' => $newRole]);
+
+        if ($success) {
+            $this->jsonResponse(['success' => true, 'message' => 'Rôle mis à jour avec succès.', 'new_functional_role' => $newRole]);
+        } else {
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de la mise à jour du rôle.'], 500);
+        }
+    }
+
+    /**
+     * Gère la mise à jour des préférences du conducteur via une requête API (AJAX).
+     */
+    public function updatePreferences()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
+            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
+            return;
+        }
+
+        // Récupération et validation des préférences
+        $prefSmoker = filter_var($data['pref_smoker'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $prefAnimals = filter_var($data['pref_animals'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $prefMusic = filter_var($data['pref_music'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $prefCustom = htmlspecialchars(trim($data['pref_custom'] ?? ''));
+
+        // Préparation des données pour la mise à jour
+        $updateData = [
+            'driver_pref_smoker' => $prefSmoker,
+            'driver_pref_animals' => $prefAnimals,
+            'driver_pref_music' => $prefMusic,
+            'driver_pref_custom' => $prefCustom,
+        ];
+
+        // Appel au service pour mettre à jour les données
+        $success = $this->userService->update($userId, $updateData);
+
+        if ($success) {
+            $this->jsonResponse(['success' => true, 'message' => 'Préférences mises à jour avec succès.']);
+        } else {
+            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.'], 500);
+        }
+    }
 }

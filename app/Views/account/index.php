@@ -18,6 +18,9 @@ $phone = htmlspecialchars($user->getPhoneNumber() ?? 'Non renseigné');
 $credits = htmlspecialchars($user->getCredits() ?? '0');
 $functionalRole = $user->getFunctionalRole(); // Pas besoin de htmlspecialchars pour la logique interne
 
+// J'ajoute le script spécifique à cette page.
+$pageScripts = ['/js/accountPageHandler.js'];
+
 ?>
 
 <section class="banner-container position-relative text-white text-center">
@@ -147,7 +150,6 @@ $functionalRole = $user->getFunctionalRole(); // Pas besoin de htmlspecialchars 
                 </div>
                 <div class="auth-link-bar mt-2">
                     <p class="mb-0 text-center"><a href="/logout" class="link" id="logout-account-btn">Se déconnecter</a></p>
-                </div>
 
             </div>
         </div>
