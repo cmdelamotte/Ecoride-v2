@@ -44,7 +44,7 @@ class AuthController extends Controller
             $user = $result['user'];
             $_SESSION['user_id'] = $user->getId();
             $_SESSION['username'] = $user->getUsername();
-            $_SESSION['user_roles'] = [$user->getRole()]; // Utiliser le rôle du modèle
+            $_SESSION['user_roles'] = [$user->getSystemRole()]; // Utiliser le rôle du modèle
 
             header('Location: /account');
             exit();
@@ -79,7 +79,7 @@ class AuthController extends Controller
             $user = $result['user'];
             $_SESSION['user_id'] = $user->getId();
             $_SESSION['username'] = $user->getUsername();
-            $_SESSION['user_roles'] = [$user->getRole()]; // Utiliser le rôle du modèle
+            $_SESSION['user_roles'] = [$user->getSystemRole()]; // Utiliser le rôle du modèle
             header('Location: /account'); // Rediriger vers la page de compte
             exit();
         } else {
