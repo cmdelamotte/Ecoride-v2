@@ -23,6 +23,11 @@
                                 <div class="alert alert-success" role="alert">
                                     <?= htmlspecialchars($success) ?>
                                 </div>
+                                <?php if (isset($debugLink)): ?>
+                                    <div class="alert alert-info" role="alert">
+                                        <strong>Lien de débogage :</strong> <a href="<?= htmlspecialchars($debugLink) ?>" class="alert-link">Cliquez ici pour réinitialiser</a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
 

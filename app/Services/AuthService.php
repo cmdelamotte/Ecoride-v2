@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Core\Database;
 use App\Services\UserService;
 use App\Services\ValidationService;
+use PDO;
 
 /**
  * Classe AuthService
@@ -153,11 +155,10 @@ class AuthService
         if ($user) {
             $token = bin2hex(random_bytes(32));
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+            error_log("AuthService::sendPasswordResetLink - Token expires at: " . $expiresAt);
 
-            $this->userService->update($user->getId(), [
-                'reset_token' => $token,
-                'reset_token_expires_at' => $expiresAt
-            ]);
+            // La mise à jour du token est une responsabilité de l'authentification
+            $this->updateResetToken($user->getId(), $token, $expiresAt);
 
             $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/reset-password?token=' . $token;
 
@@ -181,7 +182,7 @@ class AuthService
             return ['success' => false, 'error' => 'Jeton de réinitialisation manquant.'];
         }
 
-        $user = $this->userService->findByResetToken($token);
+        $user = $this->findByResetToken($token);
 
         if (!$user) {
             return ['success' => false, 'error' => 'Le lien de réinitialisation est invalide ou a expiré.'];
@@ -191,7 +192,7 @@ class AuthService
     }
 
     /**
-     * Réinitialise le mot de passe de l'utilisateur à l'aide d'un token.
+     * Réinitialise le mot de passe de l'utilisateur à l\'aide d\'un token.
      *
      * @param string $token Le token de réinitialisation.
      * @param string $password Le nouveau mot de passe.
@@ -216,7 +217,7 @@ class AuthService
             return ['success' => false, 'errors' => $errors];
         }
 
-        $user = $this->userService->findByResetToken($token);
+        $user = $this->findByResetToken($token);
 
         if (!$user) {
             return ['success' => false, 'errors' => ['token' => 'Le lien de réinitialisation est invalide ou a expiré.']];
@@ -234,6 +235,48 @@ class AuthService
         }
         else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la mise à jour du mot de passe.']];
+        }
+    }
+
+    /**
+     * Met à jour le jeton de réinitialisation pour un utilisateur.
+     *
+     * @param integer $userId
+     * @param string $token
+     * @param string $expiresAt
+     * @return boolean
+     */
+    private function updateResetToken(int $userId, string $token, string $expiresAt): bool
+    {
+        return $this->userService->update($userId, [
+            'reset_token' => $token,
+            'reset_token_expires_at' => $expiresAt
+        ]);
+    }
+
+    /**
+     * Trouve un utilisateur par son jeton de réinitialisation de mot de passe.
+     * (Méthode déplacée depuis UserService)
+     *
+     * @param string $token Le jeton de réinitialisation.
+     * @return \App\Models\User|null
+     */
+    private function findByResetToken(string $token): ?\App\Models\User
+    {
+        try {
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare(
+                "SELECT * FROM users WHERE reset_token = :token"
+            );
+            $stmt->bindParam(':token', $token, PDO::PARAM_STR);
+            $stmt->execute();
+            $stmt->setFetchMode(PDO::FETCH_CLASS, \App\Models\User::class);
+            $user = $stmt->fetch();
+
+            return $user ?: null;
+        } catch (\PDOException $e) {
+            error_log("Error finding user by reset token: " . $e->getMessage());
+            return null;
         }
     }
 }

@@ -178,28 +178,4 @@ class UserService
             return false;
         }
     }
-
-    /**
-     * Trouve un utilisateur par son jeton de réinitialisation de mot de passe.
-     *
-     * @param string $token Le jeton de réinitialisation.
-     * @return User|null Retourne une instance de User si trouvé et valide, sinon null.
-     */
-    public function findByResetToken(string $token): ?User
-    {
-        try {
-            $stmt = $this->db->prepare(
-                "SELECT * FROM users WHERE reset_token = :token AND reset_token_expires_at > NOW()"
-            );
-            $stmt->bindParam(':token', $token, PDO::PARAM_STR);
-            $stmt->execute();
-            $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
-            $user = $stmt->fetch();
-
-            return $user ?: null;
-        } catch (PDOException $e) {
-            error_log("Error finding user by reset token: " . $e->getMessage());
-            return null;
-        }
-    }
 }
