@@ -178,4 +178,54 @@ class UserService
             return false;
         }
     }
+
+    /**
+     * Met à jour le jeton de réinitialisation de mot de passe et sa date d'expiration pour un utilisateur spécifique.
+     * Cette méthode est utilisée lors de la demande de réinitialisation de mot de passe.
+     *
+     * @param int $userId L'ID de l'utilisateur dont le token doit être mis à jour.
+     * @param string $token Le nouveau jeton de réinitialisation à stocker.
+     * @param string $expiresAt La date et l'heure d'expiration du jeton.
+     * @return bool Vrai si la mise à jour a réussi, faux sinon.
+     */
+    public function updateResetToken(int $userId, string $token, string $expiresAt): bool
+    {
+        // J'utilise la méthode update existante pour mettre à jour les champs spécifiques du token.
+        // Cela assure la cohérence et réutilise la logique de mise à jour générique.
+        return $this->update($userId, [
+            'reset_token' => $token,
+            'reset_token_expires_at' => $expiresAt
+        ]);
+    }
+
+    /**
+     * Trouve un utilisateur par son jeton de réinitialisation de mot de passe et vérifie sa validité.
+     * Cette méthode est cruciale pour sécuriser le processus de réinitialisation de mot de passe.
+     *
+     * @param string $token Le jeton de réinitialisation à rechercher.
+     * @return User|null Retourne une instance de User si un utilisateur est trouvé avec un token valide et non expiré, sinon null.
+     */
+    public function findByResetToken(string $token): ?User
+    {
+        try {
+            // Prépare la requête pour trouver un utilisateur par son token et s'assurer qu'il n'a pas expiré.
+            // Je compare la date d'expiration du token avec la date et heure actuelles.
+            $stmt = $this->db->prepare(
+                "SELECT * FROM users WHERE reset_token = :token AND reset_token_expires_at > NOW()"
+            );
+            $stmt->bindParam(':token', $token, PDO::PARAM_STR);
+            $stmt->execute();
+
+            // Configure le mode de récupération pour hydrater directement un objet User.
+            $stmt->setFetchMode(PDO::FETCH_CLASS, User::class);
+            $user = $stmt->fetch();
+
+            // Retourne l'utilisateur trouvé ou null si aucun utilisateur ne correspond ou si le token est expiré.
+            return $user ?: null;
+        } catch (PDOException $e) {
+            // En cas d'erreur de base de données, je log l'erreur pour le débogage sans exposer d'informations sensibles à l'utilisateur.
+            error_log("Error finding user by reset token: " . $e->getMessage());
+            return null;
+        }
+    }
 }

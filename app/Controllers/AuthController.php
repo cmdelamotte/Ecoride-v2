@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\AuthService;
+use App\Services\PasswordResetService;
 
 /**
  * Classe AuthController
@@ -15,11 +16,13 @@ use App\Services\AuthService;
 class AuthController extends Controller
 {
     private AuthService $authService;
+    private PasswordResetService $passwordResetService;
 
     public function __construct()
     {
         parent::__construct();
         $this->authService = new AuthService();
+        $this->passwordResetService = new PasswordResetService();
     }
 
     /**
@@ -123,7 +126,7 @@ class AuthController extends Controller
      */
     public function forgotPassword()
     {
-        $result = $this->authService->sendPasswordResetLink($_POST['email'] ?? '');
+        $result = $this->passwordResetService->sendPasswordResetLink($_POST['email'] ?? '');
 
         $data = ['pageTitle' => 'Mot de passe oublié'];
         if ($result['success']) {
@@ -145,7 +148,7 @@ class AuthController extends Controller
     {
         $token = $_GET['token'] ?? '';
 
-        $result = $this->authService->validateResetToken($token);
+        $result = $this->passwordResetService->validateResetToken($token);
 
         if (!$result['success']) {
             $this->render('auth/reset-password', [
@@ -168,7 +171,7 @@ class AuthController extends Controller
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
-        $result = $this->authService->resetPasswordWithToken($token, $password, $confirmPassword);
+        $result = $this->passwordResetService->resetPasswordWithToken($token, $password, $confirmPassword);
 
         if ($result['success']) {
             $this->render('auth/login', [

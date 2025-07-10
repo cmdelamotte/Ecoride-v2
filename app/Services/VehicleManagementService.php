@@ -48,7 +48,7 @@ class VehicleManagementService
             ]);
 
             return $success ? (int)$this->db->lastInsertId() : false;
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             // En cas d'erreur, on l'enregistre dans les logs pour le débogage.
             error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
             return false;
@@ -78,7 +78,7 @@ class VehicleManagementService
             }
 
             return $this->hydrateVehicle($data);
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             error_log("VehicleManagementService::findById Error: " . $e->getMessage());
             return null;
         }
