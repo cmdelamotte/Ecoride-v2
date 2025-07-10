@@ -261,15 +261,17 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.disabled = true;
             submitButton.textContent = 'Enregistrement...';
 
-            const formData = new FormData(vehicleForm);
+            // Je récupère les données directement par l'ID des champs pour plus de robustesse,
+            // au lieu de dépendre des attributs 'name' via FormData.
             const vehicleData = {
-                brand_id: parseInt(formData.get('brand_id')),
-                model: formData.get('vehicle_model'),
-                color: formData.get('vehicle_color'),
-                license_plate: formData.get('vehicle_license_plate'),
-                registration_date: formData.get('vehicle_registration_date'),
-                passenger_capacity: parseInt(formData.get('vehicle_seats')),
-                is_electric: formData.get('vehicle_electric') === 'on' ? true : false,
+                brand_id: parseInt(document.getElementById('vehicle-brand-select').value),
+                model: document.getElementById('vehicle-model').value,
+                color: document.getElementById('vehicle-color').value,
+                license_plate: document.getElementById('vehicle-license-plate').value,
+                registration_date: document.getElementById('vehicle-registration-date').value,
+                passenger_capacity: parseInt(document.getElementById('vehicle-seats').value),
+                is_electric: document.getElementById('vehicle-electric').checked, // .checked pour une checkbox
+                energy_type: document.getElementById('vehicle-energy-type') ? document.getElementById('vehicle-energy-type').value : ''
             };
 
             try {

@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\UserService;
 use App\Services\VehicleService;
+use App\Services\UserRoleService;
+use App\Services\DriverPreferenceService;
+use App\Services\VehicleManagementService;
 
 /**
  * Classe UserController
@@ -16,12 +19,18 @@ class UserController extends Controller
 {
     private UserService $userService;
     private VehicleService $vehicleService;
+    private UserRoleService $userRoleService;
+    private DriverPreferenceService $driverPreferenceService;
+    private VehicleManagementService $vehicleManagementService;
 
     public function __construct()
     {
         parent::__construct();
         $this->userService = new UserService();
         $this->vehicleService = new VehicleService();
+        $this->userRoleService = new UserRoleService();
+        $this->driverPreferenceService = new DriverPreferenceService();
+        $this->vehicleManagementService = new VehicleManagementService();
     }
 
     /**
@@ -96,7 +105,7 @@ class UserController extends Controller
         }
 
         // Appel au service pour mettre à jour les données
-        $success = $this->userService->update($userId, ['functional_role' => $newRole]);
+        $success = $this->userRoleService->updateFunctionalRole($userId, $newRole);
 
         if ($success) {
             $this->jsonResponse(['success' => true, 'message' => 'Rôle mis à jour avec succès.', 'new_functional_role' => $newRole]);
@@ -138,8 +147,8 @@ class UserController extends Controller
             'driver_pref_custom' => $prefCustom,
         ];
 
-        // Appel au service pour mettre à jour les données
-        $success = $this->userService->update($userId, $updateData);
+        // Appel au service dédié pour mettre à jour les préférences
+        $success = $this->driverPreferenceService->updatePreferences($userId, $updateData);
 
         if ($success) {
             $this->jsonResponse(['success' => true, 'message' => 'Préférences mises à jour avec succès.']);
@@ -153,29 +162,35 @@ class UserController extends Controller
      */
     public function addVehicle()
     {
+        error_log("--- Début de addVehicle ---");
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("Méthode non autorisée : " . $_SERVER['REQUEST_METHOD']);
             $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
             return;
         }
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $jsonInput = file_get_contents('php://input');
+        error_log("Données JSON reçues : " . $jsonInput);
+        $data = json_decode($jsonInput, true);
 
         $userId = $_SESSION['user_id'] ?? null;
 
         if (!$userId) {
+            error_log("Utilisateur non authentifié.");
             $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
             return;
         }
 
-        // Validation des données du véhicule (simplifiée pour l'exemple)
+        // Validation des données du véhicule
         $brandId = filter_var($data['brand_id'] ?? null, FILTER_VALIDATE_INT);
-        $modelName = htmlspecialchars(trim($data['model'] ?? '')); // Renommé en modelName
+        $modelName = htmlspecialchars(trim($data['model'] ?? ''));
         $color = htmlspecialchars(trim($data['color'] ?? ''));
-        $licensePlate = htmlspecialchars(trim($data['license_plate'] ?? '')); // Renommé en licensePlate
-        $registrationDate = htmlspecialchars(trim($data['registration_date'] ?? '')); // Renommé en registrationDate
+        $licensePlate = htmlspecialchars(trim($data['license_plate'] ?? ''));
+        $registrationDate = htmlspecialchars(trim($data['registration_date'] ?? ''));
         $passengerCapacity = filter_var($data['passenger_capacity'] ?? null, FILTER_VALIDATE_INT);
         $isElectric = filter_var($data['is_electric'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $energyType = htmlspecialchars(trim($data['energy_type'] ?? '')); // Ajout de energyType
+        $energyType = htmlspecialchars(trim($data['energy_type'] ?? ''));
 
         $errors = [];
         if (!$brandId) $errors['brand_id'] = 'La marque est requise.';
@@ -184,6 +199,7 @@ class UserController extends Controller
         if (!$passengerCapacity || $passengerCapacity < 1 || $passengerCapacity > 8) $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
 
         if (!empty($errors)) {
+            error_log("Erreurs de validation : " . print_r($errors, true));
             $this->jsonResponse(['success' => false, 'errors' => $errors], 400);
             return;
         }
@@ -191,23 +207,27 @@ class UserController extends Controller
         $vehicleData = [
             'user_id' => $userId,
             'brand_id' => $brandId,
-            'model_name' => $modelName, // Utilise model_name
+            'model_name' => $modelName,
             'color' => $color,
-            'license_plate' => $licensePlate, // Utilise license_plate
-            'registration_date' => $registrationDate, // Utilise registration_date
+            'license_plate' => $licensePlate,
+            'registration_date' => $registrationDate,
             'passenger_capacity' => $passengerCapacity,
             'is_electric' => $isElectric,
-            'energy_type' => $energyType // Utilise energy_type
+            'energy_type' => $energyType
         ];
+        error_log("Données du véhicule préparées pour le service : " . print_r($vehicleData, true));
 
-        $vehicleId = $this->vehicleService->create($vehicleData);
+        $vehicleId = $this->vehicleManagementService->addVehicle($vehicleData);
+        error_log("ID du véhicule retourné par le service : " . ($vehicleId ?: 'false'));
 
         if ($vehicleId) {
-            // Récupérer le véhicule complet avec le nom de la marque pour le renvoyer au frontend
-            $newVehicle = $this->vehicleService->findById($vehicleId); // Nécessite une méthode findById dans VehicleService
+            $newVehicle = $this->vehicleManagementService->findById($vehicleId);
+            error_log("Véhicule récupéré après création : " . ($newVehicle ? print_r($newVehicle, true) : 'null'));
             $this->jsonResponse(['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle]);
         } else {
-            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de l\'ajout du véhicule.'], 500);
+            error_log("Échec de l'ajout du véhicule, renvoi d'une erreur JSON.");
+            $this->jsonResponse(['success' => false, 'error' => "Erreur lors de l'ajout du véhicule."], 500);
         }
     }
 }
+
