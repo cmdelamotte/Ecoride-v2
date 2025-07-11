@@ -2,12 +2,21 @@
 
 namespace App\Controllers;
 
+file_put_contents('debug.log', "POST: " . print_r($_POST, true) . "\n", FILE_APPEND);
+file_put_contents('debug.log', "RAW: " . file_get_contents('php://input') . "\n", FILE_APPEND);
+file_put_contents('debug.log', "SESSION: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
+
+
 use App\Core\Controller;
 use App\Services\UserService;
 use App\Services\VehicleService;
 use App\Services\UserRoleService;
 use App\Services\DriverPreferenceService;
 use App\Services\VehicleManagementService;
+use App\Services\UserAccountService;
+use App\Services\AvatarService;
+use App\Helpers\AuthHelper;
+use App\Helpers\RequestHelper;
 
 /**
  * Classe UserController
@@ -22,6 +31,8 @@ class UserController extends Controller
     private UserRoleService $userRoleService;
     private DriverPreferenceService $driverPreferenceService;
     private VehicleManagementService $vehicleManagementService;
+    private UserAccountService $userAccountService;
+    private AvatarService $avatarService;
 
     public function __construct()
     {
@@ -31,6 +42,8 @@ class UserController extends Controller
         $this->userRoleService = new UserRoleService();
         $this->driverPreferenceService = new DriverPreferenceService();
         $this->vehicleManagementService = new VehicleManagementService();
+        $this->userAccountService = new UserAccountService();
+        $this->avatarService = new AvatarService();
     }
 
     /**
@@ -40,34 +53,9 @@ class UserController extends Controller
      */
     public function account()
     {
-        // Je vérifie d'abord si l'utilisateur est bien authentifié
-        // en regardant si son ID est en session.
-        if (!isset($_SESSION['user_id'])) {
-            // Si non, je le redirige vers la page de connexion.
-            // C'est une mesure de sécurité de base.
-            header('Location: /login');
-            exit();
-        }
+        $user = AuthHelper::getAuthenticatedUser();
+        $vehicles = $this->vehicleService->findByUserId($user->getId());
 
-        // Je récupère l'ID de l'utilisateur depuis la session.
-        $userId = $_SESSION['user_id'];
-
-        // J'utilise le UserService pour récupérer l'objet User complet.
-        // Cela sépare bien la récupération des données (Service) de la logique de la page (Contrôleur).
-        $user = $this->userService->findById($userId);
-
-        // Si pour une raison quelconque l'utilisateur n'est pas trouvé en BDD
-        // (par ex. supprimé entre-temps), je déconnecte et redirige.
-        if (!$user) {
-            session_destroy();
-            header('Location: /login');
-            exit();
-        }
-
-        // Je récupère les véhicules de l'utilisateur
-        $vehicles = $this->vehicleService->findByUserId($userId);
-
-        // Je passe l'objet User et les véhicules à la vue pour qu'elle puisse afficher les informations.
         $this->render('account/index', [
             'pageTitle' => 'Mon Compte',
             'user' => $user,
@@ -77,157 +65,125 @@ class UserController extends Controller
 
     /**
      * Gère la mise à jour du rôle fonctionnel de l'utilisateur via une requête API (AJAX).
+     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de renvoyer la réponse.
      */
     public function updateRole()
     {
-        // Je m'assure que la méthode est bien POST pour la sécurité.
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
-            return;
-        }
+        $requestData = RequestHelper::getApiRequestData();
+        $userId = $requestData['userId'];
+        $data = $requestData['data'];
 
-        // Je récupère le corps de la requête qui est en JSON.
-        $data = json_decode(file_get_contents('php://input'), true);
+        $result = $this->userRoleService->updateFunctionalRole($userId, $data['role'] ?? null);
 
-        $newRole = $data['role'] ?? null;
-        $userId = $_SESSION['user_id'] ?? null;
-
-        // Validation des données
-        if (!$userId) {
-            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
-            return;
-        }
-
-        $allowedRoles = ['passenger', 'driver', 'passenger_driver'];
-        if (!$newRole || !in_array($newRole, $allowedRoles)) {
-            $this->jsonResponse(['success' => false, 'error' => 'Rôle non valide'], 400);
-            return;
-        }
-
-        // Appel au service pour mettre à jour les données
-        $success = $this->userRoleService->updateFunctionalRole($userId, $newRole);
-
-        if ($success) {
-            $this->jsonResponse(['success' => true, 'message' => 'Rôle mis à jour avec succès.', 'new_functional_role' => $newRole]);
+        if ($result['success']) {
+            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'new_functional_role' => $result['new_functional_role']]);
         } else {
-            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de la mise à jour du rôle.'], 500);
+            $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);
         }
     }
 
     /**
      * Gère la mise à jour des préférences du conducteur via une requête API (AJAX).
+     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de renvoyer la réponse.
      */
     public function updatePreferences()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
-            return;
-        }
+        $requestData = RequestHelper::getApiRequestData();
+        $userId = $requestData['userId'];
+        $data = $requestData['data'];
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $result = $this->driverPreferenceService->updatePreferences($userId, $data);
 
-        $userId = $_SESSION['user_id'] ?? null;
-
-        if (!$userId) {
-            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
-            return;
-        }
-
-        // Récupération et validation des préférences
-        $prefSmoker = filter_var($data['pref_smoker'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $prefAnimals = filter_var($data['pref_animals'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $prefMusic = filter_var($data['pref_music'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $prefCustom = htmlspecialchars(trim($data['pref_custom'] ?? ''));
-
-        // Préparation des données pour la mise à jour
-        $updateData = [
-            'driver_pref_smoker' => $prefSmoker,
-            'driver_pref_animals' => $prefAnimals,
-            'driver_pref_music' => $prefMusic,
-            'driver_pref_custom' => $prefCustom,
-        ];
-
-        // Appel au service dédié pour mettre à jour les préférences
-        $success = $this->driverPreferenceService->updatePreferences($userId, $updateData);
-
-        if ($success) {
-            $this->jsonResponse(['success' => true, 'message' => 'Préférences mises à jour avec succès.']);
+        if ($result['success']) {
+            $this->jsonResponse(['success' => true, 'message' => $result['message']]);
         } else {
-            $this->jsonResponse(['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.'], 500);
+            $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);
         }
     }
 
     /**
      * Gère l'ajout d'un nouveau véhicule pour l'utilisateur connecté.
+     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de renvoyer la réponse.
      */
     public function addVehicle()
     {
-        error_log("--- Début de addVehicle ---");
+        $requestData = RequestHelper::getApiRequestData();
+        $userId = $requestData['userId'];
+        $data = $requestData['data'];
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            error_log("Méthode non autorisée : " . $_SERVER['REQUEST_METHOD']);
-            $this->jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
-            return;
-        }
+        $result = $this->vehicleManagementService->addVehicle($userId, $data);
 
-        $jsonInput = file_get_contents('php://input');
-        error_log("Données JSON reçues : " . $jsonInput);
-        $data = json_decode($jsonInput, true);
-
-        $userId = $_SESSION['user_id'] ?? null;
-
-        if (!$userId) {
-            error_log("Utilisateur non authentifié.");
-            $this->jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
-            return;
-        }
-
-        // Validation des données du véhicule
-        $brandId = filter_var($data['brand_id'] ?? null, FILTER_VALIDATE_INT);
-        $modelName = htmlspecialchars(trim($data['model'] ?? ''));
-        $color = htmlspecialchars(trim($data['color'] ?? ''));
-        $licensePlate = htmlspecialchars(trim($data['license_plate'] ?? ''));
-        $registrationDate = htmlspecialchars(trim($data['registration_date'] ?? ''));
-        $passengerCapacity = filter_var($data['passenger_capacity'] ?? null, FILTER_VALIDATE_INT);
-        $isElectric = filter_var($data['is_electric'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $energyType = htmlspecialchars(trim($data['energy_type'] ?? ''));
-
-        $errors = [];
-        if (!$brandId) $errors['brand_id'] = 'La marque est requise.';
-        if (empty($modelName)) $errors['model'] = 'Le modèle est requis.';
-        if (empty($licensePlate)) $errors['license_plate'] = "La plaque d'immatriculation est requise.";
-        if (!$passengerCapacity || $passengerCapacity < 1 || $passengerCapacity > 8) $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
-
-        if (!empty($errors)) {
-            error_log("Erreurs de validation : " . print_r($errors, true));
-            $this->jsonResponse(['success' => false, 'errors' => $errors], 400);
-            return;
-        }
-
-        $vehicleData = [
-            'user_id' => $userId,
-            'brand_id' => $brandId,
-            'model_name' => $modelName,
-            'color' => $color,
-            'license_plate' => $licensePlate,
-            'registration_date' => $registrationDate,
-            'passenger_capacity' => $passengerCapacity,
-            'is_electric' => $isElectric,
-            'energy_type' => $energyType
-        ];
-        error_log("Données du véhicule préparées pour le service : " . print_r($vehicleData, true));
-
-        $vehicleId = $this->vehicleManagementService->addVehicle($vehicleData);
-        error_log("ID du véhicule retourné par le service : " . ($vehicleId ?: 'false'));
-
-        if ($vehicleId) {
-            $newVehicle = $this->vehicleManagementService->findById($vehicleId);
-            error_log("Véhicule récupéré après création : " . ($newVehicle ? print_r($newVehicle, true) : 'null'));
-            $this->jsonResponse(['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle]);
+        if ($result['success']) {
+            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'vehicle' => $result['vehicle']]);
         } else {
-            error_log("Échec de l'ajout du véhicule, renvoi d'une erreur JSON.");
-            $this->jsonResponse(['success' => false, 'error' => "Erreur lors de l'ajout du véhicule."], 500);
+            $this->jsonResponse(['success' => false, 'error' => $result['error'], 'errors' => $result['errors']], $result['status'] ?? 500);
         }
     }
-}
+
+    /**
+     * Gère l'affichage et la soumission du formulaire d'édition du profil utilisateur.
+     * Correspond à la route GET /account/edit (affichage) et POST /account/edit (traitement).
+     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de gérer la redirection/affichage.
+     */
+    public function edit()
+    {
+        $user = AuthHelper::getAuthenticatedUser();
+
+        // Gère la soumission du formulaire (méthode POST).
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Délègue la logique de mise à jour du profil au UserAccountService.
+            // Le service est responsable de la validation, du téléchargement d'avatar et de la mise à jour en BDD.
+            $result = $this->userAccountService->updateProfile($user->getId(), $_POST, $_FILES);
+
+            if ($result['success']) {
+                // Met à jour le nom d'utilisateur en session si modifié.
+                if (isset($_POST['username'])) {
+                    $_SESSION['username'] = $_POST['username'];
+                }
+                $this->render('account/index', [
+                    'pageTitle' => 'Mon Compte',
+                    'user' => $this->userService->findById($user->getId()), // Recharger l'utilisateur après mise à jour
+                    'vehicles' => $this->vehicleService->findByUserId($user->getId()),
+                    'success' => 'Votre profil a été mis à jour avec succès.'
+                ]);
+                return;
+            } else {
+                $this->render('account/edit', [
+                    'pageTitle' => 'Modifier mon profil',
+                    'user' => $user, // Utilise l'utilisateur original pour pré-remplir le formulaire
+                    'errors' => $result['errors'] ?? [],
+                    'oldInput' => $_POST
+                ]);
+                return;
+            }
+        }
+
+        // Affiche le formulaire d'édition (méthode GET).
+        $this->render('account/edit', [
+            'pageTitle' => 'Modifier mon profil',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Gère la suppression du compte utilisateur.
+     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de gérer la redirection.
+     */
+    public function delete()
+    {
+        $requestData = RequestHelper::getApiRequestData();
+        $userId = $requestData['userId'];
+
+        $result = $this->userAccountService->deleteAccount($userId);
+
+        if ($result['success']) {
+            session_destroy();
+            header('Location: /login');
+            exit();
+        } else {
+            $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);
+        }
+    }
+
+    }
 

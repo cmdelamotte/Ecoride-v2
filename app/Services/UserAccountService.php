@@ -18,11 +18,13 @@ class UserAccountService
 {
     private PDO $db;
     private UserService $userService;
+    private AvatarService $avatarService;
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
         $this->userService = new UserService();
+        $this->avatarService = new AvatarService();
     }
 
     /**
@@ -30,16 +32,16 @@ class UserAccountService
      *
      * @param int $userId L'ID de l'utilisateur à mettre à jour.
      * @param array $data Les données du profil à mettre à jour (first_name, last_name, email, phone_number, birth_date, address).
+     * @param array $files Le tableau $_FILES contenant les fichiers téléchargés (ex: avatar).
      * @return array Un tableau avec le statut de succès et un message.
      */
-    public function updateProfile(int $userId, array $data): array
+    public function updateProfile(int $userId, array $data, array $files = []): array
     {
-        // Validation des données (simplifiée pour l'exemple, à compléter avec ValidationService)
         $errors = [];
+        // Validation des données
         if (empty($data['first_name'])) $errors['first_name'] = 'Le prénom est requis.';
         if (empty($data['last_name'])) $errors['last_name'] = 'Le nom est requis.';
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'L\'email est invalide.';
-        // ... autres validations
 
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors];
@@ -61,6 +63,17 @@ class UserAccountService
             'birth_date' => htmlspecialchars(trim($data['birth_date'] ?? '')),
             'address' => htmlspecialchars(trim($data['address'] ?? '')),
         ];
+
+        // Gère le téléchargement de l'avatar si un fichier est présent.
+        if (isset($files['avatar']) && $files['avatar']['error'] === UPLOAD_ERR_OK) {
+            $avatarFileName = $this->avatarService->handleUpload($files['avatar']);
+            if ($avatarFileName) {
+                $updateData['profile_picture_path'] = $avatarFileName;
+            } else {
+                $errors['avatar'] = 'Erreur lors du téléchargement de l\'avatar.';
+                return ['success' => false, 'errors' => $errors];
+            }
+        }
 
         $success = $this->userService->update($userId, $updateData);
 
@@ -122,14 +135,17 @@ class UserAccountService
      */
     public function deleteAccount(int $userId): array
     {
-        $success = $this->userService->delete($userId);
+        try {
+            $success = $this->userService->delete($userId);
 
-        if ($success) {
-            // Déconnexion de l'utilisateur après suppression du compte
-            session_destroy();
-            return ['success' => true, 'message' => 'Votre compte a été supprimé avec succès.'];
-        } else {
-            return ['success' => false, 'error' => 'Erreur lors de la suppression du compte.'];
+            if ($success) {
+                return ['success' => true, 'message' => 'Votre compte a été supprimé avec succès.'];
+            } else {
+                return ['success' => false, 'error' => 'Erreur lors de la suppression du compte.', 'status' => 500];
+            }
+        } catch (\Exception $e) {
+            error_log("Error in UserAccountService::deleteAccount: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Erreur interne du serveur lors de la suppression du compte.', 'status' => 500];
         }
     }
 }

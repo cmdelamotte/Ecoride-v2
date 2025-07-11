@@ -27,8 +27,22 @@ class VehicleManagementService
      * @param array $data Les données du véhicule.
      * @return int|false L'ID du véhicule nouvellement créé ou false en cas d'échec.
      */
-    public function addVehicle(array $data): int|false
+    public function addVehicle(int $userId, array $data): array
     {
+        $errors = [];
+
+        // Validation des données
+        if (empty($data['brand_id'])) $errors['brand_id'] = 'La marque est requise.';
+        if (empty($data['model'])) $errors['model'] = 'Le modèle est requis.';
+        if (empty($data['license_plate'])) $errors['license_plate'] = "La plaque d'immatriculation est requise.";
+        if (!isset($data['passenger_capacity']) || !filter_var($data['passenger_capacity'], FILTER_VALIDATE_INT) || $data['passenger_capacity'] < 1 || $data['passenger_capacity'] > 8) {
+            $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
+        }
+
+        if (!empty($errors)) {
+            return ['success' => false, 'errors' => $errors, 'status' => 400];
+        }
+
         try {
             $stmt = $this->db->prepare(
                 "INSERT INTO Vehicles (user_id, brand_id, model_name, color, license_plate, registration_date, passenger_capacity, is_electric, energy_type)
@@ -36,22 +50,27 @@ class VehicleManagementService
             );
 
             $success = $stmt->execute([
-                ':user_id' => $data['user_id'],
+                ':user_id' => $userId,
                 ':brand_id' => $data['brand_id'],
-                ':model_name' => $data['model_name'],
-                ':color' => $data['color'],
-                ':license_plate' => $data['license_plate'],
-                ':registration_date' => $data['registration_date'],
+                ':model_name' => htmlspecialchars(trim($data['model'])),
+                ':color' => htmlspecialchars(trim($data['color'] ?? '')),
+                ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
+                ':registration_date' => htmlspecialchars(trim($data['registration_date'] ?? '')),
                 ':passenger_capacity' => $data['passenger_capacity'],
-                ':is_electric' => (int)$data['is_electric'],
-                ':energy_type' => $data['energy_type'],
+                ':is_electric' => (int)($data['is_electric'] ?? false),
+                ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
             ]);
 
-            return $success ? (int)$this->db->lastInsertId() : false;
+            if ($success) {
+                $vehicleId = (int)$this->db->lastInsertId();
+                $newVehicle = $this->findById($vehicleId);
+                return ['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle, 'status' => 201];
+            } else {
+                return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.", 'status' => 500];
+            }
         } catch (\PDOException $e) {
-            // En cas d'erreur, on l'enregistre dans les logs pour le débogage.
             error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
-            return false;
+            return ['success' => false, 'error' => "Erreur interne du serveur lors de l'ajout du véhicule.", 'status' => 500];
         }
     }
 

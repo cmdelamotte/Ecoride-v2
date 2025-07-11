@@ -33,25 +33,36 @@ class DriverPreferenceService
      *                         Ex: ['driver_pref_smoker' => true, 'driver_pref_animals' => false, ...].
      * @return bool Retourne true si la mise à jour a réussi, false sinon.
      */
-    public function updatePreferences(int $userId, array $preferences): bool
+    public function updatePreferences(int $userId, array $preferences): array
     {
-        // Je prépare la requête SQL pour mettre à jour les champs spécifiques aux préférences.
-        // Utiliser des requêtes préparées est crucial pour la sécurité (prévention des injections SQL).
-        $stmt = $this->db->prepare(
-            "UPDATE Users SET 
-                driver_pref_smoker = :driver_pref_smoker, 
-                driver_pref_animals = :driver_pref_animals, 
-                driver_pref_custom = :driver_pref_custom
-            WHERE id = :id"
-        );
+        try {
+            // Je prépare la requête SQL pour mettre à jour les champs spécifiques aux préférences.
+            // Utiliser des requêtes préparées est crucial pour la sécurité (prévention des injections SQL).
+            $stmt = $this->db->prepare(
+                "UPDATE Users SET 
+                    driver_pref_smoker = :driver_pref_smoker, 
+                    driver_pref_animals = :driver_pref_animals, 
+                    driver_pref_custom = :driver_pref_custom
+                WHERE id = :id"
+            );
 
-        // J'exécute la requête en liant les valeurs.
-        // Les booléens sont convertis en 0 ou 1 pour la base de données.
-        return $stmt->execute([
-            ':driver_pref_smoker' => (int)$preferences['driver_pref_smoker'],
-            ':driver_pref_animals' => (int)$preferences['driver_pref_animals'],
-            ':driver_pref_custom' => $preferences['driver_pref_custom'],
-            ':id' => $userId
-        ]);
+            // J'exécute la requête en liant les valeurs.
+            // Les booléens sont convertis en 0 ou 1 pour la base de données.
+            $success = $stmt->execute([
+                ':driver_pref_smoker' => (int)($preferences['driver_pref_smoker'] ?? false),
+                ':driver_pref_animals' => (int)($preferences['driver_pref_animals'] ?? false),
+                ':driver_pref_custom' => htmlspecialchars(trim($preferences['driver_pref_custom'] ?? '')),
+                ':id' => $userId
+            ]);
+
+            if ($success) {
+                return ['success' => true, 'message' => 'Préférences mises à jour avec succès.'];
+            } else {
+                return ['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.', 'status' => 500];
+            }
+        } catch (PDOException $e) {
+            error_log("Error in DriverPreferenceService::updatePreferences: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour des préférences.', 'status' => 500];
+        }
     }
 }

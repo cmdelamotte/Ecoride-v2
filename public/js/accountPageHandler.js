@@ -274,17 +274,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 energy_type: document.getElementById('vehicle-energy-type') ? document.getElementById('vehicle-energy-type').value : ''
             };
 
-            try {
-                const response = await fetch('/account/add-vehicle', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(vehicleData)
-                });
+            console.log('Vehicle data being sent:', vehicleData); // Debug: Log data before sending
+
+try {
+    const response = await fetch('/account/add-vehicle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(vehicleData),
+        credentials: 'same-origin' // ← indispensable pour envoyer la session
+    });
+
+    console.log('Fetch Response:', response);
+
+                if (!response.ok) {
+                    // Si la réponse n'est pas OK (ex: 400, 500), on essaie quand même de lire le JSON pour les erreurs du backend
+                    const errorData = await response.json();
+                    console.error('Backend Error Response (not ok):', errorData); // Debug: Log backend error data
+                    let errorMessage = errorData.error || 'Erreur lors de l\'ajout du véhicule.';
+                    if (errorData.errors) {
+                        for (const key in errorData.errors) {
+                            errorMessage += `\n- ${key}: ${errorData.errors[key]}`;
+                        }
+                    }
+                    alert(errorMessage);
+                    return; // Arrête l'exécution ici
+                }
 
                 const data = await response.json();
+                console.log('Parsed JSON Data:', data); // Debug: Log parsed JSON data
 
                 if (data.success) {
                     alert(data.message);
@@ -302,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(errorMessage);
                 }
             } catch (error) {
+                console.error('Fetch Catch Error:', error); // Debug: Log fetch catch error
                 alert('Une erreur de communication est survenue.');
             }
             finally {

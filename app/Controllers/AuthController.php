@@ -51,7 +51,7 @@ class AuthController extends Controller
             // Le rôle fonctionnel est préfixé par 'ROLE_' et mis en majuscules pour correspondre aux attentes du routeur.
             $functionalRole = 'ROLE_' . strtoupper($user->getFunctionalRole());
             $_SESSION['user_roles'] = [$user->getSystemRole(), $functionalRole];
-
+            
             header('Location: /account');
             exit();
         } else {

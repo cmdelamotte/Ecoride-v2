@@ -28,16 +28,22 @@ class UserRoleService
      * @param string $newFunctionalRole Le nouveau rôle fonctionnel (ex: 'passenger', 'driver', 'passenger_driver').
      * @return bool True si la mise à jour a réussi, false sinon.
      */
-    public function updateFunctionalRole(int $userId, string $newFunctionalRole): bool
+    public function updateFunctionalRole(int $userId, string $newFunctionalRole): array
     {
         try {
             $stmt = $this->db->prepare("UPDATE users SET functional_role = :functional_role WHERE id = :user_id");
             $stmt->bindParam(':functional_role', $newFunctionalRole, PDO::PARAM_STR);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            return $stmt->execute();
+            $success = $stmt->execute();
+
+            if ($success) {
+                return ['success' => true, 'message' => 'Rôle mis à jour avec succès.', 'new_functional_role' => $newFunctionalRole];
+            } else {
+                return ['success' => false, 'error' => 'Erreur lors de la mise à jour du rôle.', 'status' => 500];
+            }
         } catch (PDOException $e) {
             error_log("Error in UserRoleService::updateFunctionalRole: " . $e->getMessage());
-            return false;
+            return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour du rôle.', 'status' => 500];
         }
     }
 }
