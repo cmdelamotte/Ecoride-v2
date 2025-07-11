@@ -60,7 +60,7 @@ class DriverPreferenceService
             } else {
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.', 'status' => 500];
             }
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             error_log("Error in DriverPreferenceService::updatePreferences: " . $e->getMessage());
             return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour des préférences.', 'status' => 500];
         }

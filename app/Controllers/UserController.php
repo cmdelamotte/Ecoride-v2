@@ -17,6 +17,7 @@ use App\Services\UserAccountService;
 use App\Services\AvatarService;
 use App\Helpers\AuthHelper;
 use App\Helpers\RequestHelper;
+use App\Helpers\VehicleHelper;
 
 /**
  * Classe UserController
@@ -55,11 +56,12 @@ class UserController extends Controller
     {
         $user = AuthHelper::getAuthenticatedUser();
         $vehicles = $this->vehicleService->findByUserId($user->getId());
+        $formattedVehicles = VehicleHelper::formatCollectionForApi($vehicles);
 
         $this->render('account/index', [
             'pageTitle' => 'Mon Compte',
             'user' => $user,
-            'vehicles' => $vehicles
+            'vehicles' => $formattedVehicles
         ]);
     }
 

@@ -58,11 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (vehicleBrandSelect) vehicleBrandSelect.value = vehicleData.brand_id || "";
 
                 // Pré-remplissage des autres champs (à adapter si les noms de champs changent)
-                document.getElementById('vehicle-model').value = vehicleData.model || ""; // Utilise vehicleData.model
-                document.getElementById('vehicle-color').value = vehicleData.color || "";
-                document.getElementById('vehicle-license-plate').value = vehicleData.registration_number || ""; // Utilise registration_number
-                document.getElementById('vehicle-registration-date').value = vehicleData.year || ""; // Utilise year
-                document.getElementById('vehicle-seats').value = vehicleData.available_seats || ""; // Utilise available_seats
+                document.getElementById('vehicle-model').value = vehicleData.model_name || ''; // Utilise vehicleData.model_name
+                document.getElementById('vehicle-color').value = vehicleData.color || '';
+                document.getElementById('vehicle-license-plate').value = vehicleData.license_plate || ''; // Utilise license_plate
+                document.getElementById('vehicle-registration-date').value = vehicleData.registration_date || ''; // Utilise registration_date
+                document.getElementById('vehicle-seats').value = vehicleData.passenger_capacity || ''; // Utilise passenger_capacity
                 document.getElementById('vehicle-electric').checked = vehicleData.is_electric || false;
 
             } else {
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="vehicle-item card card-body mb-2">
                 <p class="mb-1">
                     <span class="form-label">Marque :</span> <span class="vehicle-brand-display"></span><br>
-                    <span class="form-label">Modèle :</span> <span class="vehicle-model-display"></span> - 
+                    <span class="form-label">Modèle :</span> <span class="vehicle-model-display"></span>
                     <span class="form-label">Plaque :</span> <span class="vehicle-plate-display"></span>
                 </p>
                 <div class="mt-2">
@@ -115,23 +115,24 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         vehiclesData.forEach(vehicle => {
+            console.log('Processing vehicle:', vehicle); // Affiche l'objet véhicule complet dans la console
             const clone = template.content.cloneNode(true);
             const vehicleElement = clone.querySelector('.vehicle-item');
             if (vehicleElement) {
                 // Stocke les données complètes du véhicule dans les data-attributes pour l'édition future
                 vehicleElement.setAttribute('data-vehicle-id', vehicle.id);
                 vehicleElement.setAttribute('data-brand-id', vehicle.brand_id);
-                vehicleElement.setAttribute('data-model', vehicle.model);
-                vehicleElement.setAttribute('data-plate', vehicle.registration_number);
+                vehicleElement.setAttribute('data-model', vehicle.model_name);
+                vehicleElement.setAttribute('data-plate', vehicle.license_plate);
                 vehicleElement.setAttribute('data-color', vehicle.color || "");
-                vehicleElement.setAttribute('data-year', vehicle.year);
-                vehicleElement.setAttribute('data-seats', vehicle.available_seats);
+                vehicleElement.setAttribute('data-year', vehicle.registration_date);
+                vehicleElement.setAttribute('data-seats', vehicle.passenger_capacity);
                 // Note: is_electric n'est pas dans le modèle Vehicle pour l'instant, à ajouter si nécessaire
 
                 // Affiche les données
                 vehicleElement.querySelector('.vehicle-brand-display').textContent = vehicle.brand_name;
-                vehicleElement.querySelector('.vehicle-model-display').textContent = vehicle.model;
-                vehicleElement.querySelector('.vehicle-plate-display').textContent = vehicle.registration_number;
+                vehicleElement.querySelector('.vehicle-model-display').textContent = vehicle.model_name;
+                vehicleElement.querySelector('.vehicle-plate-display').textContent = vehicle.license_plate;
 
                 vehiclesList.appendChild(clone);
             }
