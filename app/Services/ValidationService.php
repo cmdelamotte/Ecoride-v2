@@ -101,4 +101,49 @@ class ValidationService
 
         return $errors;
     }
+
+    /**
+     * Valide les données d'un véhicule.
+     *
+     * @param array $data Les données du véhicule (brand_id, model, license_plate, passenger_capacity, registration_date).
+     * @return array Le tableau des erreurs. Vide s'il n'y a pas d'erreur.
+     */
+    public static function validateVehicleData(array $data): array
+    {
+        $errors = [];
+
+        // Validation de la marque
+        if (empty($data['brand_id'])) {
+            $errors['brand_id'] = 'La marque est requise.';
+        }
+
+        // Validation du modèle
+        if (empty($data['model'])) {
+            $errors['model'] = 'Le modèle est requis.';
+        }
+
+        // Validation de la plaque d'immatriculation
+        if (empty($data['license_plate'])) {
+            $errors['license_plate'] = "La plaque d'immatriculation est requise.";
+        }
+
+        // Validation du nombre de places
+        if (!isset($data['passenger_capacity']) || !filter_var($data['passenger_capacity'], FILTER_VALIDATE_INT) || $data['passenger_capacity'] < 1 || $data['passenger_capacity'] > 8) {
+            $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
+        }
+
+        // Validation de la date d'immatriculation
+        if (!empty($data['registration_date'])) {
+            try {
+                $registrationDate = new \DateTime($data['registration_date']);
+                if ($registrationDate > new \DateTime()) {
+                    $errors['registration_date'] = 'La date d\'immatriculation ne peut pas être dans le futur.';
+                }
+            } catch (\Exception $e) {
+                $errors['registration_date'] = 'Le format de la date d\'immatriculation est invalide.';
+            }
+        }
+
+        return $errors;
+    }
 }

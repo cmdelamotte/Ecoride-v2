@@ -65,4 +65,62 @@ class VehicleService
             return [];
         }
     }
+
+    /**
+     * Récupère un véhicule par son ID, avec le nom de la marque.
+     *
+     * @param int $vehicleId L'ID du véhicule.
+     * @return Vehicle|null L'objet Vehicle ou null s'il n'est pas trouvé.
+     */
+    public function findById(int $vehicleId): ?Vehicle
+    {
+        try {
+            $stmt = $this->db->prepare(
+                "SELECT v.*, b.name as brand_name 
+                 FROM Vehicles v
+                 JOIN Brands b ON v.brand_id = b.id
+                 WHERE v.id = :id"
+            );
+            $stmt->execute([':id' => $vehicleId]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$data) {
+                return null;
+            }
+
+            return $this->hydrateVehicle($data);
+        } catch (\PDOException $e) {
+            error_log("VehicleService::findById Error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Hydrate un objet Vehicle à partir d'un tableau de données.
+     *
+     * @param array $data Les données du véhicule.
+     * @return Vehicle L'objet Vehicle hydraté.
+     */
+    private function hydrateVehicle(array $data): Vehicle
+    {
+        $vehicle = new Vehicle();
+        $vehicle->setId($data['id'])
+                ->setUserId($data['user_id'])
+                ->setBrandId($data['brand_id'])
+                ->setModelName($data['model_name'])
+                ->setColor($data['color'])
+                ->setLicensePlate($data['license_plate'])
+                ->setRegistrationDate($data['registration_date'])
+                ->setPassengerCapacity($data['passenger_capacity'])
+                ->setIsElectric($data['is_electric'])
+                ->setEnergyType($data['energy_type'])
+                ->setCreatedAt($data['created_at'])
+                ->setUpdatedAt($data['updated_at']);
+
+        if (isset($data['brand_name'])) {
+            $vehicle->setBrandName($data['brand_name']); // Propriété virtuelle
+        }
+
+        return $vehicle;
+    }
 }
