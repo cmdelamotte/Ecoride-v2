@@ -66,7 +66,15 @@ class VehicleManagementService
             }
         } catch (\PDOException $e) {
             error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
-            return ['success' => false, 'error' => "Erreur interne du serveur lors de l'ajout du véhicule.", 'status' => 500];
+            // Vérifier si l'erreur est due à une contrainte d'unicité (SQLSTATE 23000)
+            if ($e->getCode() === '23000') {
+                // Pour MySQL, le message d'erreur contient souvent le nom de la contrainte ou de la colonne.
+                // On peut tenter de parser le message ou supposer que c'est la plaque d'immatriculation.
+                // Ici, on suppose que c'est la plaque d'immatriculation pour cet exemple.
+                return ['success' => false, 'errors' => ['license_plate' => 'Cette plaque d\'immatriculation est déjà enregistrée.'], 'status' => 409];
+            } else {
+                return ['success' => false, 'error' => "Erreur interne du serveur lors de l'ajout du véhicule.", 'status' => 500];
+            }
         }
     }
 
@@ -128,7 +136,13 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
+            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
+            // Vérifier si l'erreur est due à une contrainte de clé étrangère
+            if ($e->getCode() === '23000') { // SQLSTATE pour violation d'intégrité
+                return ['success' => false, 'error' => 'Impossible de supprimer ce véhicule car il est associé à un ou plusieurs trajets.', 'status' => 409]; // 409 Conflict
+            } else {
+                return ['success' => false, 'error' => 'Erreur interne du serveur lors de la suppression du véhicule.', 'status' => 500];
+            }
         }
     }
 
@@ -157,8 +171,16 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Erreur lors de la suppression du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            
-            return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
+            // Log l'erreur complète pour le débogage côté serveur
+            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
+
+            // Vérifier si l'erreur est due à une contrainte de clé étrangère (SQLSTATE 23000)
+            if ($e->getCode() === '23000') {
+                return ['success' => false, 'error' => 'Impossible de supprimer ce véhicule car il est associé à un ou plusieurs trajets.', 'status' => 409]; // 409 Conflict
+            } else {
+                // Pour les autres types d'erreurs PDO, renvoyer une erreur interne générique
+                return ['success' => false, 'error' => 'Erreur interne du serveur lors de la suppression du véhicule.', 'status' => 500];
+            }
         }
     }
 

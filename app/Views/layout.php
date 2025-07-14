@@ -25,7 +25,7 @@
     <!-- Section pour les scripts spécifiques à la page -->
     <?php if (isset($pageScripts)): ?>
         <?php foreach ($pageScripts as $script): ?>
-            <script src="<?= htmlspecialchars($script) ?>"></script>
+            <script type="module" src="<?= htmlspecialchars($script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
 </body>

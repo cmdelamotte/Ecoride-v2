@@ -19,7 +19,7 @@ $credits = htmlspecialchars($user->getCredits() ?? '0');
 $functionalRole = $user->getFunctionalRole(); // Pas besoin de htmlspecialchars pour la logique interne
 
 // J'ajoute le script spécifique à cette page.
-$pageScripts = ['/js/accountPageHandler.js'];
+$pageScripts = ['/js/pages/accountPage.js'];
 
 ?>
 
@@ -147,13 +147,13 @@ $pageScripts = ['/js/accountPageHandler.js'];
                                     <div class="col-12">
                                         <label for="vehicle-license-plate" class="form-label">Plaque d'immatriculation</label>
                                         <div class="form-input-custom d-flex align-items-center">
-                                            <input type="text" class="form-control-custom flex-grow-1" id="vehicle-license-plate" name="vehicle_license_plate" placeholder="Plaque d'immatriculation (Ex: AA-123-BB)" aria-label="Plaque d'immatriculation" required>
+                                            <input type="text" class="form-control-custom flex-grow-1" id="vehicle-license-plate" name="license_plate" placeholder="Plaque d'immatriculation (Ex: AA-123-BB)" aria-label="Plaque d'immatriculation" required>
                                         </div>
                                     </div>
                                     <div class="col-12">
                                         <label for="vehicle-registration-date" class="form-label">Date de 1ère immatriculation</label>
                                         <div class="form-input-custom d-flex align-items-center">
-                                            <input type="date" class="form-control-custom flex-grow-1" id="vehicle-registration-date" name="vehicle_registration_date" aria-label="Date de 1ère immatriculation">
+                                            <input type="date" class="form-control-custom flex-grow-1" id="vehicle-registration-date" name="registration_date" aria-label="Date de 1ère immatriculation">
                                         </div>
                                     </div>
                                     <div class="col-12">
