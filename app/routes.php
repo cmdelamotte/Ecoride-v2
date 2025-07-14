@@ -204,6 +204,14 @@ return [
         'auth' => true,
         'roles' => []
     ],
+    [
+        'path' => '/account/update-preferences',
+        'http_method' => 'POST', // Mise à jour des préférences chauffeur
+        'controller' => 'UserController',
+        'method' => 'updatePreferences',
+        'auth' => true,
+        'roles' => []
+    ],
     
 
     // ---------------------------------------------------------------------

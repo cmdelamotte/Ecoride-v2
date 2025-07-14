@@ -49,9 +49,9 @@ class DriverPreferenceService
             // J'exécute la requête en liant les valeurs.
             // Les booléens sont convertis en 0 ou 1 pour la base de données.
             $success = $stmt->execute([
-                ':driver_pref_smoker' => (int)($preferences['driver_pref_smoker'] ?? false),
-                ':driver_pref_animals' => (int)($preferences['driver_pref_animals'] ?? false),
-                ':driver_pref_custom' => htmlspecialchars(trim($preferences['driver_pref_custom'] ?? '')),
+                ':driver_pref_smoker' => (int)($preferences['pref_smoker'] ?? false),
+                ':driver_pref_animals' => (int)($preferences['pref_animals'] ?? false),
+                ':driver_pref_custom' => htmlspecialchars(trim($preferences['pref_custom'] ?? '')),
                 ':id' => $userId
             ]);
 
