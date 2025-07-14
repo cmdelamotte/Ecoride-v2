@@ -295,43 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('Fetch Response:', response);
 
-                if (!response.ok) {
-                    // Si la réponse n'est pas OK (ex: 400, 500), on essaie quand même de lire le JSON pour les erreurs du backend
-                    const errorData = await response.json();
-                    console.error('Backend Error Response (not ok):', errorData); // Debug: Log backend error data
-                    let errorMessage = errorData.error || 'Erreur lors de l\'ajout du véhicule.';
-                    if (errorData.errors) {
-                        for (const key in errorData.errors) {
-                            errorMessage += `\n- ${key}: ${errorData.errors[key]}`;
-                        }
-                    }
-                    alert(errorMessage);
-                    return; // Arrête l'exécution ici
-                }
-
-                const data = await response.json();
-                console.log('Parsed JSON Data:', data); // Debug: Log parsed JSON data
+                const data = await response.json(); // Always parse JSON
 
                 if (data.success) {
                     alert(data.message);
                     hideVehicleForm();
-                    // Recharger la liste des véhicules après l'ajout ou la modification
-                    // Pour l'instant, on recharge la page, mais on pourra faire mieux plus tard
-                    window.location.reload(); 
+                    window.location.reload();
                 } else {
                     let errorMessage = data.error || 'Erreur lors de l\'ajout du véhicule.';
                     if (data.errors) {
+                        // Prioritize specific field errors
+                        errorMessage = ''; // Reset message to build from specific errors
                         for (const key in data.errors) {
-                            errorMessage += `\n- ${key}: ${data.errors[key]}`;
+                            errorMessage += `${data.errors[key]}\n`; // Add newline for each error
                         }
+                        // Remove trailing newline if any
+                        errorMessage = errorMessage.trim();
                     }
-                    alert(errorMessage);
+                    alert(errorMessage || 'Une erreur est survenue.'); // Fallback if no specific errors
                 }
             } catch (error) {
-                console.error('Fetch Catch Error:', error); // Debug: Log fetch catch error
-                alert('Une erreur de communication est survenue.');
-            }
-            finally {
+                console.error('Fetch Catch Error:', error);
+                alert('Une erreur de communication est survenue. Veuillez vérifier votre connexion ou réessayer.');
+            } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enregistrer Véhicule';
             }
