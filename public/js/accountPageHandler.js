@@ -16,14 +16,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!vehicleBrandSelect) {
             return;
         }
-        vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Chargement des marques...</option>';
+        // Clear existing options
+        while (vehicleBrandSelect.firstChild) {
+            vehicleBrandSelect.removeChild(vehicleBrandSelect.firstChild);
+        }
+
+        const loadingOption = document.createElement('option');
+        loadingOption.value = "";
+        loadingOption.textContent = "Chargement des marques...";
+        loadingOption.selected = true;
+        loadingOption.disabled = true;
+        vehicleBrandSelect.appendChild(loadingOption);
+
         try {
             const response = await fetch('/api/brands');
             if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
             const data = await response.json();
 
+            // Clear loading message
+            while (vehicleBrandSelect.firstChild) {
+                vehicleBrandSelect.removeChild(vehicleBrandSelect.firstChild);
+            }
+
             if (data.success && data.brands && data.brands.length > 0) {
-                vehicleBrandSelect.innerHTML = ''; // Vide le message de chargement
                 const defaultOption = document.createElement('option');
                 defaultOption.value = "";
                 defaultOption.textContent = "Sélectionnez une marque...";
@@ -38,10 +53,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     vehicleBrandSelect.appendChild(option);
                 });
             } else {
-                vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Aucune marque disponible</option>';
+                const noBrandOption = document.createElement('option');
+                noBrandOption.value = "";
+                noBrandOption.textContent = "Aucune marque disponible";
+                noBrandOption.selected = true;
+                noBrandOption.disabled = true;
+                vehicleBrandSelect.appendChild(noBrandOption);
             }
         } catch (error) {
-            vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Erreur chargement marques</option>';
+            // Clear loading message
+            while (vehicleBrandSelect.firstChild) {
+                vehicleBrandSelect.removeChild(vehicleBrandSelect.firstChild);
+            }
+            const errorOption = document.createElement('option');
+            errorOption.value = "";
+            errorOption.textContent = "Erreur chargement marques";
+            errorOption.selected = true;
+            errorOption.disabled = true;
+            vehicleBrandSelect.appendChild(errorOption);
         }
     }
 
@@ -92,51 +121,62 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!vehiclesList) {
             return;
         }
-        vehiclesList.innerHTML = ''; // Vide la liste existante
+        // Clear existing list
+        while (vehiclesList.firstChild) {
+            vehiclesList.removeChild(vehiclesList.firstChild);
+        }
 
         if (!vehiclesData || vehiclesData.length === 0) {
-            vehiclesList.innerHTML = '<p class="text-muted">Vous n\'avez pas encore de véhicule enregistré.</p>';
+            const noVehicleMessage = document.createElement('p');
+            noVehicleMessage.classList.add('text-muted');
+            noVehicleMessage.textContent = 'Vous n\'avez pas encore de véhicule enregistré.';
+            vehiclesList.appendChild(noVehicleMessage);
             return;
         }
 
-        const template = document.createElement('template');
-        template.innerHTML = `
-            <div class="vehicle-item card card-body mb-2">
-                <p class="mb-1">
-                    <span class="form-label">Marque :</span> <span class="vehicle-brand-display"></span><br>
-                    <span class="form-label">Modèle :</span> <span class="vehicle-model-display"></span>
-                    <span class="form-label">Plaque :</span> <span class="vehicle-plate-display"></span>
-                </p>
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary edit-vehicle-btn">Modifier</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger mt-1 mt-sm-0 ms-sm-1 delete-vehicle-btn">Supprimer</button>
-                </div>
-            </div>
-        `;
-
         vehiclesData.forEach(vehicle => {
-            
-            const clone = template.content.cloneNode(true);
-            const vehicleElement = clone.querySelector('.vehicle-item');
-            if (vehicleElement) {
-                // Stocke les données complètes du véhicule dans les data-attributes pour l'édition future
-                vehicleElement.setAttribute('data-vehicle-id', vehicle.id);
-                vehicleElement.setAttribute('data-brand-id', vehicle.brand_id);
-                vehicleElement.setAttribute('data-model', vehicle.model_name);
-                vehicleElement.setAttribute('data-plate', vehicle.license_plate);
-                vehicleElement.setAttribute('data-color', vehicle.color || "");
-                vehicleElement.setAttribute('data-year', vehicle.registration_date);
-                vehicleElement.setAttribute('data-seats', vehicle.passenger_capacity);
-                vehicleElement.setAttribute('data-is-electric', vehicle.is_electric);
-                // Note: is_electric n'est pas dans le modèle Vehicle pour l'instant, à ajouter si nécessaire
+            const vehicleElement = document.createElement('div');
+            vehicleElement.classList.add('vehicle-item', 'card', 'card-body', 'mb-2');
 
-                // Affiche les données
-                vehicleElement.querySelector('.vehicle-brand-display').textContent = vehicle.brand_name;
-                vehicleElement.querySelector('.vehicle-model-display').textContent = vehicle.model_name;
-                vehicleElement.querySelector('.vehicle-plate-display').textContent = vehicle.license_plate;
+            // Stocke les données complètes du véhicule dans les data-attributes pour l'édition future
+            vehicleElement.setAttribute('data-vehicle-id', vehicle.id);
+            vehicleElement.setAttribute('data-brand-id', vehicle.brand_id);
+            vehicleElement.setAttribute('data-model', vehicle.model_name);
+            vehicleElement.setAttribute('data-plate', vehicle.license_plate);
+            vehicleElement.setAttribute('data-color', vehicle.color || "");
+            vehicleElement.setAttribute('data-year', vehicle.registration_date);
+            vehicleElement.setAttribute('data-seats', vehicle.passenger_capacity);
+            vehicleElement.setAttribute('data-is-electric', vehicle.is_electric);
 
-                vehiclesList.appendChild(clone);
-            }
+            // Création des éléments internes
+            const p = document.createElement('p');
+            p.classList.add('mb-1');
+            p.innerHTML = `
+                <span class="form-label">Marque :</span> <span class="vehicle-brand-display">${vehicle.brand_name}</span><br>
+                <span class="form-label">Modèle :</span> <span class="vehicle-model-display">${vehicle.model_name}</span>
+                <span class="form-label">Plaque :</span> <span class="vehicle-plate-display">${vehicle.license_plate}</span>
+            `;
+
+            const divButtons = document.createElement('div');
+            divButtons.classList.add('mt-2');
+
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'edit-vehicle-btn');
+            editButton.textContent = 'Modifier';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.classList.add('btn', 'btn-sm', 'btn-outline-danger', 'mt-1', 'mt-sm-0', 'ms-sm-1', 'delete-vehicle-btn');
+            deleteButton.textContent = 'Supprimer';
+
+            divButtons.appendChild(editButton);
+            divButtons.appendChild(deleteButton);
+
+            vehicleElement.appendChild(p);
+            vehicleElement.appendChild(divButtons);
+
+            vehiclesList.appendChild(vehicleElement);
         });
     }
 
