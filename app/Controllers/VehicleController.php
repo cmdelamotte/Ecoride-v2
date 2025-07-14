@@ -55,11 +55,7 @@ class VehicleController extends Controller
 
         $result = $this->vehicleManagementService->addVehicle($userId, $data);
 
-        if ($result['success']) {
-            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'vehicle' => $result['vehicle']]);
-        } else {
-            $this->jsonResponse(['success' => false, 'error' => $result['error'], 'errors' => $result['errors']], $result['status'] ?? 500);
-        }
+        $this->jsonResponse($result, $result['status'] ?? 200);
     }
 
     /**

@@ -108,7 +108,7 @@ class ValidationService
      * @param array $data Les données du véhicule (brand_id, model, license_plate, passenger_capacity, registration_date).
      * @return array Le tableau des erreurs. Vide s'il n'y a pas d'erreur.
      */
-    public static function validateVehicleData(array $data): array
+    public static function validateVehicleData(array $data, ?int $vehicleId = null): array
     {
         $errors = [];
 
@@ -125,6 +125,18 @@ class ValidationService
         // Validation de la plaque d'immatriculation
         if (empty($data['license_plate'])) {
             $errors['license_plate'] = "La plaque d'immatriculation est requise.";
+        } else {
+            // Validation de l'unicité de la plaque d'immatriculation
+            $db = \App\Core\Database::getInstance()->getConnection();
+            $stmt = $db->prepare("SELECT id FROM Vehicles WHERE license_plate = :license_plate" . ($vehicleId ? " AND id != :id" : ""));
+            $stmt->bindParam(':license_plate', $data['license_plate']);
+            if ($vehicleId) {
+                $stmt->bindParam(':id', $vehicleId, PDO::PARAM_INT);
+            }
+            $stmt->execute();
+            if ($stmt->fetch()) {
+                $errors['license_plate'] = 'Cette plaque d\'immatriculation est déjà enregistrée.';
+            }
         }
 
         // Validation du nombre de places
@@ -133,6 +145,7 @@ class ValidationService
         }
 
         // Validation de la date d'immatriculation
+        // Le champ peut être vide, mais s'il est rempli, il doit être valide et non dans le futur.
         if (!empty($data['registration_date'])) {
             try {
                 $registrationDate = new \DateTime($data['registration_date']);

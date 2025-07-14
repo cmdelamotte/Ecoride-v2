@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         vehiclesData.forEach(vehicle => {
-            console.log('Processing vehicle:', vehicle); // Affiche l'objet véhicule complet dans la console
+            
             const clone = template.content.cloneNode(true);
             const vehicleElement = clone.querySelector('.vehicle-item');
             if (vehicleElement) {
@@ -276,8 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 energy_type: document.getElementById('vehicle-energy-type') ? document.getElementById('vehicle-energy-type').value : ''
             };
 
-            console.log('Vehicle data being sent:', vehicleData); // Debug: Log data before sending
-
             const editingId = editingVehicleIdInput.value;
             const url = editingId ? `/api/vehicles/${editingId}/update` : '/api/vehicles';
             const method = 'POST'; // POST est utilisé pour l'ajout et la mise à jour
@@ -315,7 +313,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(errorMessage || 'Une erreur est survenue.'); // Fallback if no specific errors
                 }
             } catch (error) {
-                console.error('Fetch Catch Error:', error);
                 alert('Une erreur de communication est survenue. Veuillez vérifier votre connexion ou réessayer.');
             } finally {
                 submitButton.disabled = false;

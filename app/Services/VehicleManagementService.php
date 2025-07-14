@@ -32,10 +32,7 @@ class VehicleManagementService
      */
     public function addVehicle(int $userId, array $data): array
     {
-        error_log("addVehicle: Données reçues: " . print_r($data, true));
-        error_log("addVehicle: User ID: " . $userId);
-
-        $errors = \App\Services\ValidationService::validateVehicleData($data);
+        $errors = \App\Services\ValidationService::validateVehicleData($data, null);
 
         if (!empty($errors)) {
             error_log("addVehicle: Erreurs de validation: " . print_r($errors, true));
@@ -54,7 +51,7 @@ class VehicleManagementService
                 ':model_name' => htmlspecialchars(trim($data['model'])),
                 ':color' => htmlspecialchars(trim($data['color'] ?? '')),
                 ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
-                ':registration_date' => htmlspecialchars(trim($data['registration_date'] ?? '')),
+                ':registration_date' => empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])),
                 ':passenger_capacity' => $data['passenger_capacity'],
                 ':is_electric' => (int)($data['is_electric'] ?? false),
                 ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
@@ -65,7 +62,7 @@ class VehicleManagementService
                 $newVehicle = $this->vehicleService->findById($vehicleId);
                 return ['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle, 'status' => 201];
             } else {
-                return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.", 'status' => 500];
+                return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.', 'errors' => [], 'status' => 500"];
             }
         } catch (\PDOException $e) {
             error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
@@ -85,11 +82,7 @@ class VehicleManagementService
      */
     public function updateVehicle(int $vehicleId, int $userId, array $data): array
     {
-        error_log("updateVehicle: Vehicle ID: " . $vehicleId);
-        error_log("updateVehicle: User ID: " . $userId);
-        error_log("updateVehicle: Données reçues: " . print_r($data, true));
-
-        $errors = \App\Services\ValidationService::validateVehicleData($data);
+        $errors = \App\Services\ValidationService::validateVehicleData($data, $vehicleId);
 
         if (!empty($errors)) {
             error_log("updateVehicle: Erreurs de validation: " . print_r($errors, true));
@@ -121,7 +114,7 @@ class VehicleManagementService
                 ':model_name' => htmlspecialchars(trim($data['model'])),
                 ':color' => htmlspecialchars(trim($data['color'] ?? '')),
                 ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
-                ':registration_date' => htmlspecialchars(trim($data['registration_date'] ?? '')),
+                ':registration_date' => empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])),
                 ':passenger_capacity' => $data['passenger_capacity'],
                 ':is_electric' => (int)($data['is_electric'] ?? false),
                 ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
@@ -135,7 +128,6 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            error_log("VehicleManagementService::updateVehicle Error: " . $e->getMessage());
             return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
         }
     }
@@ -165,7 +157,7 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Erreur lors de la suppression du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
+            
             return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
         }
     }
