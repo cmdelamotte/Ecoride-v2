@@ -25,13 +25,40 @@ return [
         'auth' => false,
         'roles' => []
     ],
+    // ---------------------------------------------------------------------
+    // Routes pour la gestion des véhicules (VehicleController)
+    // ---------------------------------------------------------------------
     [
-        'path' => '/api/get_brands',
+        'path' => '/api/brands',
         'http_method' => 'GET', // API pour récupérer toutes les marques de véhicules
-        'controller' => 'BrandController',
+        'controller' => 'VehicleController',
         'method' => 'getBrands',
-        'auth' => false,
+        'auth' => true, // Nécessite d'être connecté pour voir les marques
         'roles' => []
+    ],
+    [
+        'path' => '/api/vehicles',
+        'http_method' => 'POST', // Ajout d'un véhicule
+        'controller' => 'VehicleController',
+        'method' => 'add',
+        'auth' => true,
+        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER']
+    ],
+    [
+        'path' => '/api/vehicles/{id}/update',
+        'http_method' => 'POST', // Mise à jour d'un véhicule
+        'controller' => 'VehicleController',
+        'method' => 'update',
+        'auth' => true,
+        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER']
+    ],
+    [
+        'path' => '/api/vehicles/{id}/delete',
+        'http_method' => 'POST', // Suppression d'un véhicule
+        'controller' => 'VehicleController',
+        'method' => 'delete',
+        'auth' => true,
+        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER']
     ],
     [
         'path' => '/contact',
@@ -177,14 +204,7 @@ return [
         'auth' => true,
         'roles' => []
     ],
-    [
-        'path' => '/account/add-vehicle',
-        'http_method' => 'POST', // Ajout d'un véhicule
-        'controller' => 'UserController',
-        'method' => 'addVehicle',
-        'auth' => true,
-        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER'] // Seuls les chauffeurs peuvent ajouter un véhicule
-    ],
+    
 
     // ---------------------------------------------------------------------
     // Routes pour la gestion des trajets (RideController)

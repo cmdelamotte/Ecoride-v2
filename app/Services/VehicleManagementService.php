@@ -39,6 +39,18 @@ class VehicleManagementService
             $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
         }
 
+        // Validation de la date d'immatriculation
+        if (!empty($data['registration_date'])) {
+            try {
+                $registrationDate = new \DateTime($data['registration_date']);
+                if ($registrationDate > new \DateTime()) {
+                    $errors['registration_date'] = 'La date d\'immatriculation ne peut pas être dans le futur.';
+                }
+            } catch (\Exception $e) {
+                $errors['registration_date'] = 'Le format de la date d\'immatriculation est invalide.';
+            }
+        }
+
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors, 'status' => 400];
         }
@@ -105,22 +117,112 @@ class VehicleManagementService
 
     /**
      * Met à jour un véhicule existant.
-     * (Logique à implémenter)
+     *
+     * @param int $vehicleId L'ID du véhicule à mettre à jour.
+     * @param int $userId L'ID de l'utilisateur (pour la vérification des droits).
+     * @param array $data Les nouvelles données du véhicule.
+     * @return array Résultat de l'opération.
      */
-    public function updateVehicle(int $vehicleId, array $data): bool
+    public function updateVehicle(int $vehicleId, int $userId, array $data): array
     {
-        // TODO: Implémenter la logique de mise à jour.
-        return true;
+        $errors = [];
+
+        // Validation (similaire à l'ajout)
+        if (empty($data['brand_id'])) $errors['brand_id'] = 'La marque est requise.';
+        if (empty($data['model'])) $errors['model'] = 'Le modèle est requis.';
+        if (empty($data['license_plate'])) $errors['license_plate'] = "La plaque d'immatriculation est requise.";
+        if (!isset($data['passenger_capacity']) || !filter_var($data['passenger_capacity'], FILTER_VALIDATE_INT) || $data['passenger_capacity'] < 1 || $data['passenger_capacity'] > 8) {
+            $errors['passenger_capacity'] = 'Le nombre de places est invalide (entre 1 et 8).';
+        }
+
+        // Validation de la date d'immatriculation
+        if (!empty($data['registration_date'])) {
+            try {
+                $registrationDate = new \DateTime($data['registration_date']);
+                if ($registrationDate > new \DateTime()) {
+                    $errors['registration_date'] = 'La date d\'immatriculation ne peut pas être dans le futur.';
+                }
+            } catch (\Exception $e) {
+                $errors['registration_date'] = 'Le format de la date d\'immatriculation est invalide.';
+            }
+        }
+
+        if (!empty($errors)) {
+            return ['success' => false, 'errors' => $errors, 'status' => 400];
+        }
+
+        try {
+            // Vérifier que le véhicule appartient bien à l'utilisateur
+            $vehicle = $this->findById($vehicleId);
+            if (!$vehicle || $vehicle->getUserId() !== $userId) {
+                return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
+            }
+
+            $stmt = $this->db->prepare(
+                "UPDATE Vehicles SET 
+                    brand_id = :brand_id, 
+                    model_name = :model_name, 
+                    color = :color, 
+                    license_plate = :license_plate, 
+                    registration_date = :registration_date, 
+                    passenger_capacity = :passenger_capacity, 
+                    is_electric = :is_electric, 
+                    energy_type = :energy_type
+                 WHERE id = :id"
+            );
+
+            $success = $stmt->execute([
+                ':brand_id' => $data['brand_id'],
+                ':model_name' => htmlspecialchars(trim($data['model'])),
+                ':color' => htmlspecialchars(trim($data['color'] ?? '')),
+                ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
+                ':registration_date' => htmlspecialchars(trim($data['registration_date'] ?? '')),
+                ':passenger_capacity' => $data['passenger_capacity'],
+                ':is_electric' => (int)($data['is_electric'] ?? false),
+                ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
+                ':id' => $vehicleId
+            ]);
+
+            if ($success) {
+                $updatedVehicle = $this->findById($vehicleId);
+                return ['success' => true, 'message' => 'Véhicule mis à jour avec succès.', 'vehicle' => $updatedVehicle, 'status' => 200];
+            } else {
+                return ['success' => false, 'error' => 'Erreur lors de la mise à jour du véhicule.', 'status' => 500];
+            }
+        } catch (\PDOException $e) {
+            error_log("VehicleManagementService::updateVehicle Error: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
+        }
     }
 
     /**
      * Supprime un véhicule.
-     * (Logique à implémenter)
+     *
+     * @param int $vehicleId L'ID du véhicule à supprimer.
+     * @param int $userId L'ID de l'utilisateur effectuant l'action (pour vérification).
+     * @return array Résultat de l'opération.
      */
-    public function deleteVehicle(int $vehicleId): bool
+    public function deleteVehicle(int $vehicleId, int $userId): array
     {
-        // TODO: Implémenter la logique de suppression.
-        return true;
+        try {
+            // D'abord, je vérifie que le véhicule appartient bien à l'utilisateur connecté.
+            $vehicle = $this->findById($vehicleId);
+            if (!$vehicle || $vehicle->getUserId() !== $userId) {
+                return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
+            }
+
+            $stmt = $this->db->prepare("DELETE FROM Vehicles WHERE id = :id");
+            $success = $stmt->execute(['id' => $vehicleId]);
+
+            if ($success) {
+                return ['success' => true, 'message' => 'Véhicule supprimé avec succès.', 'status' => 200];
+            } else {
+                return ['success' => false, 'error' => 'Erreur lors de la suppression du véhicule.', 'status' => 500];
+            }
+        } catch (\PDOException $e) {
+            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Erreur interne du serveur.', 'status' => 500];
+        }
     }
 
     /**

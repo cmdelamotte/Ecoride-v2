@@ -103,24 +103,7 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Gère l'ajout d'un nouveau véhicule pour l'utilisateur connecté.
-     * Le contrôleur se contente de recevoir la requête, d'appeler le service et de renvoyer la réponse.
-     */
-    public function addVehicle()
-    {
-        $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
-        $data = $requestData['data'];
-
-        $result = $this->vehicleManagementService->addVehicle($userId, $data);
-
-        if ($result['success']) {
-            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'vehicle' => $result['vehicle']]);
-        } else {
-            $this->jsonResponse(['success' => false, 'error' => $result['error'], 'errors' => $result['errors']], $result['status'] ?? 500);
-        }
-    }
+    
 
     /**
      * Gère l'affichage et la soumission du formulaire d'édition du profil utilisateur.

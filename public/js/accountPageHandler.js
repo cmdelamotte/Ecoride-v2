@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         vehicleBrandSelect.innerHTML = '<option value="" selected disabled>Chargement des marques...</option>';
         try {
-            const response = await fetch('/api/get_brands');
+            const response = await fetch('/api/brands');
             if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
             const data = await response.json();
 
@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 vehicleElement.setAttribute('data-color', vehicle.color || "");
                 vehicleElement.setAttribute('data-year', vehicle.registration_date);
                 vehicleElement.setAttribute('data-seats', vehicle.passenger_capacity);
+                vehicleElement.setAttribute('data-is-electric', vehicle.is_electric);
                 // Note: is_electric n'est pas dans le modèle Vehicle pour l'instant, à ajouter si nécessaire
 
                 // Affiche les données
@@ -277,9 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log('Vehicle data being sent:', vehicleData); // Debug: Log data before sending
 
-try {
-    const response = await fetch('/account/add-vehicle', {
-        method: 'POST',
+            const editingId = editingVehicleIdInput.value;
+            const url = editingId ? `/api/vehicles/${editingId}/update` : '/api/vehicles';
+            const method = 'POST'; // POST est utilisé pour l'ajout et la mise à jour
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -310,7 +315,7 @@ try {
                 if (data.success) {
                     alert(data.message);
                     hideVehicleForm();
-                    // Recharger la liste des véhicules après l'ajout
+                    // Recharger la liste des véhicules après l'ajout ou la modification
                     // Pour l'instant, on recharge la page, mais on pourra faire mieux plus tard
                     window.location.reload(); 
                 } else {
@@ -329,6 +334,54 @@ try {
             finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enregistrer Véhicule';
+            }
+        });
+    }
+
+    // Gestion des clics sur les boutons d'action des véhicules (Modifier/Supprimer)
+    if (vehiclesList) {
+        vehiclesList.addEventListener('click', async (event) => {
+            const target = event.target;
+            const vehicleItem = target.closest('.vehicle-item');
+            if (!vehicleItem) return;
+
+            const vehicleId = vehicleItem.dataset.vehicleId;
+
+            // Clic sur le bouton "Supprimer"
+            if (target.classList.contains('delete-vehicle-btn')) {
+                if (confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.')) {
+                    try {
+                        const response = await fetch(`/api/vehicles/${vehicleId}/delete`, {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json' },
+                            credentials: 'same-origin'
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            alert(data.message);
+                            vehicleItem.remove(); // Supprime l'élément de la liste
+                        } else {
+                            alert('Erreur : ' + data.error);
+                        }
+                    } catch (error) {
+                        alert('Une erreur de communication est survenue.');
+                    }
+                }
+            }
+
+            // Clic sur le bouton "Modifier"
+            if (target.classList.contains('edit-vehicle-btn')) {
+                const vehicleData = {
+                    id: vehicleId,
+                    brand_id: vehicleItem.dataset.brandId,
+                    model_name: vehicleItem.dataset.model,
+                    color: vehicleItem.dataset.color,
+                    license_plate: vehicleItem.dataset.plate,
+                    registration_date: vehicleItem.dataset.year,
+                    passenger_capacity: vehicleItem.dataset.seats,
+                    is_electric: vehicleItem.dataset.isElectric === 'true'
+                };
+                showVehicleForm(true, vehicleData);
             }
         });
     }
