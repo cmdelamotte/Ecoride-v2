@@ -48,5 +48,8 @@ export const apiClient = {
     updateDriverPreferences: (preferences) => callApi('/account/update-preferences', 'POST', preferences),
     deleteAccount: () => callApi('/account/delete', 'POST'),
 
-    // Ajoutez d'autres méthodes API ici au fur et à mesure du refactoring
+    // Trajets
+    searchRides: (params) => callApi(`/api/rides/search?${params}`),
+
+    // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

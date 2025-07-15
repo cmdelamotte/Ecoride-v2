@@ -215,24 +215,29 @@ return [
     
 
     // ---------------------------------------------------------------------
-    // Routes pour la gestion des trajets (RideController)
+    // Routes pour la recherche de trajets (RideSearchController)
     // ---------------------------------------------------------------------
     [
-        'path' => '/rides/search',
-        'http_method' => 'GET', // Affichage du formulaire de recherche et/ou des résultats
-        'controller' => 'RideController',
-        'method' => 'searchForm', // Renommé pour clarté
-        'auth' => false, // La recherche peut être faite par des non-authentifiés
-        'roles' => []
-    ],
-    [
-        'path' => '/rides/search',
-        'http_method' => 'POST', // Soumission du formulaire de recherche
-        'controller' => 'RideController',
-        'method' => 'search',
+        'path' => '/rides-search',
+        'http_method' => 'GET', // Affiche la page de recherche de trajets (HTML, CSS, JS)
+        'controller' => 'RideSearchController',
+        'method' => 'searchPage',
         'auth' => false,
         'roles' => []
     ],
+    [
+        'path' => '/api/rides/search',
+        'http_method' => 'GET', // Point de terminaison de l'API pour effectuer la recherche
+        'controller' => 'RideSearchController',
+        'method' => 'searchApi',
+        'auth' => false,
+        'roles' => []
+    ],
+
+    // ---------------------------------------------------------------------
+    // Routes pour la gestion des trajets (RideController)
+    // ---------------------------------------------------------------------
+
     [
         'path' => '/rides/publish',
         'http_method' => 'GET', // Affichage du formulaire de publication de trajet
