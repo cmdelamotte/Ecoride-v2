@@ -46,7 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     renderPaginationControls(data.page, data.totalPages, queryParams);
                 } else {
-                    noResultsMessage.textContent = data.message || "Aucun trajet trouvé.";
+                    let messageHtml = data.message || "Aucun trajet ne correspond à vos critères pour la date sélectionnée.";
+                    if (data.nextAvailableDate) {
+                        const formattedNextDate = new Date(data.nextAvailableDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        messageHtml += `<br>Le prochain trajet disponible pour cet itinéraire est le <strong>${formattedNextDate}</strong>.`;
+                        
+                        const searchNextDateButton = createElement('button', ['btn', 'primary-btn', 'btn-sm', 'mt-3'], {}, `Rechercher pour le ${formattedNextDate}`);
+                        searchNextDateButton.onclick = () => {
+                            const newSearchParams = new URLSearchParams(window.location.search);
+                            newSearchParams.set('date', data.nextAvailableDate);
+                            newSearchParams.set('page', '1');
+                            window.history.pushState({ date: data.nextAvailableDate }, "", `?${newSearchParams.toString()}`);
+                            fetchAndDisplayRides(); 
+                        };
+                        
+                        clearChildren(noResultsMessage);
+                        const messageParagraph = createElement('p', [], {}, '');
+                        messageParagraph.innerHTML = messageHtml;
+                        noResultsMessage.appendChild(messageParagraph);
+                        noResultsMessage.appendChild(searchNextDateButton);
+                    } else {
+                         noResultsMessage.innerHTML = messageHtml;
+                    }
                     noResultsMessage.classList.remove('d-none');
                 }
             } else {

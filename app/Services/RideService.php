@@ -130,7 +130,44 @@ class RideService
             } else {
                 // 5. Aucun trajet trouvé, chercher la prochaine date disponible
                 $response['message'] = "Aucun trajet trouvé pour le " . (new DateTime($dateStr))->format('d/m/Y') . ".";
-                // ... (Logique de recherche de la prochaine date à implémenter ici)
+                
+                $nextDateQueryParams = [];
+                $nextDateWhereConditions = ["r.ride_status = 'planned'"];
+
+                // Critères de base (villes, places)
+                if (!empty($departureCity)) {
+                    $nextDateWhereConditions[] = "LOWER(r.departure_city) LIKE LOWER(:departure_city)";
+                    $nextDateQueryParams[':departure_city'] = '%' . $departureCity . '%';
+                }
+                if (!empty($arrivalCity)) {
+                    $nextDateWhereConditions[] = "LOWER(r.arrival_city) LIKE LOWER(:arrival_city)";
+                    $nextDateQueryParams[':arrival_city'] = '%' . $arrivalCity . '%';
+                }
+
+                // Chercher à partir de demain
+                $startDateForNextSearch = (new DateTime($dateStr))->modify('+1 day');
+                $nextDateWhereConditions[] = "r.departure_time >= :start_date_next_search";
+                $nextDateQueryParams[':start_date_next_search'] = $startDateForNextSearch->format('Y-m-d H:i:s');
+
+                $nextDateWhereSql = "WHERE " . implode(" AND ", $nextDateWhereConditions);
+
+                $sqlNextDate = "SELECT DATE(r.departure_time) as next_ride_date
+                                FROM Rides r
+                                LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                                {$nextDateWhereSql}
+                                GROUP BY r.id, r.seats_offered
+                                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
+                                ORDER BY r.departure_time ASC
+                                LIMIT 1";
+
+                $stmtNextDate = $this->pdo->prepare($sqlNextDate);
+                $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));
+                $nextAvailable = $stmtNextDate->fetch(PDO::FETCH_ASSOC);
+
+                if ($nextAvailable && isset($nextAvailable['next_ride_date'])) {
+                    $response['nextAvailableDate'] = $nextAvailable['next_ride_date'];
+                }
+
                 $response['success'] = true; // La requête a réussi, même sans résultat
             }
 
