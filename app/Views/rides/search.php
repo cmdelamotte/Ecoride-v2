@@ -210,34 +210,38 @@
                     </div>
                     <div class="collapse mt-3" id="detailsCollapseRide_TEMPLATE_ID">
                         <div class="card card-body">
-                            <div class="ride-details-content row">
-                                <div class="col-md-12 adresses-container-details mb-2">
-                                    <h5 class="mt-3 mb-2 form-label">Points de RDV</h5>
-                                    <p class="mb-1"><span class="form-label">Adresse de départ : </span><span class="ride-departure-address-details"></span></p>
-                                    <p class="mb-1"><span class="form-label">Adresse d'arrivée : </span><span class="ride-arrival-address-details"></span></p>
-                                </div>
-                                <hr>
-                                <div class="col-md-6 driver-reviews-container">
-                                    <h5 class="mb-2 form-label">Avis sur le conducteur</h5>
-                                </div>
-
-                                <div class="col-md-6 vehicle-info-container">
-                                    <h5 class="mb-2 form-label">Infos Véhicule</h5>
-                                    <p class="mb-1"><span class="form-label">Modèle : </span><span class="ride-car-model"></span></p>
-                                    <p class="mb-1"><span class="form-label">Année : </span><span class="ride-car-registration-year"></span></p>
-                                    <p class="mb-1"><span class="form-label">Énergie : </span><span class="ride-car-energy"></span></p>
-                                </div>
-                                <div class="driver-preferences-container mt-3">
-                                    <h5 class="mb-2 form-label">Préférences Conducteur</h5>
-                                    <div class="driver-preferences-text">
+                            <div class="loading-details-message text-center py-3">Chargement des détails...</div>
+                            <div class="error-details-message alert alert-danger d-none"></div>
+                            <div class="ride-details-content-wrapper d-none">
+                                <div class="ride-details-content row">
+                                    <div class="col-md-12 adresses-container-details mb-2">
+                                        <h5 class="mt-3 mb-2 form-label">Points de RDV</h5>
+                                        <p class="mb-1"><span class="form-label">Adresse de départ : </span><span class="ride-departure-address-details"></span></p>
+                                        <p class="mb-1"><span class="form-label">Adresse d'arrivée : </span><span class="ride-arrival-address-details"></span></p>
                                     </div>
-                                    <p class="small text-muted no-prefs-message d-none">Préférences non spécifiées.</p>
-                                </div>
-                                <hr class="my-3">
-                                <div class="text-center">
-                                    <button class="btn primary-btn participate-button" type="button" data-bs-toggle="modal" data-bs-target="#confirmationModal">
-                                        <i class="bi bi-check-circle me-1"></i> Participer
-                                    </button>
+                                    <hr>
+                                    <div class="col-md-6 driver-reviews-container">
+                                        <h5 class="mb-2 form-label">Avis sur le conducteur</h5>
+                                    </div>
+
+                                    <div class="col-md-6 vehicle-info-container">
+                                        <h5 class="mb-2 form-label">Infos Véhicule</h5>
+                                        <p class="mb-1"><span class="form-label">Modèle : </span><span class="ride-car-model"></span></p>
+                                        <p class="mb-1"><span class="form-label">Année : </span><span class="ride-car-registration-year"></span></p>
+                                        <p class="mb-1"><span class="form-label">Énergie : </span><span class="ride-car-energy"></span></p>
+                                    </div>
+                                    <div class="driver-preferences-container mt-3">
+                                        <h5 class="mb-2 form-label">Préférences Conducteur</h5>
+                                        <div class="driver-preferences-text">
+                                        </div>
+                                        <p class="small text-muted no-prefs-message d-none">Préférences non spécifiées.</p>
+                                    </div>
+                                    <hr class="my-3">
+                                    <div class="text-center">
+                                        <button class="btn primary-btn participate-button" type="button" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                                            <i class="bi bi-check-circle me-1"></i> Participer
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

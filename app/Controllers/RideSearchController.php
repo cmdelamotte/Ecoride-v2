@@ -57,4 +57,26 @@ class RideSearchController extends Controller
             'pageTitle' => 'Rechercher un trajet'
         ]);
     }
+
+    /**
+     * Gère l'appel API pour récupérer les détails d'un trajet spécifique.
+     *
+     * @param int $id L'ID du trajet.
+     */
+    public function detailsApi(int $id)
+    {
+        $rideDetails = $this->rideService->findRideDetailsById($id);
+
+        if ($rideDetails) {
+            $this->jsonResponse([
+                'success' => true,
+                'details' => $rideDetails
+            ]);
+        } else {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Trajet non trouvé ou erreur lors de la récupération des détails.'
+            ], 404);
+        }
+    }
 }

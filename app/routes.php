@@ -233,6 +233,14 @@ return [
         'auth' => false,
         'roles' => []
     ],
+    [
+        'path' => '/api/rides/{id}/details',
+        'http_method' => 'GET', // API pour récupérer les détails d'un trajet spécifique
+        'controller' => 'RideSearchController',
+        'method' => 'detailsApi',
+        'auth' => false, // Les détails peuvent être vus par des non-authentifiés
+        'roles' => []
+    ],
 
     // ---------------------------------------------------------------------
     // Routes pour la gestion des trajets (RideController)
