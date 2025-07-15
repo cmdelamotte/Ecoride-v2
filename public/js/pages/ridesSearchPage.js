@@ -25,13 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        loadingIndicator.classList.remove('d-none');
-        clearChildren(rideResultsContainer);
-        clearChildren(noResultsMessage);
-        noResultsMessage.classList.add('d-none');
-        clearChildren(paginationContainer);
-
         const queryParams = new URLSearchParams(window.location.search);
+
+        // Vérifier si les paramètres de recherche principaux sont présents
+        if (!queryParams.has('departure_city') || !queryParams.has('arrival_city') || !queryParams.has('date')) {
+            noResultsMessage.innerHTML = "Veuillez utiliser le formulaire ci-dessus pour rechercher un trajet.";
+            noResultsMessage.classList.remove('d-none');
+            return; // Ne pas lancer de recherche si les critères de base sont absents
+        }
+
+        loadingIndicator.classList.remove('d-none');
 
         try {
             const data = await apiClient.searchRides(queryParams.toString());

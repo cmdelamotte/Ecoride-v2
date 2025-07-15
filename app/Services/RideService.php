@@ -33,6 +33,21 @@ class RideService
         $departureCity = trim($criteria['departure_city'] ?? '');
         $arrivalCity = trim($criteria['arrival_city'] ?? '');
         $dateStr = trim($criteria['date'] ?? '');
+
+        // Vérification des paramètres obligatoires
+        if (empty($departureCity) || empty($arrivalCity) || empty($dateStr)) {
+            return [
+                'success' => false,
+                'message' => 'Les critères de recherche (départ, arrivée, date) sont obligatoires.',
+                'rides' => [],
+                'totalRides' => 0,
+                'page' => 1,
+                'limit' => 5,
+                'totalPages' => 0,
+                'nextAvailableDate' => null
+            ];
+        }
+
         $seatsNeeded = filter_var($criteria['seats'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 1]]);
         $page = filter_var($criteria['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 1]]);
         $limit = filter_var($criteria['limit'] ?? 5, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 5]]);
