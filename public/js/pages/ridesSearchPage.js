@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Ne pas lancer de recherche si les critères de base sont absents
         }
 
+        // Nettoyer les résultats précédents
+        clearChildren(rideResultsContainer);
+        clearChildren(noResultsMessage);
+        noResultsMessage.classList.add('d-none');
+        clearChildren(paginationContainer);
+
         loadingIndicator.classList.remove('d-none');
 
         try {
