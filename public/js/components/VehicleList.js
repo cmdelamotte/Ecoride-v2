@@ -91,11 +91,20 @@ export class VehicleList {
 
             // Création des éléments internes
             const p = createElement('p', ['mb-1']);
-            p.innerHTML = `
-                <span class="form-label">Marque :</span> <span class="vehicle-brand-display">${vehicle.brand_name}</span><br>
-                <span class="form-label">Modèle :</span> <span class="vehicle-model-display">${vehicle.model_name}</span>
-                <span class="form-label">Plaque :</span> <span class="vehicle-plate-display">${vehicle.license_plate}</span>
-            `;
+
+            p.appendChild(createElement('span', ['form-label'], {}, 'Marque :'));
+            p.appendChild(document.createTextNode(' '));
+            p.appendChild(createElement('span', ['vehicle-brand-display'], {}, vehicle.brand_name));
+            p.appendChild(createElement('br'));
+
+            p.appendChild(createElement('span', ['form-label'], {}, 'Modèle :'));
+            p.appendChild(document.createTextNode(' '));
+            p.appendChild(createElement('span', ['vehicle-model-display'], {}, vehicle.model_name));
+            p.appendChild(createElement('br'));
+
+            p.appendChild(createElement('span', ['form-label'], {}, 'Plaque :'));
+            p.appendChild(document.createTextNode(' '));
+            p.appendChild(createElement('span', ['vehicle-plate-display'], {}, vehicle.license_plate));
 
             const divButtons = createElement('div', ['mt-2']);
 

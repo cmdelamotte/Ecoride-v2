@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Vérifier si les paramètres de recherche principaux sont présents
         if (!queryParams.has('departure_city') || !queryParams.has('arrival_city') || !queryParams.has('date')) {
-            noResultsMessage.innerHTML = "Veuillez utiliser le formulaire ci-dessus pour rechercher un trajet.";
+            noResultsMessage.textContent = "Veuillez utiliser le formulaire ci-dessus pour rechercher un trajet.";
             noResultsMessage.classList.remove('d-none');
             return; // Ne pas lancer de recherche si les critères de base sont absents
         }
@@ -66,10 +66,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     pagination.render(data.page, data.totalPages, queryParams);
                 } else {
-                    let messageHtml = data.message || "Aucun trajet ne correspond à vos critères pour la date sélectionnée.";
+                    let messageText = data.message || "Aucun trajet ne correspond à vos critères pour la date sélectionnée.";
                     if (data.nextAvailableDate) {
                         const formattedNextDate = new Date(data.nextAvailableDate + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        messageHtml += `<br>Le prochain trajet disponible pour cet itinéraire est le <strong>${formattedNextDate}</strong>.`;
+                        
+                        clearChildren(noResultsMessage);
+                        const messageParagraph = createElement('p', [], {}, messageText);
+                        noResultsMessage.appendChild(messageParagraph);
+
+                        const nextDateParagraph = createElement('p', [], {});
+                        nextDateParagraph.appendChild(document.createTextNode("Le prochain trajet disponible pour cet itinéraire est le "));
+                        const strongElement = createElement('strong', [], {}, formattedNextDate);
+                        nextDateParagraph.appendChild(strongElement);
+                        nextDateParagraph.appendChild(document.createTextNode("."));
+                        noResultsMessage.appendChild(nextDateParagraph);
                         
                         const searchNextDateButton = createElement('button', ['btn', 'primary-btn', 'btn-sm', 'mt-3'], {}, `Rechercher pour le ${formattedNextDate}`);
                         searchNextDateButton.onclick = () => {
@@ -79,14 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.history.pushState({ date: data.nextAvailableDate }, "", `?${newSearchParams.toString()}`);
                             fetchAndDisplayRides(); 
                         };
-                        
-                        clearChildren(noResultsMessage);
-                        const messageParagraph = createElement('p', [], {}, '');
-                        messageParagraph.innerHTML = messageHtml;
-                        noResultsMessage.appendChild(messageParagraph);
                         noResultsMessage.appendChild(searchNextDateButton);
                     } else {
-                         noResultsMessage.innerHTML = messageHtml;
+                         noResultsMessage.textContent = messageText;
                     }
                     noResultsMessage.classList.remove('d-none');
                 }
