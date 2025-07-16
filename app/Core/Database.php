@@ -74,17 +74,29 @@ class Database
      * @param string $className Le nom de la classe dans laquelle "hydrater" le résultat.
      * @return object|null Un objet de la classe spécifiée, ou null si aucun résultat.
      */
-    public function fetchOne(string $query, array $params = [], string $className = 'stdClass'): ?object
+    public function fetchOne(string $query, array $params = [], mixed $fetchMode = 'stdClass'): mixed
     {
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
-            
-            // J'utilise FETCH_CLASS pour que PDO crée et peuple directement l'objet.
-            // C'est propre, performant et ça évite l'hydratation manuelle.
-            $stmt->setFetchMode(PDO::FETCH_CLASS, $className);
+
+            // Je gère différents modes de récupération.
+            if (is_int($fetchMode)) { // Si c'est une constante PDO::FETCH_*
+                $stmt->setFetchMode($fetchMode);
+            } elseif (is_string($fetchMode)) { // Si c'est un nom de classe
+                $stmt->setFetchMode(PDO::FETCH_CLASS, $fetchMode);
+            } else {
+                // Par défaut, ou si un mode non géré est passé, je reviens à FETCH_ASSOC.
+                $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            }
             
             $result = $stmt->fetch();
+            
+            // Si le mode est FETCH_COLUMN, le résultat est scalaire, sinon c'est un objet ou un tableau.
+            if ($fetchMode === PDO::FETCH_COLUMN) {
+                return $result;
+            }
+
             return $result ?: null;
 
         } catch (PDOException $e) {
@@ -102,18 +114,45 @@ class Database
      * @param string $className Le nom de la classe dans laquelle "hydrater" chaque objet du résultat.
      * @return array Un tableau d'objets de la classe spécifiée. Peut être vide.
      */
-    public function fetchAll(string $query, array $params = [], string $className = 'stdClass'): array
+    public function fetchAll(string $query, array $params = [], mixed $fetchMode = 'stdClass'): array
     {
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
 
-            // Comme pour fetchOne, mais fetchAll retourne un tableau de tous les objets trouvés.
-            return $stmt->fetchAll(PDO::FETCH_CLASS, $className);
+            // Je gère différents modes de récupération pour fetchAll.
+            if (is_int($fetchMode)) { // Si c'est une constante PDO::FETCH_*
+                return $stmt->fetchAll($fetchMode);
+            } elseif (is_string($fetchMode) && class_exists($fetchMode)) { // Si c'est un nom de classe valide
+                return $stmt->fetchAll(PDO::FETCH_CLASS, $fetchMode);
+            } else {
+                // Par défaut, ou si un mode non géré est passé, je reviens à FETCH_ASSOC.
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
 
         } catch (PDOException $e) {
             error_log("Database fetchAll error: " . $e->getMessage());
             return []; // En cas d'erreur, je retourne un tableau vide.
+        }
+    }
+
+    /**
+     * Exécute une requête SELECT et retourne la valeur de la première colonne du premier enregistrement.
+     * Idéal pour les requêtes COUNT(), SUM(), ou pour récupérer une seule valeur scalaire.
+     *
+     * @param string $query La requête SQL avec des placeholders nommés.
+     * @param array $params Les paramètres à lier à la requête.
+     * @return mixed La valeur de la colonne, ou null si aucun résultat.
+     */
+    public function fetchColumn(string $query, array $params = []): mixed
+    {
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log("Database fetchColumn error: " . $e->getMessage());
+            return null;
         }
     }
 

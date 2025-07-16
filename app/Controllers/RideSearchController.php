@@ -41,13 +41,17 @@ class RideSearchController extends Controller
 
         // Récupère tous les paramètres GET
         $filters = $_GET;
-        error_log("RideSearchController: Filtres reçus: " . print_r($filters, true)); // Log temporaire pour le débogage
 
         // Appelle le service pour effectuer la recherche
         $results = $this->searchFilterService->searchRides($filters);
 
         // Envoie la réponse JSON
         if ($results['success']) {
+            // Si la recherche a réussi et qu'il y a des trajets (objets Ride),
+            // je les formate pour le JavaScript.
+            if (!empty($results['rides'])) {
+                $results['rides'] = RideHelper::formatCollectionForSearchApi($results['rides']);
+            }
             $this->jsonResponse($results, 200);
         } else {
             // Si le service retourne une erreur de validation, utilise le code 400 Bad Request

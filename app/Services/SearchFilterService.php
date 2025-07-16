@@ -3,6 +3,10 @@
 namespace App\Services;
 
 use App\Core\Database;
+use App\Models\Ride;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\Brand;
 use PDO;
 use DateTime;
 use Exception;
@@ -14,24 +18,22 @@ use Exception;
  */
 class SearchFilterService
 {
-    private PDO $pdo;
+    private Database $db;
 
     /**
      * Constructeur du service.
-     *
-     * @param Database $db L'instance de la base de données.
      */
-    public function __construct(Database $db)
+    public function __construct()
     {
-        $this->pdo = $db->getConnection();
+        $this->db = Database::getInstance();
     }
 
     /**
      * Recherche des trajets en fonction des filtres fournis.
      *
      * @param array $filters Un tableau associatif des filtres de recherche (ex: departure_city, arrival_city, date, seats, maxPrice, etc.).
-     * @return array Un tableau contenant les trajets trouvés, le nombre total de trajets,
-     *               les informations de pagination et la prochaine date disponible si aucun trajet n'est trouvé pour la date exacte.
+     * @return array Un tableau contenant les trajets trouvés (sous forme d'objets Ride),
+     *               le nombre total de trajets, les informations de pagination et la prochaine date disponible.
      */
     public function searchRides(array $filters): array
     {
@@ -97,13 +99,11 @@ class SearchFilterService
             $whereConditions[] = "r.price_per_seat <= :maxPrice";
             $queryParams[':maxPrice'] = $maxPrice;
         }
-        if ($ecoOnly === true) { // Si le filtre est explicitement défini à true
+        if ($ecoOnly === true) { 
             $whereConditions[] = "v.is_electric = 1";
         }
         if ($maxDuration !== null && $maxDuration > 0) {
-            error_log("DEBUG maxDuration: " . $maxDuration);
             $maxDurationMinutes = $maxDuration * 60;
-            error_log("DEBUG maxDurationMinutes: " . $maxDurationMinutes);
             $whereConditions[] = "TIMESTAMPDIFF(MINUTE, r.departure_time, r.estimated_arrival_time) <= :maxDurationMinutes";
             $queryParams[':maxDurationMinutes'] = $maxDurationMinutes;
         }
@@ -122,33 +122,30 @@ class SearchFilterService
 
         try {
             // 3. Compter le nombre total de résultats pour la pagination
-            $countSql = "SELECT COUNT(*) FROM (
-                SELECT r.id FROM Rides r
+            $countSql = "SELECT COUNT(DISTINCT r.id) FROM Rides r
                 JOIN Users u ON r.driver_id = u.id
                 JOIN Vehicles v ON r.vehicle_id = v.id
                 LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                 {$baseWhereSql}
                 GROUP BY r.id, r.seats_offered
-                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
-            ) AS SubQuery";
+                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed";
 
-            $stmtCount = $this->pdo->prepare($countSql);
-            $stmtCount->execute(array_merge($queryParams, [':seats_needed' => $seatsNeeded]));
-            $totalRides = (int) $stmtCount->fetchColumn();
+            $totalRides = $this->db->fetchColumn(
+                $countSql,
+                array_merge($queryParams, [':seats_needed' => $seatsNeeded])
+            );
 
             $response['totalRides'] = $totalRides;
             $response['totalPages'] = ($limit > 0 && $totalRides > 0) ? ceil($totalRides / $limit) : 0;
 
             if ($totalRides > 0) {
-                // 4. Récupérer les trajets pour la page actuelle
+                // 4. Récupérer les trajets pour la page actuelle avec toutes les données nécessaires
                 $ridesSql = "SELECT
-                                r.id as ride_id, r.departure_city, r.arrival_city, r.departure_address, r.arrival_address, 
-                                r.departure_time, r.estimated_arrival_time, r.price_per_seat,
-                                v.is_electric as is_eco_ride, 
-                                u.username as driver_username, u.profile_picture_path as driver_photo,
-                                u.driver_pref_smoker, u.driver_pref_animals, u.driver_pref_custom,
-                                v.model_name as vehicle_model, br.name as vehicle_brand,
-                                v.energy_type as vehicle_energy, v.registration_date as vehicle_registration_date,
+                                r.id as ride_id, r.driver_id, r.vehicle_id, r.departure_city, r.arrival_city, r.departure_address, r.arrival_address, 
+                                r.departure_time, r.estimated_arrival_time, r.price_per_seat, r.seats_offered, r.ride_status, r.driver_message, r.is_eco_ride,
+                                u.id as driver_user_id, u.username as driver_username, u.profile_picture_path as driver_photo, u.driver_pref_smoker, u.driver_pref_animals, u.driver_pref_custom, u.driver_rating,
+                                v.id as vehicle_id_v, v.model_name as vehicle_model, v.color as vehicle_color, v.license_plate as vehicle_license_plate, v.registration_date as vehicle_registration_date, v.passenger_capacity as vehicle_capacity, v.is_electric as vehicle_is_electric, v.energy_type as vehicle_energy_type, v.brand_id as vehicle_brand_id,
+                                br.id as brand_id_b, br.name as vehicle_brand_name,
                                 (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) as seats_available
                             FROM Rides r
                             JOIN Users u ON r.driver_id = u.id
@@ -156,30 +153,77 @@ class SearchFilterService
                             JOIN Brands br ON v.brand_id = br.id
                             LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                             {$baseWhereSql}
-                            GROUP BY r.id, r.departure_city, r.arrival_city, r.departure_address, r.arrival_address,
-                                    r.departure_time, r.estimated_arrival_time, r.price_per_seat, r.seats_offered,
-                                    v.is_electric, u.username, u.profile_picture_path, u.driver_pref_smoker, u.driver_pref_animals, u.driver_pref_custom,
-                                    v.model_name, v.energy_type, v.registration_date, br.name
+                            GROUP BY r.id, r.driver_id, r.vehicle_id, r.departure_city, r.arrival_city, r.departure_address, r.arrival_address,
+                                    r.departure_time, r.estimated_arrival_time, r.price_per_seat, r.seats_offered, r.ride_status, r.driver_message, r.is_eco_ride,
+                                    u.id, u.username, u.profile_picture_path, u.driver_pref_smoker, u.driver_pref_animals, u.driver_pref_custom, u.driver_rating,
+                                    v.id, v.model_name, v.color, v.license_plate, v.registration_date, v.passenger_capacity, v.is_electric, v.energy_type, v.brand_id,
+                                    br.id, br.name
                             HAVING seats_available >= :seats_needed
                             ORDER BY r.departure_time ASC
                             LIMIT :limit OFFSET :offset";
 
-                $stmtRides = $this->pdo->prepare($ridesSql);
-                $stmtRides->bindValue(':seats_needed', $seatsNeeded, PDO::PARAM_INT);
-                $stmtRides->bindValue(':limit', $limit, PDO::PARAM_INT);
-                $stmtRides->bindValue(':offset', $offset, PDO::PARAM_INT);
-                foreach ($queryParams as $key => $value) {
-                    $stmtRides->bindValue($key, $value);
-                }
-                $stmtRides->execute();
-                $rides = $stmtRides->fetchAll(PDO::FETCH_ASSOC);
+                $rawRidesData = $this->db->fetchAll(
+                    $ridesSql,
+                    array_merge($queryParams, [
+                        ':seats_needed' => $seatsNeeded,
+                        ':limit' => $limit,
+                        ':offset' => $offset
+                    ]),
+                    PDO::FETCH_ASSOC // Récupérer en tableau associatif pour l'hydratation manuelle
+                );
 
-                // Conversion des booléens et entiers
-                foreach ($rides as &$ride) {
-                    $ride['is_eco_ride'] = (bool)$ride['is_eco_ride'];
-                    $ride['seats_available'] = (int)$ride['seats_available'];
-                    if (isset($ride['driver_pref_animals'])) $ride['driver_pref_animals'] = (bool)$ride['driver_pref_animals'];
-                    if (isset($ride['driver_pref_smoker'])) $ride['driver_pref_smoker'] = (bool)$ride['driver_pref_smoker'];
+                $rides = [];
+                foreach ($rawRidesData as $data) {
+                    // Hydratation de l'objet Brand
+                    $brand = (new Brand())
+                        ->setId($data['brand_id_b'])
+                        ->setName($data['vehicle_brand_name']);
+
+                    // Hydratation de l'objet Vehicle
+                    $vehicle = (new Vehicle())
+                        ->setId($data['vehicle_id_v'])
+                        ->setUserId($data['driver_user_id'])
+                        ->setBrandId($data['vehicle_brand_id'])
+                        ->setBrand($brand) // Attacher l'objet Brand
+                        ->setModelName($data['vehicle_model'])
+                        ->setColor($data['vehicle_color'])
+                        ->setLicensePlate($data['vehicle_license_plate'])
+                        ->setRegistrationDate($data['vehicle_registration_date'])
+                        ->setPassengerCapacity($data['vehicle_capacity'])
+                        ->setIsElectric((bool)$data['vehicle_is_electric'])
+                        ->setEnergyType($data['vehicle_energy_type']);
+
+                    // Hydratation de l'objet User (conducteur)
+                    $driver = (new User())
+                        ->setId($data['driver_user_id'])
+                        ->setUsername($data['driver_username'])
+                        ->setProfilePicturePath($data['driver_photo'])
+                        ->setDriverPrefSmoker((bool)$data['driver_pref_smoker'])
+                        ->setDriverPrefAnimals((bool)$data['driver_pref_animals'])
+                        ->setDriverPrefCustom($data['driver_pref_custom'])
+                        ->setDriverRating($data['driver_rating']);
+
+                    // Hydratation de l'objet Ride
+                    $ride = (new Ride())
+                        ->setId($data['ride_id'])
+                        ->setDriverId($data['driver_id'])
+                        ->setVehicleId($data['vehicle_id'])
+                        ->setDepartureCity($data['departure_city'])
+                        ->setArrivalCity($data['arrival_city'])
+                        ->setDepartureAddress($data['departure_address'])
+                        ->setArrivalAddress($data['arrival_address'])
+                        ->setDepartureTime($data['departure_time'])
+                        ->setEstimatedArrivalTime($data['estimated_arrival_time'])
+                        ->setPricePerSeat($data['price_per_seat'])
+                        ->setSeatsOffered($data['seats_offered'])
+                        ->setRideStatus($data['ride_status'])
+                        ->setDriverMessage($data['driver_message'])
+                        ->setIsEcoRide((bool)$data['is_eco_ride'])
+                        ->setSeatsAvailable((int)$data['seats_available']) // Attacher la valeur calculée
+                        ->setDriver($driver) // Attacher l'objet User
+                        ->setVehicle($vehicle); // Attacher l'objet Vehicle
+
+                    $rides[] = $ride;
                 }
 
                 $response['success'] = true;
@@ -211,7 +255,7 @@ class SearchFilterService
                     $nextDateWhereConditions[] = "r.price_per_seat <= :maxPrice";
                     $nextDateQueryParams[':maxPrice'] = $maxPrice;
                 }
-                if ($ecoOnly === true) { // Appliquer le filtre uniquement si ecoOnly est explicitement vrai
+                if ($ecoOnly === true) {
                     $nextDateWhereConditions[] = "v.is_electric = :ecoOnly";
                     $nextDateQueryParams[':ecoOnly'] = 1;
                 }
@@ -243,15 +287,17 @@ class SearchFilterService
                                 ORDER BY r.departure_time ASC
                                 LIMIT 1";
 
-                error_log("SQL Next Date Query: " . $sqlNextDate); // Log de la requête
-                error_log("SQL Next Date Params: " . print_r(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]), true)); // Log des paramètres
-
-                $stmtNextDate = $this->pdo->prepare($sqlNextDate);
+                $stmtNextDate = $this->db->getConnection()->prepare($sqlNextDate);
                 $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));
-                $nextAvailable = $stmtNextDate->fetch(PDO::FETCH_ASSOC);
+                $stmtNextDate = $this->db->getConnection()->prepare($sqlNextDate);
+                $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));
+                $nextAvailable = $this->db->fetchColumn(
+                    $sqlNextDate,
+                    array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded])
+                );
 
-                if ($nextAvailable && isset($nextAvailable['next_ride_date'])) {
-                    $response['nextAvailableDate'] = $nextAvailable['next_ride_date'];
+                if ($nextAvailable) {
+                    $response['nextAvailableDate'] = $nextAvailable;
                 }
 
                 $response['success'] = true; // La requête a réussi, même sans résultat

@@ -25,6 +25,7 @@ class Ride
     private ?bool $is_eco_ride = null;
     private ?string $created_at = null;
     private ?string $updated_at = null;
+    private ?int $seats_available = null; // Nombre de places disponibles (calculé)
 
     // Propriétés pour les relations (objets)
     private ?User $driver = null;
@@ -48,6 +49,7 @@ class Ride
     public function getRideStatus(): ?string { return $this->ride_status; }
     public function getDriverMessage(): ?string { return $this->driver_message; }
     public function isEcoRide(): ?bool { return $this->is_eco_ride; }
+    public function getSeatsAvailable(): ?int { return $this->seats_available; }
     public function getCreatedAt(): ?string { return $this->created_at; }
     public function getUpdatedAt(): ?string { return $this->updated_at; }
 
@@ -73,6 +75,7 @@ class Ride
     public function setRideStatus(?string $ride_status): self { $this->ride_status = $ride_status; return $this; }
     public function setDriverMessage(?string $driver_message): self { $this->driver_message = $driver_message; return $this; }
     public function setIsEcoRide(?bool $is_eco_ride): self { $this->is_eco_ride = $is_eco_ride; return $this; }
+    public function setSeatsAvailable(?int $seats_available): self { $this->seats_available = $seats_available; return $this; }
     public function setCreatedAt(?string $created_at): self { $this->created_at = $created_at; return $this; }
     public function setUpdatedAt(?string $updated_at): self { $this->updated_at = $updated_at; return $this; }
 
