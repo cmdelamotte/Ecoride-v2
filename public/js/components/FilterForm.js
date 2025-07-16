@@ -96,7 +96,7 @@ export class FilterForm {
         // Ajouter les nouveaux filtres depuis le formulaire de filtre
         const formData = new FormData(this.form);
         if (formData.get('price-filter')) currentSearchParams.set('maxPrice', formData.get('price-filter'));
-        if (formData.get('duration-filter-range')) currentSearchParams.set('maxDuration', formData.get('duration-filter-range'));
+        if (this.durationRangeInput && this.durationRangeInput.value) currentSearchParams.set('maxDuration', this.durationRangeInput.value);
         
         const animalOption = formData.get('animal-option');
         if (animalOption && animalOption !== "") currentSearchParams.set('animalsAllowed', animalOption);

@@ -101,8 +101,11 @@ class SearchFilterService
             $whereConditions[] = "v.is_electric = 1";
         }
         if ($maxDuration !== null && $maxDuration > 0) {
+            error_log("DEBUG maxDuration: " . $maxDuration);
+            $maxDurationMinutes = $maxDuration * 60;
+            error_log("DEBUG maxDurationMinutes: " . $maxDurationMinutes);
             $whereConditions[] = "TIMESTAMPDIFF(MINUTE, r.departure_time, r.estimated_arrival_time) <= :maxDurationMinutes";
-            $queryParams[':maxDurationMinutes'] = $maxDuration * 60;
+            $queryParams[':maxDurationMinutes'] = $maxDurationMinutes;
         }
         if ($animalsAllowed !== null && ($animalsAllowed === 'true' || $animalsAllowed === 'false')) {
             $whereConditions[] = "u.driver_pref_animals = :animalsAllowed";
