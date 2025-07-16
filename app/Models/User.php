@@ -23,6 +23,7 @@ class User
     private ?string $profile_picture_path = null;
     private ?string $system_role = null;
     private ?string $functional_role = null;
+    private ?float $driver_rating = null; // Nouvelle propriété pour la note du conducteur
     private ?string $account_status = null;
     private ?float $credits = null;
     private ?bool $driver_pref_animals = null;
@@ -48,6 +49,7 @@ class User
     public function getProfilePicturePath(): ?string { return $this->profile_picture_path; }
     public function getSystemRole(): ?string { return $this->system_role; }
     public function getFunctionalRole(): ?string { return $this->functional_role; }
+    public function getDriverRating(): ?float { return $this->driver_rating; }
     public function getAccountStatus(): ?string { return $this->account_status; }
     public function getCredits(): ?float { return $this->credits; }
     public function getDriverPrefAnimals(): ?bool { return $this->driver_pref_animals; }
@@ -73,6 +75,7 @@ class User
     public function setProfilePicturePath(?string $profile_picture_path): self { $this->profile_picture_path = $profile_picture_path; return $this; }
     public function setSystemRole(?string $system_role): self { $this->system_role = $system_role; return $this; }
     public function setFunctionalRole(?string $functional_role): self { $this->functional_role = $functional_role; return $this; }
+    public function setDriverRating(?float $driver_rating): self { $this->driver_rating = $driver_rating; return $this; }
     public function setAccountStatus(?string $account_status): self { $this->account_status = $account_status; return $this; }
     public function setCredits(?float $credits): self { $this->credits = $credits; return $this; }
     public function setDriverPrefAnimals(?bool $driver_pref_animals): self { $this->driver_pref_animals = $driver_pref_animals; return $this; }
