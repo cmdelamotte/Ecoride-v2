@@ -85,7 +85,81 @@ class UserService
      * @param array $data Les données à mettre à jour.
      * @return bool True si la mise à jour a réussi, sinon false.
      */
-    public function update(int $id, array $data): bool
+    public function update(User $user): bool
+    {
+        // Je construis le tableau de données à partir des propriétés de l'objet User.
+        // Cela garantit que seules les données de l'objet sont utilisées pour la mise à jour.
+        $data = [
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'password_hash' => $user->getPasswordHash(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'address' => $user->getAddress(),
+            'birth_date' => $user->getBirthDate(),
+            'phone_number' => $user->getPhoneNumber(),
+            'profile_picture_path' => $user->getProfilePicturePath(),
+            'system_role' => $user->getSystemRole(),
+            'functional_role' => $user->getFunctionalRole(),
+            'driver_rating' => $user->getDriverRating(),
+            'account_status' => $user->getAccountStatus(),
+            'credits' => $user->getCredits(),
+            'driver_pref_animals' => $user->getDriverPrefAnimals(),
+            'driver_pref_smoker' => $user->getDriverPrefSmoker(),
+            'driver_pref_music' => $user->getDriverPrefMusic(),
+            'driver_pref_custom' => $user->getDriverPrefCustom(),
+            'reset_token' => $user->getResetToken(),
+            'reset_token_expires_at' => $user->getResetTokenExpiresAt(),
+            'created_at' => $user->getCreatedAt(),
+            'updated_at' => $user->getUpdatedAt(),
+        ];
+
+        // Je filtre les valeurs nulles ou vides pour ne mettre à jour que les champs pertinents.
+        // Cela évite d'écraser des données avec des valeurs nulles si elles ne sont pas fournies.
+        $updateData = array_filter($data, function($value, $key) {
+            // Exclure les valeurs nulles
+            if (is_null($value)) {
+                return false;
+            }
+
+            // Gérer spécifiquement les booléens
+            if (in_array($key, ['driver_pref_animals', 'driver_pref_smoker', 'driver_pref_music'])) {
+                // Si c'est un booléen, je le garde (true/false/0/1 sont valides)
+                return true;
+            }
+
+            // Exclure les chaînes vides pour les colonnes qui ne les acceptent pas
+            if (is_string($value) && $value === '') {
+                // Je suppose que les colonnes suivantes ne doivent pas être mises à jour avec une chaîne vide
+                // Adaptez cette liste selon les contraintes de votre BDD
+                $nullableStringColumns = ['address', 'profile_picture_path', 'driver_pref_custom', 'reset_token', 'reset_token_expires_at'];
+                if (!in_array($key, $nullableStringColumns)) {
+                    return false;
+                }
+            }
+            
+            // Pour les autres types (int, float, string non vide), je les garde
+            return true;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        if (empty($updateData)) {
+            return false; // Rien à mettre à jour
+        }
+
+        return $this->updatePartial($user->getId(), $updateData);
+    }
+
+    /**
+     * Met à jour un utilisateur existant avec un tableau de données spécifique.
+     * Cette méthode est utilisée pour des mises à jour partielles et ciblées,
+     * notamment pour des champs qui ne sont pas directement liés à l'objet User complet
+     * ou pour des cas où seul un sous-ensemble de données est pertinent.
+     *
+     * @param int $id L'ID de l'utilisateur à mettre à jour.
+     * @param array $data Les données à mettre à jour (clé-valeur).
+     * @return bool True si la mise à jour a réussi, sinon false.
+     */
+    public function updatePartial(int $id, array $data): bool
     {
         if (empty($data)) {
             return false;
@@ -126,10 +200,15 @@ class UserService
      */
     public function updateResetToken(int $userId, string $token, string $expiresAt): bool
     {
-        return $this->update($userId, [
+        // Je construis un tableau de données contenant uniquement les champs à mettre à jour.
+        // Cela garantit que seuls les champs pertinents sont envoyés à la base de données.
+        $updateData = [
             'reset_token' => $token,
             'reset_token_expires_at' => $expiresAt
-        ]);
+        ];
+
+        // J'appelle la nouvelle méthode updatePartial pour cette mise à jour ciblée.
+        return $this->updatePartial($userId, $updateData);
     }
 
     /**
