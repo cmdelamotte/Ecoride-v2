@@ -61,8 +61,7 @@ class AuthService
             'birth_date' => $data['birth_date'],
             'credits' => 20.00, // Crédits par défaut
             'account_status' => 'active',
-            'functional_role' => 'passenger',
-            'system_role' => 'ROLE_USER', // Ajout du rôle système par défaut
+            'functional_role' => 'passenger'
         ];
 
         // 4. Créer l'utilisateur
