@@ -69,15 +69,20 @@ export class SearchForm {
             seats: parseInt(this.passengersInput.value, 10)
         };
 
-        const queryParams = new URLSearchParams(searchCriteria).toString();
-        const targetUrl = `/rides-search?${queryParams}`;
+        const newSearchParams = new URLSearchParams();
+        newSearchParams.set('departure_city', searchCriteria.departure_city);
+        newSearchParams.set('arrival_city', searchCriteria.arrival_city);
+        newSearchParams.set('date', searchCriteria.date);
+        newSearchParams.set('seats', searchCriteria.seats);
+
+        const targetUrl = `/rides-search?${newSearchParams.toString()}`;
 
         // Si on est déjà sur la page de recherche, on utilise l'history API pour éviter un rechargement complet.
         // Sinon, on fait une redirection classique.
         if (window.location.pathname === '/rides-search') {
-            window.history.pushState(searchCriteria, '', targetUrl);
+            window.history.pushState(Object.fromEntries(newSearchParams), '', targetUrl);
             // Déclencher un événement pour que la page de recherche sache qu'elle doit se mettre à jour
-            window.dispatchEvent(new CustomEvent('search-updated', { detail: searchCriteria }));
+            window.dispatchEvent(new CustomEvent('search-updated', { detail: newSearchParams }));
         } else {
             window.location.href = targetUrl;
         }

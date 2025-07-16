@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Services\SearchFilterService;
+use App\Core\Database;
 use App\Services\RideService;
 
 /**
@@ -13,36 +15,43 @@ use App\Services\RideService;
  */
 class RideSearchController extends Controller
 {
+    private SearchFilterService $searchFilterService;
     private RideService $rideService;
 
     public function __construct()
     {
         parent::__construct();
+        $database = Database::getInstance();
+        $this->searchFilterService = new SearchFilterService($database);
         $this->rideService = new RideService();
     }
 
     /**
-     * Gère l'appel API pour la recherche de trajets.
-     * Récupère les critères de la requête GET, appelle le service de recherche
-     * et renvoie les résultats en JSON.
+     * Gère la recherche de trajets via une requête API (GET).
+     * Récupère les paramètres de recherche de l'URL et utilise le SearchFilterService.
      */
     public function searchApi()
     {
-        // Les critères de recherche sont passés directement depuis la requête GET.
-        $criteria = $_GET;
+        // Assurez-vous que la requête est de type GET
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->jsonResponse(['success' => false, 'message' => 'Méthode non autorisée.'], 405);
+            return;
+        }
 
-        // Le RideService contient toute la logique de recherche complexe.
-        $result = $this->rideService->searchRides($criteria);
+        // Récupère tous les paramètres GET
+        $filters = $_GET;
+        error_log("RideSearchController: Filtres reçus: " . print_r($filters, true)); // Log temporaire pour le débogage
 
-        // Le contrôleur se contente de formater la réponse.
-        if ($result['success']) {
-            $this->jsonResponse($result);
+        // Appelle le service pour effectuer la recherche
+        $results = $this->searchFilterService->searchRides($filters);
+
+        // Envoie la réponse JSON
+        if ($results['success']) {
+            $this->jsonResponse($results, 200);
         } else {
-            // En cas d'échec (erreur interne dans le service), on renvoie une réponse d'erreur.
-            $this->jsonResponse([
-                'success' => false,
-                'message' => $result['message'] ?? 'Une erreur est survenue.'
-            ], 500); // 500 Internal Server Error
+            // Si le service retourne une erreur de validation, utilise le code 400 Bad Request
+            $statusCode = isset($results['errors']) ? 400 : 500;
+            $this->jsonResponse($results, $statusCode);
         }
     }
 

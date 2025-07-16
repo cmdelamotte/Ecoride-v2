@@ -1,4 +1,5 @@
 import { SearchForm } from '../components/SearchForm.js';
+import { FilterForm } from '../components/FilterForm.js';
 import { apiClient } from '../utils/apiClient.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { RideCard } from '../components/RideCard.js';
@@ -7,6 +8,8 @@ import { Pagination } from '../components/Pagination.js';
 document.addEventListener('DOMContentLoaded', () => {
     // Initialiser le formulaire de recherche principal
     new SearchForm('search-form');
+    // Initialiser le formulaire de filtres
+    new FilterForm('filter-form');
 
     const rideResultsContainer = document.getElementById('ride-results-container');
     const noResultsMessage = document.getElementById('no-results-message');
@@ -24,21 +27,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lancer la recherche initiale au chargement de la page
     fetchAndDisplayRides();
 
-    // Écouter les mises à jour du formulaire de recherche (si on est déjà sur la page)
-    window.addEventListener('search-updated', () => {
-        fetchAndDisplayRides();
+    // Écouter les mises à jour du formulaire de recherche et de filtres
+    window.addEventListener('search-updated', (event) => {
+        const updatedSearchParams = event.detail; // L'événement contient déjà les bons paramètres
+        fetchAndDisplayRides(updatedSearchParams);
     });
 
-    async function fetchAndDisplayRides() {
+    async function fetchAndDisplayRides(searchParams = null) {
         if (!rideResultsContainer || !noResultsMessage || !loadingIndicator || !paginationContainer) {
             console.error("Éléments DOM manquants pour la recherche.");
             return;
         }
 
-        const queryParams = new URLSearchParams(window.location.search);
+        let queryParams;
+        if (searchParams instanceof URLSearchParams) {
+            queryParams = searchParams;
+        } else if (typeof searchParams === 'object' && searchParams !== null) {
+            // Si c'est un objet simple (du SearchForm), le convertir en URLSearchParams
+            queryParams = new URLSearchParams(searchParams);
+        } else {
+            // Par défaut, utiliser les paramètres de l'URL actuelle
+            queryParams = new URLSearchParams(window.location.search);
+        }
 
-        // Vérifier si les paramètres de recherche principaux sont présents
-        if (!queryParams.has('departure_city') || !queryParams.has('arrival_city') || !queryParams.has('date')) {
+        // Vérifier si les paramètres de recherche principaux sont présents ET non vides
+        const departureCity = queryParams.get('departure_city');
+        const arrivalCity = queryParams.get('arrival_city');
+        const date = queryParams.get('date');
+
+        if (!departureCity || departureCity.trim() === '' ||
+            !arrivalCity || arrivalCity.trim() === '' ||
+            !date || date.trim() === '') {
             noResultsMessage.textContent = "Veuillez utiliser le formulaire ci-dessus pour rechercher un trajet.";
             noResultsMessage.classList.remove('d-none');
             return; // Ne pas lancer de recherche si les critères de base sont absents
@@ -48,8 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearChildren(rideResultsContainer);
         clearChildren(noResultsMessage);
         noResultsMessage.classList.add('d-none');
-        // La pagination est gérée par la classe Pagination, on ne la nettoie pas directement ici
-        // clearChildren(paginationContainer); 
 
         loadingIndicator.classList.remove('d-none');
 
@@ -87,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             newSearchParams.set('date', data.nextAvailableDate);
                             newSearchParams.set('page', '1');
                             window.history.pushState({ date: data.nextAvailableDate }, "", `?${newSearchParams.toString()}`);
-                            fetchAndDisplayRides(); 
+                            fetchAndDisplayRides(newSearchParams); 
                         };
                         noResultsMessage.appendChild(searchNextDateButton);
                     } else {
