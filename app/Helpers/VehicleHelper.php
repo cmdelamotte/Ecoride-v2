@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Vehicle;
+use App\Models\Brand; // J'importe le modèle Brand
 
 /**
  * Classe VehicleHelper
@@ -29,7 +30,8 @@ class VehicleHelper
                 'id' => $vehicle->getId(),
                 'user_id' => $vehicle->getUserId(),
                 'brand_id' => $vehicle->getBrandId(),
-                'brand_name' => $vehicle->getBrandName(),
+                // J'accède au nom de la marque via l'objet Brand associé.
+                'brand_name' => $vehicle->getBrand() ? $vehicle->getBrand()->getName() : null,
                 'model_name' => $vehicle->getModelName(),
                 'color' => $vehicle->getColor(),
                 'license_plate' => $vehicle->getLicensePlate(),

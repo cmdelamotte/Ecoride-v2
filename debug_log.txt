@@ -1,0 +1,25 @@
+[16-Jul-2025 22:47:58 UTC] DEBUG: UserService->update() - updateData: Array
+(
+    [username] => alice_driver_passenger
+    [email] => alice.martin@email.com
+    [password_hash] => $2y$10$xfCmx5rdUH6hS6Pj91DE9.SJP8rf5L6CiuYDYl/EXk1Ot0lFPZNOS
+    [first_name] => Alice
+    [last_name] => Martin
+    [address] => 10 Rue du Covoiturage, Lyon
+    [birth_date] => 1992-07-20
+    [phone_number] => 0611223344
+    [functional_role] => passenger_driver
+    [driver_rating] => 4.2
+    [account_status] => active
+    [credits] => 75.5
+    [driver_pref_animals] => 1
+    [driver_pref_smoker] => 
+    [driver_pref_custom] => Musique de zinzin .
+    [reset_token] => a4571a60b802de088f6e3f8245a9e371b5d415086efea546b8fd09bd6152a9a6
+    [reset_token_expires_at] => 2025-07-17 01:47:58
+    [created_at] => 2025-07-07 03:01:09
+    [updated_at] => 2025-07-16 22:19:25
+    [id] => 3
+)
+
+[16-Jul-2025 22:47:58 UTC] Database execute error: SQLSTATE[HY000]: General error: 1366 Incorrect integer value: '' for column 'driver_pref_smoker' at row 1
