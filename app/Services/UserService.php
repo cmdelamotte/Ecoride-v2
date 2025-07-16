@@ -65,15 +65,47 @@ class UserService
      * @param array $data Les données pour le nouvel utilisateur.
      * @return int|false L'ID du nouvel utilisateur ou false en cas d'échec.
      */
-    public function create(array $data): int|false
+    public function create(User $user): int|false
     {
-        $columns = implode(', ', array_keys($data));
-        $placeholders = ':' . implode(', :', array_keys($data));
+        // Je construis le tableau de données à partir des propriétés de l'objet User.
+        // Cela garantit que seules les données de l'objet sont utilisées pour la création.
+        $data = [
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'password_hash' => $user->getPasswordHash(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'address' => $user->getAddress(),
+            'birth_date' => $user->getBirthDate(),
+            'phone_number' => $user->getPhoneNumber(),
+            'profile_picture_path' => $user->getProfilePicturePath(),
+            'system_role' => $user->getSystemRole(),
+            'functional_role' => $user->getFunctionalRole(),
+            'driver_rating' => $user->getDriverRating(),
+            'account_status' => $user->getAccountStatus(),
+            'credits' => $user->getCredits(),
+            'driver_pref_animals' => $user->getDriverPrefAnimals(),
+            'driver_pref_smoker' => $user->getDriverPrefSmoker(),
+            'driver_pref_music' => $user->getDriverPrefMusic(),
+            'driver_pref_custom' => $user->getDriverPrefCustom(),
+            'reset_token' => $user->getResetToken(),
+            'reset_token_expires_at' => $user->getResetTokenExpiresAt(),
+            'created_at' => $user->getCreatedAt(),
+            'updated_at' => $user->getUpdatedAt(),
+        ];
+
+        // Je filtre les valeurs nulles pour ne pas les inclure dans la requête INSERT.
+        $insertData = array_filter($data, function($value) {
+            return !is_null($value); // Garde les valeurs non nulles
+        });
+
+        $columns = implode(', ', array_keys($insertData));
+        $placeholders = ':' . implode(', :', array_keys($insertData));
 
         $sql = "INSERT INTO users ($columns) VALUES ($placeholders)";
         
-        // J'utilise la nouvelle méthode execute. Si elle réussit, je retourne le nouvel ID.
-        $rowCount = $this->db->execute($sql, $data);
+        // J'utilise la méthode execute. Si elle réussit, je retourne le nouvel ID.
+        $rowCount = $this->db->execute($sql, $insertData);
 
         return $rowCount > 0 ? (int)$this->db->lastInsertId() : false;
     }

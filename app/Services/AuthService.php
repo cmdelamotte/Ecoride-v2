@@ -49,26 +49,31 @@ class AuthService
             return ['success' => false, 'errors' => $errors];
         }
 
-        // 3. Préparer les données pour la création
+        // 3. Préparer les données et construire l'objet User
         $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
-        $userData = [
-            'username' => $data['username'],
-            'email' => $data['email'],
-            'password_hash' => $passwordHash,
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'phone_number' => $data['phone_number'],
-            'birth_date' => $data['birth_date'],
-            'credits' => 20.00, // Crédits par défaut
-            'account_status' => 'active',
-            'functional_role' => 'passenger'
-        ];
+        
+        // Je crée un nouvel objet User et je le peuple avec les données du formulaire.
+        // Cela garantit que l'objet est correctement formé avant d'être passé au UserService.
+        $user = (new \App\Models\User())
+            ->setUsername($data['username'])
+            ->setEmail($data['email'])
+            ->setPasswordHash($passwordHash)
+            ->setFirstName($data['first_name'])
+            ->setLastName($data['last_name'])
+            ->setPhoneNumber($data['phone_number'])
+            ->setBirthDate($data['birth_date'])
+            ->setCredits(20.00) // Crédits par défaut
+            ->setAccountStatus('active')
+            ->setFunctionalRole('passenger');
 
-        // 4. Créer l'utilisateur
-        $userId = $this->userService->create($userData);
+        // 4. Créer l'utilisateur via le UserService
+        // La méthode create du UserService attend maintenant un objet User.
+        $userId = $this->userService->create($user);
 
         if ($userId) {
-            $user = $this->userService->findById($userId);
+            // Si la création réussit, je mets à jour l'ID de l'objet User
+            // et je le retourne pour la session.
+            $user->setId($userId);
             return ['success' => true, 'user' => $user];
         } else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la création du compte.']];
