@@ -211,9 +211,9 @@ class SearchFilterService
                     $nextDateWhereConditions[] = "r.price_per_seat <= :maxPrice";
                     $nextDateQueryParams[':maxPrice'] = $maxPrice;
                 }
-                if ($ecoOnly !== null) {
+                if ($ecoOnly === true) { // Appliquer le filtre uniquement si ecoOnly est explicitement vrai
                     $nextDateWhereConditions[] = "v.is_electric = :ecoOnly";
-                    $nextDateQueryParams[':ecoOnly'] = $ecoOnly ? 1 : 0;
+                    $nextDateQueryParams[':ecoOnly'] = 1;
                 }
                 if ($maxDuration !== null && $maxDuration > 0) {
                     $nextDateWhereConditions[] = "TIMESTAMPDIFF(MINUTE, r.departure_time, r.estimated_arrival_time) <= :maxDurationMinutes";
@@ -242,6 +242,9 @@ class SearchFilterService
                                 HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
                                 ORDER BY r.departure_time ASC
                                 LIMIT 1";
+
+                error_log("SQL Next Date Query: " . $sqlNextDate); // Log de la requête
+                error_log("SQL Next Date Params: " . print_r(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]), true)); // Log des paramètres
 
                 $stmtNextDate = $this->pdo->prepare($sqlNextDate);
                 $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));

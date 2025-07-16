@@ -1,0 +1,53 @@
+[16-Jul-2025 20:52:17 UTC] RideSearchController: Filtres reçus: Array
+(
+    [departure_city] => Dijon
+    [arrival_city] => Strasbourg
+    [date] => 2025-10-04
+    [seats] => 1
+)
+
+[16-Jul-2025 20:52:17 UTC] SQL Next Date Query: SELECT DATE(r.departure_time) as next_ride_date
+                                FROM Rides r
+                                JOIN Users u ON r.driver_id = u.id
+                                JOIN Vehicles v ON r.vehicle_id = v.id
+                                LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                                WHERE r.ride_status = 'planned' AND LOWER(r.departure_city) LIKE LOWER(:departure_city) AND LOWER(r.arrival_city) LIKE LOWER(:arrival_city) AND r.departure_time >= :start_date_next_search AND v.is_electric = :ecoOnly
+                                GROUP BY r.id, r.seats_offered
+                                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
+                                ORDER BY r.departure_time ASC
+                                LIMIT 1
+[16-Jul-2025 20:52:17 UTC] SQL Next Date Params: Array
+(
+    [:departure_city] => %Dijon%
+    [:arrival_city] => %Strasbourg%
+    [:start_date_next_search] => 2025-10-05 00:00:00
+    [:ecoOnly] => 0
+    [:seats_needed] => 1
+)
+
+[16-Jul-2025 20:52:20 UTC] RideSearchController: Filtres reçus: Array
+(
+    [departure_city] => Dijon
+    [arrival_city] => Strasbourg
+    [date] => 2025-10-04
+    [seats] => 1
+)
+
+[16-Jul-2025 20:52:20 UTC] SQL Next Date Query: SELECT DATE(r.departure_time) as next_ride_date
+                                FROM Rides r
+                                JOIN Users u ON r.driver_id = u.id
+                                JOIN Vehicles v ON r.vehicle_id = v.id
+                                LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                                WHERE r.ride_status = 'planned' AND LOWER(r.departure_city) LIKE LOWER(:departure_city) AND LOWER(r.arrival_city) LIKE LOWER(:arrival_city) AND r.departure_time >= :start_date_next_search AND v.is_electric = :ecoOnly
+                                GROUP BY r.id, r.seats_offered
+                                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
+                                ORDER BY r.departure_time ASC
+                                LIMIT 1
+[16-Jul-2025 20:52:20 UTC] SQL Next Date Params: Array
+(
+    [:departure_city] => %Dijon%
+    [:arrival_city] => %Strasbourg%
+    [:start_date_next_search] => 2025-10-05 00:00:00
+    [:ecoOnly] => 0
+    [:seats_needed] => 1
+)
