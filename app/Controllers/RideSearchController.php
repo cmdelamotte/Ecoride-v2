@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Services\SearchFilterService;
 use App\Core\Database;
 use App\Services\RideService;
+use App\Helpers\RideHelper; // J'importe le nouveau helper.
 
 /**
  * RideSearchController
@@ -74,12 +75,15 @@ class RideSearchController extends Controller
      */
     public function detailsApi(int $id)
     {
-        $rideDetails = $this->rideService->findRideDetailsById($id);
+        // Le service retourne maintenant un objet Ride complet ou null.
+        $rideObject = $this->rideService->findRideDetailsById($id);
 
-        if ($rideDetails) {
+        if ($rideObject) {
+            // J'utilise le helper pour transformer l'objet en un tableau formaté pour l'API.
+            $formattedRide = RideHelper::formatDetailsForApi($rideObject);
             $this->jsonResponse([
                 'success' => true,
-                'details' => $rideDetails
+                'details' => $formattedRide
             ]);
         } else {
             $this->jsonResponse([

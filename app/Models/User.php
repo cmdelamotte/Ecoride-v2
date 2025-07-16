@@ -35,6 +35,9 @@ class User
     private ?string $created_at = null;
     private ?string $updated_at = null;
 
+    // Propriété pour la relation (avis de l'utilisateur)
+    private array $reviews = [];
+
     // --- GETTERS ---
 
     public function getId(): ?int { return $this->id; }
@@ -60,6 +63,7 @@ class User
     public function getResetTokenExpiresAt(): ?string { return $this->reset_token_expires_at; }
     public function getCreatedAt(): ?string { return $this->created_at; }
     public function getUpdatedAt(): ?string { return $this->updated_at; }
+    public function getReviews(): array { return $this->reviews; }
 
     // --- SETTERS ---
 
@@ -86,4 +90,5 @@ class User
     public function setResetTokenExpiresAt(?string $reset_token_expires_at): self { $this->reset_token_expires_at = $reset_token_expires_at; return $this; }
     public function setCreatedAt(?string $created_at): self { $this->created_at = $created_at; return $this; }
     public function setUpdatedAt(?string $updated_at): self { $this->updated_at = $updated_at; return $this; }
+    public function setReviews(array $reviews): self { $this->reviews = $reviews; return $this; }
 }

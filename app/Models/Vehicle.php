@@ -12,7 +12,7 @@ class Vehicle
     private ?int $id = null;
     private ?int $user_id = null;
     private ?int $brand_id = null;
-    private ?string $brand_name = null; // Propriété pour le nom de la marque (jointure)
+    private ?Brand $brand = null; // Objet Brand associé
     private ?string $model_name = null; // Correspond à `model_name` en BDD
     private ?string $color = null;
     private ?string $license_plate = null; // Correspond à `license_plate` en BDD
@@ -28,7 +28,7 @@ class Vehicle
     public function getId(): ?int { return $this->id; }
     public function getUserId(): ?int { return $this->user_id; }
     public function getBrandId(): ?int { return $this->brand_id; }
-    public function getBrandName(): ?string { return $this->brand_name; }
+    public function getBrand(): ?Brand { return $this->brand; }
     public function getModelName(): ?string { return $this->model_name; }
     public function getColor(): ?string { return $this->color; }
     public function getLicensePlate(): ?string { return $this->license_plate; }
@@ -44,7 +44,7 @@ class Vehicle
     public function setId(?int $id): self { $this->id = $id; return $this; }
     public function setUserId(?int $user_id): self { $this->user_id = $user_id; return $this; }
     public function setBrandId(?int $brand_id): self { $this->brand_id = $brand_id; return $this; }
-    public function setBrandName(?string $brand_name): self { $this->brand_name = $brand_name; return $this; }
+    public function setBrand(?Brand $brand): self { $this->brand = $brand; return $this; }
     public function setModelName(?string $model_name): self { $this->model_name = $model_name; return $this; }
     public function setColor(?string $color): self { $this->color = $color; return $this; }
     public function setLicensePlate(?string $license_plate): self { $this->license_plate = $license_plate; return $this; }
