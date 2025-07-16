@@ -4,123 +4,92 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Models\Vehicle;
-use PDO;
-use PDOException;
+use App\Models\Brand; // Importer le modèle Brand
 
 /**
  * Service VehicleService
  *
- * Gère la logique métier liée à la LECTURE des véhicules pour un utilisateur.
- * Sa seule responsabilité est de fournir des listes de véhicules.
- * Le CRUD est géré par VehicleManagementService.
+ * Gère la logique métier liée à la LECTURE des véhicules.
+ * Ce service est maintenant responsable de construire des objets Vehicle complets,
+ * y compris leurs relations (comme la marque).
  */
 class VehicleService
 {
-    private PDO $db;
+    private Database $db;
+    private BrandService $brandService;
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance();
+        $this->brandService = new BrandService(); // Injection de dépendance manuelle
     }
 
     /**
-     * Trouve tous les véhicules appartenant à un utilisateur donné.
-     *
-     * @param int $userId L'ID de l'utilisateur dont on veut récupérer les véhicules.
-     * @return array Un tableau d'objets Vehicle.
-     */
-    public function findByUserId(int $userId): array
-    {
-        try {
-            $stmt = $this->db->prepare("SELECT v.*, b.name as brand_name FROM Vehicles v JOIN Brands b ON v.brand_id = b.id WHERE v.user_id = :user_id ORDER BY v.updated_at DESC");
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $vehicles = [];
-            foreach ($results as $data) {
-                $vehicle = new Vehicle();
-                $vehicle->setId($data['id'])
-                        ->setUserId($data['user_id'])
-                        ->setBrandId($data['brand_id'])
-                        ->setModelName($data['model_name']) // Utilise model_name
-                        ->setColor($data['color'])
-                        ->setLicensePlate($data['license_plate']) // Utilise license_plate
-                        ->setRegistrationDate($data['registration_date']) // Utilise registration_date
-                        ->setPassengerCapacity($data['passenger_capacity']) // Utilise passenger_capacity
-                        ->setIsElectric($data['is_electric'])
-                        ->setEnergyType($data['energy_type'] ?? null) // energy_type peut être null
-                        ->setCreatedAt($data['created_at'])
-                        ->setUpdatedAt($data['updated_at']);
-                
-                $vehicle->setBrandName($data['brand_name']);
-
-                $vehicles[] = $vehicle;
-            }
-
-            return $vehicles;
-        } catch (PDOException $e) {
-            error_log("Error in VehicleService::findByUserId: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Récupère un véhicule par son ID, avec le nom de la marque.
+     * Trouve un véhicule par son ID.
+     * Note : cette méthode ne charge pas les relations.
      *
      * @param int $vehicleId L'ID du véhicule.
      * @return Vehicle|null L'objet Vehicle ou null s'il n'est pas trouvé.
      */
     public function findById(int $vehicleId): ?Vehicle
     {
-        try {
-            $stmt = $this->db->prepare(
-                "SELECT v.*, b.name as brand_name 
-                 FROM Vehicles v
-                 JOIN Brands b ON v.brand_id = b.id
-                 WHERE v.id = :id"
-            );
-            $stmt->execute([':id' => $vehicleId]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$data) {
-                return null;
-            }
-
-            return $this->hydrateVehicle($data);
-        } catch (\PDOException $e) {
-            error_log("VehicleService::findById Error: " . $e->getMessage());
-            return null;
-        }
+        return $this->db->fetchOne(
+            "SELECT * FROM Vehicles WHERE id = :id",
+            ['id' => $vehicleId],
+            Vehicle::class
+        );
     }
 
     /**
-     * Hydrate un objet Vehicle à partir d'un tableau de données.
+     * Trouve un véhicule par son ID et y attache l'objet Brand associé.
      *
-     * @param array $data Les données du véhicule.
-     * @return Vehicle L'objet Vehicle hydraté.
+     * @param int $vehicleId L'ID du véhicule.
+     * @return Vehicle|null L'objet Vehicle complet avec sa marque, ou null.
      */
-    private function hydrateVehicle(array $data): Vehicle
+    public function findWithBrandById(int $vehicleId): ?Vehicle
     {
-        $vehicle = new Vehicle();
-        $vehicle->setId($data['id'])
-                ->setUserId($data['user_id'])
-                ->setBrandId($data['brand_id'])
-                ->setModelName($data['model_name'])
-                ->setColor($data['color'])
-                ->setLicensePlate($data['license_plate'])
-                ->setRegistrationDate($data['registration_date'])
-                ->setPassengerCapacity($data['passenger_capacity'])
-                ->setIsElectric($data['is_electric'])
-                ->setEnergyType($data['energy_type'])
-                ->setCreatedAt($data['created_at'])
-                ->setUpdatedAt($data['updated_at']);
+        // Étape 1: Récupérer l'objet Vehicle de base.
+        $vehicle = $this->findById($vehicleId);
 
-        if (isset($data['brand_name'])) {
-            $vehicle->setBrandName($data['brand_name']); // Propriété virtuelle
+        if ($vehicle && $vehicle->getBrandId()) {
+            // Étape 2: Récupérer l'objet Brand associé via le BrandService.
+            $brand = $this->brandService->findById($vehicle->getBrandId());
+            if ($brand) {
+                // Étape 3: Attacher l'objet Brand à l'objet Vehicle.
+                $vehicle->setBrand($brand);
+            }
         }
 
         return $vehicle;
+    }
+
+    /**
+     * Trouve tous les véhicules appartenant à un utilisateur donné, avec leur marque.
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @return array Un tableau d'objets Vehicle, chacun avec sa marque chargée.
+     */
+    public function findByUserId(int $userId): array
+    {
+        // D'abord, je récupère tous les objets Vehicle de base pour cet utilisateur.
+        $vehicles = $this->db->fetchAll(
+            "SELECT * FROM Vehicles WHERE user_id = :user_id ORDER BY updated_at DESC",
+            ['user_id' => $userId],
+            Vehicle::class
+        );
+
+        // Ensuite, pour chaque véhicule, je charge sa marque.
+        // C'est un exemple de "N+1 query", qui est simple à écrire mais peut être inefficace
+        // sur de très grandes listes. Pour ce projet, c'est une approche claire et acceptable.
+        foreach ($vehicles as $vehicle) {
+            if ($vehicle->getBrandId()) {
+                $brand = $this->brandService->findById($vehicle->getBrandId());
+                if ($brand) {
+                    $vehicle->setBrand($brand);
+                }
+            }
+        }
+
+        return $vehicles;
     }
 }

@@ -75,9 +75,9 @@ class RideService
 
         // 2b. Charger le véhicule (objet Vehicle) et sa marque (objet Brand).
         if ($ride->getVehicleId()) {
-            // TODO: Créer une méthode dans VehicleService pour récupérer le véhicule avec ses détails.
-            // $vehicle = $this->vehicleService->findWithDetailsById($ride->getVehicleId());
-            // $ride->setVehicle($vehicle);
+            // J'utilise la nouvelle méthode du VehicleService pour obtenir l'objet complet.
+            $vehicle = $this->vehicleService->findWithBrandById($ride->getVehicleId());
+            $ride->setVehicle($vehicle);
         }
         
         // La méthode retourne maintenant un objet Ride, qui contient lui-même un objet User (le conducteur).
