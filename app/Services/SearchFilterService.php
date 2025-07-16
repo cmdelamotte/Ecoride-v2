@@ -224,6 +224,12 @@ class SearchFilterService
                     $nextDateQueryParams[':animalsAllowed'] = ($animalsAllowed === 'true' ? 1 : 0);
                 }
 
+                $minRating = filter_var($filters['minRating'] ?? null, FILTER_VALIDATE_FLOAT);
+                if ($minRating !== null && $minRating > 0) {
+                    $nextDateWhereConditions[] = "u.driver_rating >= :minRating";
+                    $nextDateQueryParams[':minRating'] = $minRating;
+                }
+
                 $nextDateWhereSql = "WHERE " . implode(" AND ", $nextDateWhereConditions);
 
                 $sqlNextDate = "SELECT DATE(r.departure_time) as next_ride_date
