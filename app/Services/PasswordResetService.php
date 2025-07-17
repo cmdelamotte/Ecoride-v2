@@ -138,16 +138,13 @@ class PasswordResetService
         // Hache le nouveau mot de passe avant de le stocker.
         $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
-        // Je construis un tableau de données contenant uniquement les champs à mettre à jour.
-        // Cela garantit que seuls les champs pertinents sont envoyés à la base de données.
-        $updateData = [
-            'password_hash' => $newPasswordHash,
-            'reset_token' => null,
-            'reset_token_expires_at' => null
-        ];
+        // Met à jour les propriétés de l'objet User.
+        $user->setPasswordHash($newPasswordHash);
+        $user->setResetToken(null);
+        $user->setResetTokenExpiresAt(null);
 
-        // Met à jour l'utilisateur via la méthode updatePartial du UserService.
-        $updated = $this->userService->updatePartial($user->getId(), $updateData);
+        // Met à jour l'utilisateur via le UserService.
+        $updated = $this->userService->update($user);
 
         // Retourne le statut de la mise à jour.
         if ($updated) {

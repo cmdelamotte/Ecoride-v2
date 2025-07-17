@@ -186,35 +186,7 @@ class UserService
         return $this->db->execute($sql, $updateData) > 0;
     }
 
-    /**
-     * Met à jour un utilisateur existant avec un tableau de données spécifique.
-     * Cette méthode est utilisée pour des mises à jour partielles et ciblées,
-     * notamment pour des champs qui ne sont pas directement liés à l'objet User complet
-     * ou pour des cas où seul un sous-ensemble de données est pertinent.
-     *
-     * @param int $id L'ID de l'utilisateur à mettre à jour.
-     * @param array $data Les données à mettre à jour (clé-valeur).
-     * @return bool True si la mise à jour a réussi, sinon false.
-     */
-    public function updatePartial(int $id, array $data): bool
-    {
-        if (empty($data)) {
-            return false;
-        }
-
-        $setParts = [];
-        foreach (array_keys($data) as $key) {
-            $setParts[] = "{$key} = :{$key}";
-        }
-        $setClause = implode(', ', $setParts);
-
-        $sql = "UPDATE users SET {$setClause} WHERE id = :id";
-        $data['id'] = $id; // J'ajoute l'id au tableau de paramètres pour la liaison.
-
-        // La méthode execute retourne le nombre de lignes affectées.
-        // Une mise à jour réussie doit affecter au moins une ligne.
-        return $this->db->execute($sql, $data) > 0;
-    }
+    
 
     /**
      * Supprime un utilisateur.
@@ -237,15 +209,19 @@ class UserService
      */
     public function updateResetToken(int $userId, string $token, string $expiresAt): bool
     {
-        // Je construis un tableau de données contenant uniquement les champs à mettre à jour.
-        // Cela garantit que seuls les champs pertinents sont envoyés à la base de données.
-        $updateData = [
-            'reset_token' => $token,
-            'reset_token_expires_at' => $expiresAt
-        ];
+        // Je récupère l'objet User correspondant à l'ID.
+        $user = $this->findById($userId);
 
-        // J'appelle la nouvelle méthode updatePartial pour cette mise à jour ciblée.
-        return $this->updatePartial($userId, $updateData);
+        if (!$user) {
+            return false; // L'utilisateur n'existe pas.
+        }
+
+        // Je mets à jour les propriétés de l'objet User.
+        $user->setResetToken($token);
+        $user->setResetTokenExpiresAt($expiresAt);
+
+        // Je passe l'objet User mis à jour à la méthode update.
+        return $this->update($user);
     }
 
     /**
