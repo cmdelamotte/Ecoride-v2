@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\BrandService;
 use App\Core\Logger;
+use App\Helpers\BrandHelper;
 
 /**
  * Classe BrandController
@@ -32,13 +33,7 @@ class BrandController extends Controller
         Logger::debug("BrandController: Marques récupérées: " . count($brands));
 
         // Je transforme les objets Brand en tableaux associatifs pour la sérialisation JSON.
-        $brandsAsArray = [];
-        foreach ($brands as $brand) {
-            $brandsAsArray[] = [
-                'id' => $brand->getId(),
-                'name' => $brand->getName()
-            ];
-        }
+        $brandsAsArray = BrandHelper::formatCollectionForApi($brands);
 
         // Je renvoie la liste des marques au format JSON.
         $this->jsonResponse(['success' => true, 'brands' => $brandsAsArray]);
