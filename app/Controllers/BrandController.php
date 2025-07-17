@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\BrandService;
+use App\Core\Logger;
 
 /**
  * Classe BrandController
@@ -25,10 +26,10 @@ class BrandController extends Controller
      */
     public function getBrands()
     {
-        error_log("BrandController: Appel de getBrands.");
+        Logger::debug("BrandController: Appel de getBrands.");
         // Je récupère toutes les marques via le service.
         $brands = $this->brandService->findAll();
-        error_log("BrandController: Marques récupérées: " . count($brands));
+        Logger::debug("BrandController: Marques récupérées: " . count($brands));
 
         // Je transforme les objets Brand en tableaux associatifs pour la sérialisation JSON.
         $brandsAsArray = [];

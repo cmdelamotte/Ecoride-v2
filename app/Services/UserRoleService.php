@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Models\User;
+use App\Core\Logger;
 use PDO;
 use PDOException;
 
@@ -44,7 +45,7 @@ class UserRoleService
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour du rôle.', 'status' => 500];
             }
         } catch (PDOException $e) {
-            error_log("Error in UserRoleService::updateFunctionalRole: " . $e->getMessage());
+            Logger::error("Error in UserRoleService::updateFunctionalRole: " . $e->getMessage());
             return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour du rôle.', 'status' => 500];
         }
     }

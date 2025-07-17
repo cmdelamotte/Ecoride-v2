@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Models\User;
+use App\Core\Logger;
 use PDO;
 use PDOException;
 
@@ -149,8 +150,9 @@ class UserAccountService
                 return ['success' => false, 'error' => 'Erreur lors de la suppression du compte.', 'status' => 500];
             }
         } catch (\Exception $e) {
-            error_log("Error in UserAccountService::deleteAccount: " . $e->getMessage());
+            Logger::error("Error in UserAccountService::deleteAccount: " . $e->getMessage());
             return ['success' => false, 'error' => 'Erreur interne du serveur lors de la suppression du compte.', 'status' => 500];
         }
     }
+
 }

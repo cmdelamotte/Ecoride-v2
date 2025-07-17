@@ -5,6 +5,7 @@ namespace App\Core;
 use PDO;
 use PDOException;
 use stdClass;
+use App\Core\Logger;
 
 /**
  * Classe Database (Singleton)
@@ -46,7 +47,7 @@ class Database
         } catch (PDOException $e) {
             // En cas d'erreur de connexion, je loggue l'erreur et j'arrête l'application
             // de manière propre pour éviter d'exposer des informations sensibles.
-            error_log("Database connection error: " . $e->getMessage());
+            Logger::error("Database connection error: " . $e->getMessage());
             // En production, un message plus générique serait affiché.
             die("Erreur de connexion à la base de données.");
         }
@@ -100,7 +101,7 @@ class Database
             return $result ?: null;
 
         } catch (PDOException $e) {
-            error_log("Database fetchOne error: " . $e->getMessage());
+            Logger::error("Database fetchOne error: " . $e->getMessage());
             return null; // En cas d'erreur, je retourne null pour une gestion gracieuse.
         }
     }
@@ -131,7 +132,7 @@ class Database
             }
 
         } catch (PDOException $e) {
-            error_log("Database fetchAll error: " . $e->getMessage());
+            Logger::error("Database fetchAll error: " . $e->getMessage());
             return []; // En cas d'erreur, je retourne un tableau vide.
         }
     }
@@ -151,7 +152,7 @@ class Database
             $stmt->execute($params);
             return $stmt->fetchColumn();
         } catch (PDOException $e) {
-            error_log("Database fetchColumn error: " . $e->getMessage());
+            Logger::error("Database fetchColumn error: " . $e->getMessage());
             return null;
         }
     }
@@ -170,7 +171,7 @@ class Database
             $stmt->execute($params);
             return $stmt->rowCount();
         } catch (PDOException $e) {
-            error_log("Database execute error: " . $e->getMessage());
+            Logger::error("Database execute error: " . $e->getMessage());
             return 0; // Retourne 0 en cas d'échec.
         }
     }

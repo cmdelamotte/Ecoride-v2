@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Core\Logger;
+
 /**
  * Classe AvatarService
  * Gère la logique de téléchargement et de gestion des fichiers d'avatar.
@@ -36,21 +38,21 @@ class AvatarService
     {
         // Vérifie si un fichier a été réellement téléchargé et s'il n'y a pas d'erreur.
         if (!isset($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
-            error_log("AvatarService: Erreur de téléchargement ou fichier manquant.");
+            Logger::error("AvatarService: Erreur de téléchargement ou fichier manquant.");
             return null;
         }
 
         // Valide le type de fichier pour s'assurer que c'est une image.
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!in_array($file['type'], $allowedTypes)) {
-            error_log("AvatarService: Type de fichier non autorisé: " . $file['type']);
+            Logger::error("AvatarService: Type de fichier non autorisé: " . $file['type']);
             return null;
         }
 
         // Valide la taille du fichier (ex: max 2MB).
         // La taille est en octets.
         if ($file['size'] > 2 * 1024 * 1024) { // 2MB
-            error_log("AvatarService: Fichier trop volumineux: " . $file['size'] . " octets.");
+            Logger::error("AvatarService: Fichier trop volumineux: " . $file['size'] . " octets.");
             return null;
         }
 
@@ -63,7 +65,7 @@ class AvatarService
         if (move_uploaded_file($file['tmp_name'], $destination)) {
             return $fileName;
         } else {
-            error_log("AvatarService: Échec du déplacement du fichier vers " . $destination);
+            Logger::error("AvatarService: Échec du déplacement du fichier vers " . $destination);
             return null;
         }
     }

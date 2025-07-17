@@ -7,6 +7,7 @@ use App\Models\Ride;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\Brand;
+use App\Core\Logger;
 use PDO;
 use DateTime;
 use Exception;
@@ -303,7 +304,7 @@ class SearchFilterService
 
         } catch (Exception $e) {
             // En cas d'erreur, on log et on prépare une réponse d'échec
-            error_log("SearchFilterService Error: " . $e->getMessage());
+            Logger::error("SearchFilterService Error: " . $e->getMessage());
             $response['success'] = false;
             $response['message'] = "Une erreur technique est survenue lors de la recherche.";
         }

@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Controllers\ErrorController;
+use App\Core\Logger;
 
 /**
  * Classe Router
@@ -131,7 +132,7 @@ class Router
 
         // Vérifie si la classe du contrôleur existe.
         if (!class_exists($controllerName)) {
-            error_log("Controller class not found: " . $controllerName);
+            Logger::error("Controller class not found: " . $controllerName);
             $this->handleError('internalError'); // Erreur interne du serveur
             return;
         }
@@ -140,7 +141,7 @@ class Router
 
         // Vérifie si la méthode existe dans le contrôleur.
         if (!method_exists($controller, $methodName)) {
-            error_log("Controller method not found: " . $controllerName . "::" . $methodName);
+            Logger::error("Controller method not found: " . $controllerName . "::" . $methodName);
             $this->handleError('internalError'); // Erreur interne du serveur
             return;
         }

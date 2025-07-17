@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Models\User;
 use App\Services\UserService; // Ajout de l'importation explicite
+use App\Core\Logger;
 use PDO;
 
 /**
@@ -52,7 +53,7 @@ class DriverPreferenceService
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour des préférences.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            error_log("Error in DriverPreferenceService::updatePreferences: " . $e->getMessage());
+            Logger::error("Error in DriverPreferenceService::updatePreferences: " . $e->getMessage());
             return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour des préférences.', 'status' => 500];
         }
     }
