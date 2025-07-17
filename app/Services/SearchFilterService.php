@@ -287,10 +287,8 @@ class SearchFilterService
                                 ORDER BY r.departure_time ASC
                                 LIMIT 1";
 
-                $stmtNextDate = $this->db->getConnection()->prepare($sqlNextDate);
-                $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));
-                $stmtNextDate = $this->db->getConnection()->prepare($sqlNextDate);
-                $stmtNextDate->execute(array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded]));
+                
+
                 $nextAvailable = $this->db->fetchColumn(
                     $sqlNextDate,
                     array_merge($nextDateQueryParams, [':seats_needed' => $seatsNeeded])

@@ -2,11 +2,6 @@
 
 namespace App\Controllers;
 
-file_put_contents('debug.log', "POST: " . print_r($_POST, true) . "\n", FILE_APPEND);
-file_put_contents('debug.log', "RAW: " . file_get_contents('php://input') . "\n", FILE_APPEND);
-file_put_contents('debug.log', "SESSION: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
-
-
 use App\Core\Controller;
 use App\Services\UserService;
 use App\Services\VehicleService;
@@ -37,7 +32,6 @@ class UserController extends Controller
 
     public function __construct()
     {
-        parent::__construct();
         $this->userService = new UserService();
         $this->vehicleService = new VehicleService();
         $this->userRoleService = new UserRoleService();

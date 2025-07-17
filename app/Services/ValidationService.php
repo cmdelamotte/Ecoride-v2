@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use PDO; // Import de la classe PDO
+use App\Core\Database;
 
 class ValidationService
 {
@@ -129,14 +130,14 @@ class ValidationService
             $errors['license_plate'] = "La plaque d'immatriculation est requise.";
         } else {
             // Validation de l'unicité de la plaque d'immatriculation
-            $db = \App\Core\Database::getInstance()->getConnection();
-            $stmt = $db->prepare("SELECT id FROM Vehicles WHERE license_plate = :license_plate" . ($vehicleId ? " AND id != :id" : ""));
-            $stmt->bindParam(':license_plate', $data['license_plate']);
+            $db = Database::getInstance();
+            $sql = "SELECT id FROM Vehicles WHERE license_plate = :license_plate";
+            $params = [':license_plate' => $data['license_plate']];
             if ($vehicleId) {
-                $stmt->bindParam(':id', $vehicleId, PDO::PARAM_INT);
+                $sql .= " AND id != :id";
+                $params[':id'] = $vehicleId;
             }
-            $stmt->execute();
-            if ($stmt->fetch()) {
+            if ($db->fetchOne($sql, $params)) {
                 $errors['license_plate'] = 'Cette plaque d\'immatriculation est déjà enregistrée.';
             }
         }

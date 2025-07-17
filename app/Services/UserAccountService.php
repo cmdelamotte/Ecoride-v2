@@ -16,13 +16,13 @@ use PDOException;
  */
 class UserAccountService
 {
-    private PDO $db;
+    private Database $db;
     private UserService $userService;
     private AvatarService $avatarService;
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance();
         $this->userService = new UserService();
         $this->avatarService = new AvatarService();
     }

@@ -22,7 +22,6 @@ class VehicleController extends Controller
 
     public function __construct()
     {
-        parent::__construct();
         $this->vehicleManagementService = new VehicleManagementService();
         $this->brandService = new BrandService();
     }

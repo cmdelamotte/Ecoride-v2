@@ -16,7 +16,6 @@ class BrandController extends Controller
 
     public function __construct()
     {
-        parent::__construct();
         $this->brandService = new BrandService();
     }
 

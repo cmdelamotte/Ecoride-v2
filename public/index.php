@@ -18,9 +18,3 @@ $router = new App\Core\Router();
 // 5. Lancement de l'application
 $router->run();
 
-try {
-    $db = App\Core\Database::getInstance()->getConnection();
-    echo "Connexion à la base de données réussie !";
-    } catch (PDOException $e) {
-    echo "Erreur de connexion à la base de données : " . $e->getMessage();
-}

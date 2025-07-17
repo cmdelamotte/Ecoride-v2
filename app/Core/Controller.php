@@ -12,20 +12,7 @@ use PDO;
  */
 class Controller
 {
-    /**
-     * @var PDO $db Instance de la connexion PDO à la base de données.
-     */
-    protected PDO $db;
-
-    /**
-     * Constructeur du contrôleur.
-     * Initialise la connexion à la base de données en utilisant le pattern Singleton
-     * pour s'assurer qu'une seule instance de PDO est utilisée à travers l'application.
-     */
-    public function __construct()
-    {
-        $this->db = Database::getInstance()->getConnection();
-    }
+    
 
     /**
      * Rend une vue PHP en injectant des données.
