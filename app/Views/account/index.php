@@ -74,6 +74,10 @@ $pageScripts = ['/js/pages/accountPage.js'];
                             <span class="form-label">Téléphone :</span>
                             <span id="account-phone-display" class="fw-bold"><?= $phone ?></span>
                         </div>
+                        <div class="mb-3">
+                            <span class="form-label">Adresse :</span>
+                            <span id="account-address-display" class="fw-bold"><?= htmlspecialchars($user->getAddress() ?? 'Non renseignée') ?></span>
+                        </div>
                         <p><span class="form-label">Crédits EcoRide :</span> <span id="account-credits" class="fw-bold"><?= $credits ?></span></p>
                         <div id="personal-info-actions">
                             <!-- TODO: Créer les routes et pages pour ces liens -->
