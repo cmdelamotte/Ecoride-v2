@@ -40,6 +40,10 @@ class UserAccountService
     {
         $errors = [];
         // Validation des données
+        if (empty($data['username'])) $errors['username'] = 'Le pseudo est requis.';
+        elseif (strlen($data['username']) < 2) $errors['username'] = 'Le pseudo doit contenir au moins 2 caractères.';
+        elseif (!preg_match("/^[a-zA-Z0-9\s'-]+$/", $data['username'])) $errors['username'] = 'Le pseudo contient des caractères non autorisés.';
+
         if (empty($data['first_name'])) $errors['first_name'] = 'Le prénom est requis.';
         if (empty($data['last_name'])) $errors['last_name'] = 'Le nom est requis.';
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $errors['email'] = 'L\'email est invalide.';
@@ -48,19 +52,24 @@ class UserAccountService
             return ['success' => false, 'errors' => $errors];
         }
 
+        // Vérifier si le pseudo est déjà utilisé par un autre utilisateur
+        $existingUserByUsername = $this->userService->findByEmailOrUsername($data['username']);
+        if ($existingUserByUsername && $existingUserByUsername->getId() !== $user->getId()) {
+            $errors['username'] = 'Ce pseudo n\'est pas disponible.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
         // Vérifier si l'email est déjà utilisé par un autre utilisateur
-        // Je récupère l'utilisateur par email pour vérifier s'il existe déjà.
-        $existingUser = $this->userService->findByEmailOrUsername($data['email']);
-        // Si un utilisateur existe avec cet email ET que ce n'est pas l'utilisateur actuel,
-        // alors l'email est déjà pris.
-        if ($existingUser && $existingUser->getId() !== $user->getId()) {
+        $existingUserByEmail = $this->userService->findByEmailOrUsername($data['email']);
+        if ($existingUserByEmail && $existingUserByEmail->getId() !== $user->getId()) {
             $errors['email'] = "Cette adresse email n'est pas disponible.";
             return ['success' => false, 'errors' => $errors];
         }
 
         // Mise à jour des propriétés de l'objet User avec les nouvelles données.
         // J'utilise les setters pour garantir l'encapsulation et la validation future si nécessaire.
-        $user->setFirstName(htmlspecialchars(trim($data['first_name'])))
+        $user->setUsername(htmlspecialchars(trim($data['username'])))
+             ->setFirstName(htmlspecialchars(trim($data['first_name'])))
              ->setLastName(htmlspecialchars(trim($data['last_name'])))
              ->setEmail(htmlspecialchars(trim($data['email'])))
              ->setPhoneNumber(htmlspecialchars(trim($data['phone_number'] ?? '')))

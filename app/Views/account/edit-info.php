@@ -34,6 +34,19 @@
                         <?php endif; ?>
 
                         <div class="col-12">
+                            <label for="username" class="visually-hidden">Pseudo</label>
+                            <div class="form-input-custom d-flex align-items-center">
+                                <i class="bi bi-person-badge me-2"></i>
+                                <input type="text" class="form-control-custom flex-grow-1 <?= isset($errors['username']) ? 'is-invalid' : '' ?>" id="username" name="username" placeholder="Pseudo" aria-label="Pseudo" value="<?= htmlspecialchars($oldInput['username'] ?? $user->getUsername()) ?>" required>
+                            </div>
+                            <?php if (isset($errors['username'])): ?>
+                                <div class="invalid-feedback d-block">
+                                    <?= htmlspecialchars($errors['username']) ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="col-12">
                             <label for="first_name" class="visually-hidden">Prénom</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-person me-2"></i>

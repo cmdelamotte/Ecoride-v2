@@ -129,6 +129,11 @@ class UserController extends Controller
                     $_SESSION['username'] = $updatedUser->getUsername();
                 }
 
+                // Met à jour le pseudo en session si modifié.
+                if ($updatedUser && $updatedUser->getUsername() !== $_SESSION['username']) {
+                    $_SESSION['username'] = $updatedUser->getUsername();
+                }
+
                 $this->render('account/index', [
                     'pageTitle' => 'Mon Compte',
                     'user' => $updatedUser, // Utilise l'utilisateur mis à jour
