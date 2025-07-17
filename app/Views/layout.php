@@ -15,6 +15,7 @@
     </header>
 
     <main id="main-content">
+        <div id="dynamic-alerts-container" class="container mt-3" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 1050; width: 100%; max-width: 700px;"></div>
         <?php echo $content; ?>
     </main>
 
@@ -22,6 +23,7 @@
 
     <!-- Scripts JavaScript globaux -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/js/utils/displayFlashMessage.js"></script>
     <!-- Section pour les scripts spécifiques à la page -->
     <?php if (isset($pageScripts)): ?>
         <?php foreach ($pageScripts as $script): ?>

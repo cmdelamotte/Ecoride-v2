@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '../utils/apiClient.js';
+import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 
 export class RoleForm {
     constructor(formSelector, driverInfoSection) {
@@ -32,14 +33,20 @@ export class RoleForm {
             const result = await apiClient.updateUserRole(selectedRole);
 
             if (result.success) {
-                alert(result.message);
-                // Recharger la page pour que la navbar et les autres éléments PHP se mettent à jour
-                window.location.reload();
+                displayFlashMessage(result.message, 'success');
+                // Mettre à jour la visibilité de la section chauffeur dynamiquement
+                if (this.driverInfoSection) {
+                    if (result.new_functional_role === 'driver' || result.new_functional_role === 'passenger_driver') {
+                        this.driverInfoSection.classList.remove('d-none');
+                    } else {
+                        this.driverInfoSection.classList.add('d-none');
+                    }
+                }
             } else {
-                alert('Erreur : ' + result.error);
+                displayFlashMessage(result.error, 'danger');
             }
         } catch (error) {
-            alert('Une erreur de communication est survenue.');
+            displayFlashMessage('Une erreur de communication est survenue.', 'danger');
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = 'Enregistrer mon rôle';
