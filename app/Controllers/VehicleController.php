@@ -87,10 +87,30 @@ class VehicleController extends Controller
     public function update(int $vehicleId)
     {
         $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
+        $user = AuthHelper::getAuthenticatedUser(); // Récupère l'objet User authentifié
         $data = $requestData['data'];
 
-        $result = $this->vehicleManagementService->updateVehicle($vehicleId, $userId, $data);
+        // Validation des données brutes du formulaire
+        $errors = ValidationService::validateVehicleData($data, $vehicleId);
+        if (!empty($errors)) {
+            $this->jsonResponse(['success' => false, 'errors' => $errors], 400);
+            return;
+        }
+
+        // Construction de l'objet Vehicle à partir des données validées
+        $vehicle = (new Vehicle())
+            ->setId($vehicleId) // Important : définir l'ID du véhicule à mettre à jour
+            ->setBrandId($data['brand_id'])
+            ->setModelName(htmlspecialchars(trim($data['model'])))
+            ->setColor(htmlspecialchars(trim($data['color'] ?? '')))
+            ->setLicensePlate(htmlspecialchars(trim($data['license_plate'])))
+            ->setRegistrationDate(empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])))
+            ->setPassengerCapacity($data['passenger_capacity'])
+            ->setIsElectric((bool)($data['is_electric'] ?? false))
+            ->setEnergyType(htmlspecialchars(trim($data['energy_type'] ?? '')));
+
+        // Appel du service avec l'objet Vehicle et l'ID utilisateur
+        $result = $this->vehicleManagementService->updateVehicle($vehicle, $user->getId());
 
         $this->jsonResponse($result, $result['status'] ?? 200);
     }

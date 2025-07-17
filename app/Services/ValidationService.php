@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use PDO; // Import de la classe PDO
+
 class ValidationService
 {
     /**

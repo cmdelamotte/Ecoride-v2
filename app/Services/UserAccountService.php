@@ -35,7 +35,7 @@ class UserAccountService
      * @param array $files Le tableau $_FILES contenant les fichiers téléchargés (ex: avatar).
      * @return array Un tableau avec le statut de succès et un message.
      */
-    public function updateProfile(int $userId, array $data, array $files = []): array
+    public function updateProfile(User $user, array $data, array $files = []): array
     {
         $errors = [];
         // Validation des données
@@ -48,34 +48,37 @@ class UserAccountService
         }
 
         // Vérifier si l'email est déjà utilisé par un autre utilisateur
+        // Je récupère l'utilisateur par email pour vérifier s'il existe déjà.
         $existingUser = $this->userService->findByEmailOrUsername($data['email']);
-        if ($existingUser && $existingUser->getId() !== $userId) {
+        // Si un utilisateur existe avec cet email ET que ce n'est pas l'utilisateur actuel,
+        // alors l'email est déjà pris.
+        if ($existingUser && $existingUser->getId() !== $user->getId()) {
             $errors['email'] = 'Cet email est déjà utilisé par un autre compte.';
             return ['success' => false, 'errors' => $errors];
         }
 
-        // Préparation des données pour la mise à jour
-        $updateData = [
-            'first_name' => htmlspecialchars(trim($data['first_name'])),
-            'last_name' => htmlspecialchars(trim($data['last_name'])),
-            'email' => htmlspecialchars(trim($data['email'])),
-            'phone_number' => htmlspecialchars(trim($data['phone_number'] ?? '')),
-            'birth_date' => htmlspecialchars(trim($data['birth_date'] ?? '')),
-            'address' => htmlspecialchars(trim($data['address'] ?? '')),
-        ];
+        // Mise à jour des propriétés de l'objet User avec les nouvelles données.
+        // J'utilise les setters pour garantir l'encapsulation et la validation future si nécessaire.
+        $user->setFirstName(htmlspecialchars(trim($data['first_name'])))
+             ->setLastName(htmlspecialchars(trim($data['last_name'])))
+             ->setEmail(htmlspecialchars(trim($data['email'])))
+             ->setPhoneNumber(htmlspecialchars(trim($data['phone_number'] ?? '')))
+             ->setBirthDate(htmlspecialchars(trim($data['birth_date'] ?? '')))
+             ->setAddress(htmlspecialchars(trim($data['address'] ?? '')));
 
         // Gère le téléchargement de l'avatar si un fichier est présent.
         if (isset($files['avatar']) && $files['avatar']['error'] === UPLOAD_ERR_OK) {
             $avatarFileName = $this->avatarService->handleUpload($files['avatar']);
             if ($avatarFileName) {
-                $updateData['profile_picture_path'] = $avatarFileName;
+                $user->setProfilePicturePath($avatarFileName);
             } else {
                 $errors['avatar'] = 'Erreur lors du téléchargement de l\'avatar.';
                 return ['success' => false, 'errors' => $errors];
             }
         }
 
-        $success = $this->userService->update($userId, $updateData);
+        // Je passe l'objet User complet à la méthode update du UserService.
+        $success = $this->userService->update($user);
 
         if ($success) {
             return ['success' => true, 'message' => 'Informations personnelles mises à jour avec succès.'];
@@ -93,13 +96,12 @@ class UserAccountService
      * @param string $confirmNewPassword La confirmation du nouveau mot de passe.
      * @return array Un tableau avec le statut de succès et un message/erreurs.
      */
-    public function changePassword(int $userId, string $currentPassword, string $newPassword, string $confirmNewPassword): array
+    public function changePassword(User $user, string $currentPassword, string $newPassword, string $confirmNewPassword): array
     {
         $errors = [];
 
-        // 1. Récupérer l'utilisateur pour vérifier le mot de passe actuel
-        $user = $this->userService->findById($userId);
-        if (!$user || !password_verify($currentPassword, $user->getPasswordHash())) {
+        // 1. Vérifier le mot de passe actuel
+        if (!password_verify($currentPassword, $user->getPasswordHash())) {
             $errors['current_password'] = 'Mot de passe actuel incorrect.';
         }
 
@@ -116,9 +118,12 @@ class UserAccountService
             return ['success' => false, 'errors' => $errors];
         }
 
-        // 3. Hasher le nouveau mot de passe et le mettre à jour
+        // 3. Hasher le nouveau mot de passe et le mettre à jour sur l'objet User
         $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $success = $this->userService->update($userId, ['password_hash' => $newPasswordHash]);
+        $user->setPasswordHash($newPasswordHash);
+
+        // 4. Persister l'objet User mis à jour via le UserService
+        $success = $this->userService->update($user);
 
         if ($success) {
             return ['success' => true, 'message' => 'Mot de passe mis à jour avec succès.'];

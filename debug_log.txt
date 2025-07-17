@@ -1,20 +1,24 @@
-PHP error logs:
+Erreurs VSC:
 
-[17-Jul-2025 02:03:50 UTC] PHP Fatal error:  Uncaught Error: Call to undefined method PDO::execute() in C:\laragon\www\Ecoride\New_Code\app\Services\VehicleManagementService.php:67
-Stack trace:
-#0 C:\laragon\www\Ecoride\New_Code\app\Controllers\VehicleController.php(78): App\Services\VehicleManagementService->addVehicle(Object(App\Models\Vehicle), 3)
-#1 [internal function]: App\Controllers\VehicleController->add()
-#2 C:\laragon\www\Ecoride\New_Code\app\Core\Router.php(149): call_user_func_array(Array, Array)
-#3 C:\laragon\www\Ecoride\New_Code\public\index.php(19): App\Core\Router->run()
-#4 {main}
-  thrown in C:\laragon\www\Ecoride\New_Code\app\Services\VehicleManagementService.php on line 67
+- Dans VehicleManagementService.php:
 
+ligne 85: 
+$stmt = $this->db->prepare("DELETE FROM Vehicles WHERE id = :id"); prepare est souligné: Call to unknown method: App\Core\Database::prepare()PHP(PHP0418)
+Undefined method 'prepare'.intelephense(P1013)
 
-Console Chrome:
+- dans VehicleService.php:
+ligne 56: 
+$brand = $this->brandService->findById($vehicle->getBrandId()); findById est souligné: Call to unknown method: App\Services\BrandService::findById()PHP(PHP0418)
+ligne 86:
+$brand = $this->brandService->findById($vehicle->getBrandId()); même erreur
 
-API call error: SyntaxError: Unexpected token '<', "<br />
-<b>"... is not valid JSON
-callApi	@	apiClient.js:31
-await in callApi		
-addVehicle	@	apiClient.js:42
-handleSubmit	@	VehicleForm.js:121
+- dans UserAccountService.php:
+ligne 78:
+$success = $this->userService->update($userId, $updateData); $userId est souligné: Argument '1' passed to update() is expected to be of type App\Models\User, int|null givenPHP(PHP0406)
+Expected type 'App\Models\User'. Found 'int'.intelephense(P1006)
+(parameter) int|null $userId
+même ligne, $updateData aussi est souligné: Too many arguments to function update(). 2 provided, but 1 accepted.PHP(PHP0443)
+
+ligne 121:
+$success = $this->userService->update($userId, ['password_hash' => $newPasswordHash]); $userId est souligné, même erreur que ligne 78.
+['password_hash' => $newPasswordHash] est souligné: Too many arguments to function update(). 2 provided, but 1 accepted.PHP(PHP0443)

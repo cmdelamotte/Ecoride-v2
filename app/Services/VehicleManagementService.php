@@ -78,7 +78,7 @@ class VehicleManagementService
                 return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.", 'errors' => [], 'status' => 500];
             }
         } catch (\PDOException $e) {
-            error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
+            
             // Vérifier si l'erreur est due à une contrainte d'unicité (SQLSTATE 23000)
             if ($e->getCode() === '23000') {
                 return ['success' => false, 'errors' => ['license_plate' => 'Cette plaque d\'immatriculation est déjà enregistrée.'], 'status' => 409];
@@ -98,37 +98,66 @@ class VehicleManagementService
      * @param array $data Les nouvelles données du véhicule.
      * @return array Résultat de l'opération.
      */
-    public function updateVehicle(int $vehicleId, int $userId, array $data): array
+    public function updateVehicle(Vehicle $vehicle, int $userId): array
     {
-        $errors = \App\Services\ValidationService::validateVehicleData($data, $vehicleId);
-
-        if (!empty($errors)) {
-            error_log("updateVehicle: Erreurs de validation: " . print_r($errors, true));
-            return ['success' => false, 'errors' => $errors, 'status' => 400];
-        }
-
         try {
             // Vérifier que le véhicule appartient bien à l'utilisateur
-            $vehicle = $this->vehicleService->findById($vehicleId);
-            if (!$vehicle || $vehicle->getUserId() !== $userId) {
+            // Je récupère le véhicule existant pour comparaison et pour m'assurer de son appartenance.
+            $existingVehicle = $this->vehicleService->findById($vehicle->getId());
+            if (!$existingVehicle || $existingVehicle->getUserId() !== $userId) {
                 return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
             }
 
-            $rowCount = $this->db->execute($sql, $insertData);
+            // Je construis le tableau de données à partir des propriétés de l'objet Vehicle.
+            // Cela garantit que seules les données de l'objet sont utilisées pour la mise à jour.
+            $data = [
+                'brand_id' => $vehicle->getBrandId(),
+                'model_name' => $vehicle->getModelName(),
+                'color' => $vehicle->getColor(),
+                'license_plate' => $vehicle->getLicensePlate(),
+                'registration_date' => $vehicle->getRegistrationDate(),
+                'passenger_capacity' => $vehicle->getPassengerCapacity(),
+                'is_electric' => (int)$vehicle->getIsElectric(), // Caster en int pour la BDD
+                'energy_type' => $vehicle->getEnergyType(),
+            ];
 
-            if ($success) {
-                $updatedVehicle = $this->vehicleService->findById($vehicleId);
+            // Je filtre les valeurs nulles ou vides pour ne pas les inclure dans la requête UPDATE.
+            $updateData = array_filter($data, function($value) {
+                return !is_null($value) && $value !== ''; // Garde les valeurs non nulles et non vides
+            });
+
+            if (empty($updateData)) {
+                return ['success' => true, 'message' => 'Aucune modification à appliquer.', 'vehicle' => $vehicle, 'status' => 200];
+            }
+
+            $columns = implode(', ', array_keys($updateData));
+            $placeholders = ':' . implode(', :', array_keys($updateData));
+
+            $setParts = [];
+            foreach (array_keys($updateData) as $key) {
+                $setParts[] = "{$key} = :{$key}";
+            }
+            $setClause = implode(', ', $setParts);
+
+            $sql = "UPDATE Vehicles SET {$setClause} WHERE id = :id";
+            $updateData['id'] = $vehicle->getId(); // J'ajoute l'id du véhicule à mettre à jour.
+
+            $rowCount = $this->db->execute($sql, $updateData);
+
+            if ($rowCount > 0) {
+                // Je récupère l'objet Vehicle complet avec sa marque pour le retour.
+                $updatedVehicle = $this->vehicleService->findWithBrandById($vehicle->getId());
                 return ['success' => true, 'message' => 'Véhicule mis à jour avec succès.', 'vehicle' => $updatedVehicle, 'status' => 200];
             } else {
                 return ['success' => false, 'error' => 'Erreur lors de la mise à jour du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
-            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
-            // Vérifier si l'erreur est due à une contrainte de clé étrangère
-            if ($e->getCode() === '23000') { // SQLSTATE pour violation d'intégrité
-                return ['success' => false, 'error' => 'Impossible de supprimer ce véhicule car il est associé à un ou plusieurs trajets.', 'status' => 409]; // 409 Conflict
+            
+            // Vérifier si l'erreur est due à une contrainte d'unicité (SQLSTATE 23000)
+            if ($e->getCode() === '23000') {
+                return ['success' => false, 'errors' => ['license_plate' => 'Cette plaque d\'immatriculation est déjà enregistrée.'], 'status' => 409];
             } else {
-                return ['success' => false, 'error' => 'Erreur interne du serveur lors de la suppression du véhicule.', 'status' => 500];
+                return ['success' => false, 'error' => 'Erreur interne du serveur lors de la mise à jour du véhicule.', 'status' => 500];
             }
         }
     }
@@ -149,17 +178,16 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
             }
 
-            $stmt = $this->db->prepare("DELETE FROM Vehicles WHERE id = :id");
-            $success = $stmt->execute(['id' => $vehicleId]);
+            $rowCount = $this->db->execute("DELETE FROM Vehicles WHERE id = :id", ['id' => $vehicleId]);
 
-            if ($success) {
+            if ($rowCount > 0) {
                 return ['success' => true, 'message' => 'Véhicule supprimé avec succès.', 'status' => 200];
             } else {
                 return ['success' => false, 'error' => 'Erreur lors de la suppression du véhicule.', 'status' => 500];
             }
         } catch (\PDOException $e) {
             // Log l'erreur complète pour le débogage côté serveur
-            error_log("VehicleManagementService::deleteVehicle Error: " . $e->getMessage());
+            
 
             // Vérifier si l'erreur est due à une contrainte de clé étrangère (SQLSTATE 23000)
             if ($e->getCode() === '23000') {
