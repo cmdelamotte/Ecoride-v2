@@ -54,7 +54,7 @@ class UserAccountService
         // Si un utilisateur existe avec cet email ET que ce n'est pas l'utilisateur actuel,
         // alors l'email est déjà pris.
         if ($existingUser && $existingUser->getId() !== $user->getId()) {
-            $errors['email'] = 'Cet email est déjà utilisé par un autre compte.';
+            $errors['email'] = "Cette adresse email n'est pas disponible.";
             return ['success' => false, 'errors' => $errors];
         }
 
