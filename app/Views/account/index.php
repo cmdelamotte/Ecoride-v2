@@ -71,7 +71,7 @@ $pageScripts = ['/js/pages/accountPage.js'];
                         <p><span class="form-label">Crédits EcoRide :</span> <span id="account-credits" class="fw-bold"><?= $credits ?></span></p>
                         <div id="personal-info-actions">
                             <!-- TODO: Créer les routes et pages pour ces liens -->
-                            <a href="/account/edit-info" class="btn secondary-btn btn-sm mt-2">Modifier mes informations</a>
+                            <a href="/account/update-info" class="btn secondary-btn btn-sm mt-2">Modifier mes informations</a>
                             <a href="/account/edit-password" class="btn btn-outline-danger btn-sm mt-2">Changer de mot de passe</a>
                         </div>
                     </div>

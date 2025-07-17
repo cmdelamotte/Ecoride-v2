@@ -108,7 +108,7 @@ class UserController extends Controller
      * Correspond à la route GET /account/edit (affichage) et POST /account/edit (traitement).
      * Le contrôleur se contente de recevoir la requête, d'appeler le service et de gérer la redirection/affichage.
      */
-    public function edit()
+    public function updateInfo()
     {
         $user = AuthHelper::getAuthenticatedUser();
 
@@ -137,7 +137,7 @@ class UserController extends Controller
                 ]);
                 return;
             } else {
-                $this->render('account/edit', [
+                $this->render('account/edit-info', [
                     'pageTitle' => 'Modifier mon profil',
                     'user' => $user, // Utilise l'utilisateur original pour pré-remplir le formulaire
                     'errors' => $result['errors'] ?? [],
@@ -148,7 +148,7 @@ class UserController extends Controller
         }
 
         // Affiche le formulaire d'édition (méthode GET).
-        $this->render('account/edit', [
+        $this->render('account/edit-info', [
             'pageTitle' => 'Modifier mon profil',
             'user' => $user
         ]);

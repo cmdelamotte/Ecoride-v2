@@ -174,6 +174,14 @@ return [
     ],
     [
         'path' => '/account/update-info',
+        'http_method' => 'GET', // Affichage du formulaire de modification des informations personnelles
+        'controller' => 'UserController',
+        'method' => 'updateInfo',
+        'auth' => true,
+        'roles' => []
+    ],
+    [
+        'path' => '/account/update-info',
         'http_method' => 'POST', // Mise à jour des informations personnelles
         'controller' => 'UserController',
         'method' => 'updateInfo',
