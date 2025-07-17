@@ -134,13 +134,8 @@ class UserController extends Controller
                     $_SESSION['username'] = $updatedUser->getUsername();
                 }
 
-                $this->render('account/index', [
-                    'pageTitle' => 'Mon Compte',
-                    'user' => $updatedUser, // Utilise l'utilisateur mis à jour
-                    'vehicles' => $this->vehicleService->findByUserId($user->getId()),
-                    'success' => 'Votre profil a été mis à jour avec succès.'
-                ]);
-                return;
+                \App\Core\FlashMessage::set('success', 'Vos informations personnelles ont été mises à jour avec succès.');
+                $this->redirect('/account');
             } else {
                 $this->render('account/edit-info', [
                     'pageTitle' => 'Modifier mon profil',
@@ -191,9 +186,8 @@ class UserController extends Controller
             $result = $this->userAccountService->changePassword($user, $currentPassword, $newPassword, $confirmNewPassword);
 
             if ($result['success']) {
-                $_SESSION['success_message'] = 'Votre mot de passe a été mis à jour avec succès.';
-                header('Location: /account');
-                exit();
+                \App\Core\FlashMessage::set('success', 'Votre mot de passe a été mis à jour avec succès.');
+                $this->redirect('/account');
             } else {
                 $this->render('account/edit-password', [
                     'pageTitle' => 'Modifier mon mot de passe',

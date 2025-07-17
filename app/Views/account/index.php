@@ -37,12 +37,11 @@ $pageScripts = ['/js/pages/accountPage.js'];
 
                 <!-- CARTE INFORMATIONS PERSONNELLES -->
                 <div class="card mb-4">
-                    <?php if (isset($_SESSION['success_message'])): ?>
+                    <?php if (\App\Core\FlashMessage::has('success')): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <?= htmlspecialchars($_SESSION['success_message']) ?>
+                            <?= \App\Core\FlashMessage::get('success') ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                        <?php unset($_SESSION['success_message']); // Supprime le message après l'affichage ?>
                     <?php endif; ?>
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h2 class="h5 mb-0">Informations Personnelles</h2>

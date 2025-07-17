@@ -42,6 +42,17 @@ class Controller
     }
 
     /**
+     * Redirige l'utilisateur vers une URL donnée.
+     *
+     * @param string $url L'URL vers laquelle rediriger.
+     */
+    protected function redirect(string $url): void
+    {
+        header('Location: ' . $url);
+        exit();
+    }
+
+    /**
      * Envoie une réponse JSON au client.
      * Définit l'en-tête Content-Type à application/json, le code de statut HTTP,
      * encode les données en JSON et termine l'exécution du script.
