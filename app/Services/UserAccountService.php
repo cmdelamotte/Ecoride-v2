@@ -135,13 +135,13 @@ class UserAccountService
     /**
      * Supprime le compte d'un utilisateur.
      *
-     * @param int $userId L'ID de l'utilisateur à supprimer.
+     * @param User $user L'objet User de l'utilisateur à supprimer.
      * @return array Un tableau avec le statut de succès et un message.
      */
-    public function deleteAccount(int $userId): array
+    public function deleteAccount(User $user): array
     {
         try {
-            $success = $this->userService->delete($userId);
+            $success = $this->userService->delete($user->getId());
 
             if ($success) {
                 return ['success' => true, 'message' => 'Votre compte a été supprimé avec succès.'];

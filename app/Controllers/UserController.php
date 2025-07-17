@@ -160,15 +160,12 @@ class UserController extends Controller
      */
     public function delete()
     {
-        $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
+        $user = AuthHelper::getAuthenticatedUser();
 
-        $result = $this->userAccountService->deleteAccount($userId);
+        $result = $this->userAccountService->deleteAccount($user);
 
         if ($result['success']) {
-            session_destroy();
-            header('Location: /login');
-            exit();
+            $this->jsonResponse(['success' => true, 'message' => 'Votre compte a été supprimé avec succès. Redirection...'], 200);
         } else {
             $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);
         }
