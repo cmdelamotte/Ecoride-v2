@@ -33,13 +33,8 @@ export class RoleForm {
 
             if (result.success) {
                 alert(result.message);
-                if (this.driverInfoSection) {
-                    if (result.new_functional_role === 'driver' || result.new_functional_role === 'passenger_driver') {
-                        this.driverInfoSection.classList.remove('d-none');
-                    } else {
-                        this.driverInfoSection.classList.add('d-none');
-                    }
-                }
+                // Recharger la page pour que la navbar et les autres éléments PHP se mettent à jour
+                window.location.reload();
             } else {
                 alert('Erreur : ' + result.error);
             }
