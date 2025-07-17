@@ -115,7 +115,7 @@
                             <label for="address" class="visually-hidden">Adresse</label>
                             <div class="form-input-custom d-flex align-items-center">
                                 <i class="bi bi-house me-2"></i>
-                                <input type="text" class="form-control-custom flex-grow-1 <?= isset($errors['address']) ? 'is-invalid' : '' ?>" id="address" name="address" placeholder="Adresse" aria-label="Adresse" value="<?= htmlspecialchars($oldInput['address'] ?? $user->getAddress()) ?>">
+                                <input type="text" class="form-control-custom flex-grow-1 <?= isset($errors['address']) ? 'is-invalid' : '' ?>" id="address" name="address" placeholder="Adresse" aria-label="Adresse" value="<?= htmlspecialchars((string)($oldInput['address'] ?? $user->getAddress() ?? '')) ?>">
                             </div>
                             <?php if (isset($errors['address'])): ?>
                                 <div class="invalid-feedback d-block">
