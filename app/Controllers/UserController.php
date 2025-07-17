@@ -72,12 +72,15 @@ class UserController extends Controller
     public function updateRole()
     {
         $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
+        // Je récupère l'utilisateur authentifié. C'est l'objet User que le service attend.
+        $user = AuthHelper::getAuthenticatedUser();
         $data = $requestData['data'];
 
-        $result = $this->userRoleService->updateFunctionalRole($userId, $data['role'] ?? null);
+        $result = $this->userRoleService->updateFunctionalRole($user, $data['role'] ?? null);
 
         if ($result['success']) {
+            // Je mets à jour le rôle en session pour qu'il soit immédiatement pris en compte.
+            $_SESSION['user_roles'] = array_filter([$user->getSystemRole(), 'ROLE_' . strtoupper($result['new_functional_role'])]);
             $this->jsonResponse(['success' => true, 'message' => $result['message'], 'new_functional_role' => $result['new_functional_role']]);
         } else {
             $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);

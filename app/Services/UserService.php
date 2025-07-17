@@ -119,66 +119,71 @@ class UserService
      */
     public function update(User $user): bool
     {
-        // Je construis le tableau de données à partir des propriétés de l'objet User.
-        // Cela garantit que seules les données de l'objet sont utilisées pour la mise à jour.
-        $data = [
-            'username' => $user->getUsername(),
-            'email' => $user->getEmail(),
-            'password_hash' => $user->getPasswordHash(),
-            'first_name' => $user->getFirstName(),
-            'last_name' => $user->getLastName(),
-            'address' => $user->getAddress(),
-            'birth_date' => $user->getBirthDate(),
-            'phone_number' => $user->getPhoneNumber(),
-            'profile_picture_path' => $user->getProfilePicturePath(),
-            'system_role' => $user->getSystemRole(),
-            'functional_role' => $user->getFunctionalRole(),
-            'driver_rating' => $user->getDriverRating(),
-            'account_status' => $user->getAccountStatus(),
-            'credits' => $user->getCredits(),
-            'driver_pref_animals' => $user->getDriverPrefAnimals(),
-            'driver_pref_smoker' => $user->getDriverPrefSmoker(),
-            'driver_pref_music' => $user->getDriverPrefMusic(),
-            'driver_pref_custom' => $user->getDriverPrefCustom(),
-            'reset_token' => $user->getResetToken(),
-            'reset_token_expires_at' => $user->getResetTokenExpiresAt(),
-            'created_at' => $user->getCreatedAt(),
-            'updated_at' => $user->getUpdatedAt(),
-        ];
+        // 1. Récupérer l'utilisateur existant de la base de données pour comparaison.
+        $existingUser = $this->findById($user->getId());
 
-        // Je filtre les valeurs nulles ou vides pour ne mettre à jour que les champs pertinents.
-        // Cela évite d'écraser des données avec des valeurs nulles si elles ne sont pas fournies.
-        $updateData = array_filter($data, function($value, $key) {
-            // Exclure les valeurs nulles
-            if (is_null($value)) {
-                return false;
+        if (!$existingUser) {
+            // L'utilisateur n'existe pas, impossible de mettre à jour.
+            return false;
+        }
+
+        $updateData = [];
+        // Utiliser la réflexion pour obtenir toutes les propriétés de l'objet User.
+        $reflectionClass = new \ReflectionClass($user);
+        $properties = $reflectionClass->getProperties(\ReflectionProperty::IS_PRIVATE);
+
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
+            // Ignorer les propriétés qui ne sont pas des colonnes de la BDD ou qui sont gérées automatiquement.
+            if (in_array($propertyName, ['id', 'created_at', 'updated_at', 'system_role'])) {
+                continue;
             }
 
-            // Gérer spécifiquement les booléens
-            if (in_array($key, ['driver_pref_animals', 'driver_pref_smoker', 'driver_pref_music'])) {
-                // Si c'est un booléen, je le garde (true/false/0/1 sont valides)
-                return true;
-            }
+            // Rendre la propriété accessible pour lire sa valeur.
+            $property->setAccessible(true);
+            $newValue = $property->getValue($user);
+            $oldValue = $property->getValue($existingUser);
 
-            // Exclure les chaînes vides pour les colonnes qui ne les acceptent pas
-            if (is_string($value) && $value === '') {
-                // Je suppose que les colonnes suivantes ne doivent pas être mises à jour avec une chaîne vide
-                // Adaptez cette liste selon les contraintes de votre BDD
-                $nullableStringColumns = ['address', 'profile_picture_path', 'driver_pref_custom', 'reset_token', 'reset_token_expires_at'];
-                if (!in_array($key, $nullableStringColumns)) {
-                    return false;
+            // Comparer les valeurs. Si elles sont différentes, inclure dans la mise à jour.
+            // Gérer les cas spécifiques pour les booléens et les chaînes vides.
+            if ($newValue !== $oldValue) {
+                // Pour les booléens, s'assurer que false est bien 0 et true est 1.
+                if (is_bool($newValue)) {
+                    $updateData[$propertyName] = (int)$newValue;
+                } 
+                // Pour les chaînes vides, les traiter comme null si la colonne est nullable
+                // et que la valeur précédente n'était pas vide.
+                elseif (is_string($newValue) && $newValue === '') {
+                    // Liste des colonnes qui peuvent être nulles et pour lesquelles une chaîne vide doit être null
+                    $nullableStringColumns = ['address', 'profile_picture_path', 'driver_pref_custom', 'reset_token', 'reset_token_expires_at'];
+                    if (in_array($propertyName, $nullableStringColumns)) {
+                        $updateData[$propertyName] = null;
+                    } else {
+                        $updateData[$propertyName] = $newValue; // Garder la chaîne vide si la colonne n'est pas nullable
+                    }
+                }
+                else {
+                    $updateData[$propertyName] = $newValue;
                 }
             }
-            
-            // Pour les autres types (int, float, string non vide), je les garde
-            return true;
-        }, ARRAY_FILTER_USE_BOTH);
+        }
 
         if (empty($updateData)) {
             return false; // Rien à mettre à jour
         }
 
-        return $this->updatePartial($user->getId(), $updateData);
+        $setParts = [];
+        foreach (array_keys($updateData) as $key) {
+            $setParts[] = "{$key} = :{$key}";
+        }
+        $setClause = implode(', ', $setParts);
+
+        $sql = "UPDATE users SET {$setClause} WHERE id = :id";
+        $updateData['id'] = $user->getId(); // J'ajoute l'id de l'utilisateur à mettre à jour.
+
+        // La méthode execute retourne le nombre de lignes affectées.
+        // Une mise à jour réussie doit affecter au moins une ligne.
+        return $this->db->execute($sql, $updateData) > 0;
     }
 
     /**
