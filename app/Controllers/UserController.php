@@ -122,16 +122,22 @@ class UserController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Délègue la logique de mise à jour du profil au UserAccountService.
             // Le service est responsable de la validation, du téléchargement d'avatar et de la mise à jour en BDD.
-            $result = $this->userAccountService->updateProfile($user->getId(), $_POST, $_FILES);
+            // Je passe l'objet User directement au service.
+            $result = $this->userAccountService->updateProfile($user, $_POST, $_FILES);
 
             if ($result['success']) {
+                // Recharger l'utilisateur après mise à jour pour s'assurer que l'objet en session est à jour.
+                // Cela est important car les setters de l'objet User sont utilisés pour la mise à jour.
+                $updatedUser = $this->userService->findById($user->getId());
+                
                 // Met à jour le nom d'utilisateur en session si modifié.
-                if (isset($_POST['username'])) {
-                    $_SESSION['username'] = $_POST['username'];
+                if ($updatedUser && $updatedUser->getUsername() !== $_SESSION['username']) {
+                    $_SESSION['username'] = $updatedUser->getUsername();
                 }
+
                 $this->render('account/index', [
                     'pageTitle' => 'Mon Compte',
-                    'user' => $this->userService->findById($user->getId()), // Recharger l'utilisateur après mise à jour
+                    'user' => $updatedUser, // Utilise l'utilisateur mis à jour
                     'vehicles' => $this->vehicleService->findByUserId($user->getId()),
                     'success' => 'Votre profil a été mis à jour avec succès.'
                 ]);

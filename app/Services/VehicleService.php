@@ -79,17 +79,12 @@ class VehicleService
         );
 
         // Ensuite, pour chaque véhicule, je charge sa marque.
-        // C'est un exemple de "N+1 query", qui est simple à écrire mais peut être inefficace
-        // sur de très grandes listes. Pour ce projet, c'est une approche claire et acceptable.
+        // J'utilise la méthode findWithBrandById pour réutiliser la logique d'hydratation de la marque.
+        $fullVehicles = [];
         foreach ($vehicles as $vehicle) {
-            if ($vehicle->getBrandId()) {
-                $brand = $this->brandService->findById($vehicle->getBrandId());
-                if ($brand) {
-                    $vehicle->setBrand($brand);
-                }
-            }
+            $fullVehicles[] = $this->findWithBrandById($vehicle->getId());
         }
 
-        return $vehicles;
+        return array_filter($fullVehicles); // Retourne uniquement les véhicules qui ont pu être entièrement hydratés
     }
 }
