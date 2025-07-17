@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Core\Database;
 use App\Models\User;
 use App\Services\UserService;
-use App\Services\ValidationService;
-use PDO;
 
 /**
  * Classe PasswordResetService
@@ -17,6 +15,7 @@ use PDO;
 class PasswordResetService
 {
     private UserService $userService;
+    private Database $db;
 
     /**
      * Constructeur de la classe PasswordResetService.
@@ -25,6 +24,7 @@ class PasswordResetService
     public function __construct()
     {
         $this->userService = new UserService();
+        $this->db = Database::getInstance();
     }
 
     /**
@@ -54,8 +54,7 @@ class PasswordResetService
             $expiresAt = date('Y-m-d H:i:s', strtotime('+3 hour'));
 
             // Met à jour le token de réinitialisation et sa date d'expiration dans les données de l'utilisateur.
-            // Cette opération est déléguée à UserService pour maintenir la séparation des responsabilités.
-            $this->userService->updateResetToken($user->getId(), $token, $expiresAt);
+            $this->updateResetToken($user->getId(), $token, $expiresAt);
 
             // Construit le lien de réinitialisation qui sera envoyé à l'utilisateur.
             $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/reset-password?token=' . $token;
@@ -84,8 +83,7 @@ class PasswordResetService
         }
 
         // Recherche l'utilisateur associé au token.
-        // Cette opération est déléguée à UserService.
-        $user = $this->userService->findByResetToken($token);
+        $user = $this->findByResetToken($token);
 
         // Si aucun utilisateur n'est trouvé ou si le token est expiré, retourne une erreur.
         if (!$user) {
@@ -128,7 +126,7 @@ class PasswordResetService
         }
 
         // Valide le token et récupère l'utilisateur associé.
-        $user = $this->userService->findByResetToken($token);
+        $user = $this->findByResetToken($token);
 
         // Si le token est invalide ou expiré, retourne une erreur.
         if (!$user) {
@@ -152,5 +150,45 @@ class PasswordResetService
         } else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la mise à jour du mot de passe.']];
         }
+    }
+
+    /**
+     * Met à jour le jeton de réinitialisation de mot de passe et sa date d'expiration.
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @param string $token Le nouveau jeton.
+     * @param string $expiresAt La date d'expiration.
+     * @return bool Vrai si la mise à jour a réussi, faux sinon.
+     */
+    private function updateResetToken(int $userId, string $token, string $expiresAt): bool
+    {
+        // Je récupère l'objet User correspondant à l'ID.
+        $user = $this->userService->findById($userId);
+
+        if (!$user) {
+            return false; // L'utilisateur n'existe pas.
+        }
+
+        // Je mets à jour les propriétés de l'objet User.
+        $user->setResetToken($token);
+        $user->setResetTokenExpiresAt($expiresAt);
+
+        // Je passe l'objet User mis à jour à la méthode update.
+        return $this->userService->update($user);
+    }
+
+    /**
+     * Trouve un utilisateur par son jeton de réinitialisation de mot de passe.
+     *
+     * @param string $token Le jeton à rechercher.
+     * @return User|null Retourne une instance de User si le token est valide, sinon null.
+     */
+    private function findByResetToken(string $token): ?User
+    {
+        return $this->db->fetchOne(
+            "SELECT * FROM users WHERE reset_token = :token AND reset_token_expires_at > NOW()",
+            ['token' => $token],
+            User::class
+        );
     }
 }

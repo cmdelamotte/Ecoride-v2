@@ -198,43 +198,5 @@ class UserService
         return $this->db->execute("DELETE FROM users WHERE id = :id", ['id' => $id]) > 0;
     }
 
-    /**
-     * Met à jour le jeton de réinitialisation de mot de passe et sa date d'expiration.
-     *
-     * @param int $userId L'ID de l'utilisateur.
-     * @param string $token Le nouveau jeton.
-     * @param string $expiresAt La date d'expiration.
-     * @return bool Vrai si la mise à jour a réussi, faux sinon.
-     */
-    public function updateResetToken(int $userId, string $token, string $expiresAt): bool
-    {
-        // Je récupère l'objet User correspondant à l'ID.
-        $user = $this->findById($userId);
-
-        if (!$user) {
-            return false; // L'utilisateur n'existe pas.
-        }
-
-        // Je mets à jour les propriétés de l'objet User.
-        $user->setResetToken($token);
-        $user->setResetTokenExpiresAt($expiresAt);
-
-        // Je passe l'objet User mis à jour à la méthode update.
-        return $this->update($user);
-    }
-
-    /**
-     * Trouve un utilisateur par son jeton de réinitialisation de mot de passe.
-     *
-     * @param string $token Le jeton à rechercher.
-     * @return User|null Retourne une instance de User si le token est valide, sinon null.
-     */
-    public function findByResetToken(string $token): ?User
-    {
-        return $this->db->fetchOne(
-            "SELECT * FROM users WHERE reset_token = :token AND reset_token_expires_at > NOW()",
-            ['token' => $token],
-            User::class
-        );
-    }
+    
 }
