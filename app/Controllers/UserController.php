@@ -94,10 +94,11 @@ class UserController extends Controller
     public function updatePreferences()
     {
         $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
+        // Je récupère l'utilisateur authentifié. C'est l'objet User que le service attend.
+        $user = AuthHelper::getAuthenticatedUser();
         $data = $requestData['data'];
 
-        $result = $this->driverPreferenceService->updatePreferences($userId, $data);
+        $result = $this->driverPreferenceService->updatePreferences($user, $data);
 
         if ($result['success']) {
             $this->jsonResponse(['success' => true, 'message' => $result['message']]);

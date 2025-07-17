@@ -1,13 +1,13 @@
 PHP error logs:
 
-[16-Jul-2025 23:59:08 UTC] PHP Fatal error:  Uncaught TypeError: App\Services\UserRoleService::updateFunctionalRole(): Argument #1 ($user) must be of type App\Models\User, int given, called in C:\laragon\www\Ecoride\New_Code\app\Controllers\UserController.php on line 78 and defined in C:\laragon\www\Ecoride\New_Code\app\Services\UserRoleService.php:32
+[17-Jul-2025 00:25:50 UTC] PHP Fatal error:  Uncaught TypeError: App\Services\DriverPreferenceService::updatePreferences(): Argument #1 ($user) must be of type App\Models\User, int given, called in C:\laragon\www\Ecoride\New_Code\app\Controllers\UserController.php on line 100 and defined in C:\laragon\www\Ecoride\New_Code\app\Services\DriverPreferenceService.php:37
 Stack trace:
-#0 C:\laragon\www\Ecoride\New_Code\app\Controllers\UserController.php(78): App\Services\UserRoleService->updateFunctionalRole(17, 'passenger')
-#1 [internal function]: App\Controllers\UserController->updateRole()
+#0 C:\laragon\www\Ecoride\New_Code\app\Controllers\UserController.php(100): App\Services\DriverPreferenceService->updatePreferences(3, Array)
+#1 [internal function]: App\Controllers\UserController->updatePreferences()
 #2 C:\laragon\www\Ecoride\New_Code\app\Core\Router.php(149): call_user_func_array(Array, Array)
 #3 C:\laragon\www\Ecoride\New_Code\public\index.php(19): App\Core\Router->run()
 #4 {main}
-  thrown in C:\laragon\www\Ecoride\New_Code\app\Services\UserRoleService.php on line 32
+  thrown in C:\laragon\www\Ecoride\New_Code\app\Services\DriverPreferenceService.php on line 37
 
 
 Console Chrome:
@@ -16,5 +16,5 @@ API call error: SyntaxError: Unexpected token '<', "<br />
 <b>"... is not valid JSON
 callApi	@	apiClient.js:31
 await in callApi		
-updateUserRole	@	apiClient.js:47
-handleSubmit	@	RoleForm.js:32
+updateDriverPreferences	@	apiClient.js:48
+handleSubmit	@	PreferencesForm.js:34

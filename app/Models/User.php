@@ -28,7 +28,6 @@ class User
     private ?float $credits = null;
     private ?bool $driver_pref_animals = null;
     private ?bool $driver_pref_smoker = null;
-    private ?bool $driver_pref_music = null;
     private ?string $driver_pref_custom = null;
     private ?string $reset_token = null;
     private ?string $reset_token_expires_at = null;
@@ -57,7 +56,6 @@ class User
     public function getCredits(): ?float { return $this->credits; }
     public function getDriverPrefAnimals(): ?bool { return $this->driver_pref_animals; }
     public function getDriverPrefSmoker(): ?bool { return $this->driver_pref_smoker; }
-    public function getDriverPrefMusic(): ?bool { return $this->driver_pref_music; }
     public function getDriverPrefCustom(): ?string { return $this->driver_pref_custom; }
     public function getResetToken(): ?string { return $this->reset_token; }
     public function getResetTokenExpiresAt(): ?string { return $this->reset_token_expires_at; }
@@ -84,7 +82,6 @@ class User
     public function setCredits(?float $credits): self { $this->credits = $credits; return $this; }
     public function setDriverPrefAnimals(?bool $driver_pref_animals): self { $this->driver_pref_animals = $driver_pref_animals; return $this; }
     public function setDriverPrefSmoker(?bool $driver_pref_smoker): self { $this->driver_pref_smoker = $driver_pref_smoker; return $this; }
-    public function setDriverPrefMusic(?bool $driver_pref_music): self { $this->driver_pref_music = $driver_pref_music; return $this; }
     public function setDriverPrefCustom(?string $driver_pref_custom): self { $this->driver_pref_custom = $driver_pref_custom; return $this; }
     public function setResetToken(?string $reset_token): self { $this->reset_token = $reset_token; return $this; }
     public function setResetTokenExpiresAt(?string $reset_token_expires_at): self { $this->reset_token_expires_at = $reset_token_expires_at; return $this; }
