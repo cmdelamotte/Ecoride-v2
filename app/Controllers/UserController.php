@@ -176,5 +176,36 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Gère l'affichage et la soumission du formulaire de changement de mot de passe.
+     */
+    public function updatePassword()
+    {
+        $user = AuthHelper::getAuthenticatedUser();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $currentPassword = $_POST['current_password'] ?? '';
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmNewPassword = $_POST['confirm_new_password'] ?? '';
+
+            $result = $this->userAccountService->changePassword($user, $currentPassword, $newPassword, $confirmNewPassword);
+
+            if ($result['success']) {
+                $_SESSION['success_message'] = 'Votre mot de passe a été mis à jour avec succès.';
+                header('Location: /account');
+                exit();
+            } else {
+                $this->render('account/edit-password', [
+                    'pageTitle' => 'Modifier mon mot de passe',
+                    'errors' => $result['errors'] ?? [],
+                    'oldInput' => $_POST // Pour conserver les valeurs saisies (sauf mots de passe)
+                ]);
+            }
+        } else {
+            $this->render('account/edit-password', [
+                'pageTitle' => 'Modifier mon mot de passe'
+            ]);
+        }
     }
+}
 

@@ -116,13 +116,10 @@ class UserAccountService
         }
 
         // 2. Valider le nouveau mot de passe
-        if (empty($newPassword)) {
-            $errors['new_password'] = 'Le nouveau mot de passe est requis.';
+        $passwordErrors = ValidationService::validatePassword($newPassword, $confirmNewPassword);
+        if (!empty($passwordErrors)) {
+            $errors = array_merge($errors, $passwordErrors);
         }
-        if ($newPassword !== $confirmNewPassword) {
-            $errors['confirm_new_password'] = 'Les nouveaux mots de passe ne correspondent pas.';
-        }
-        // TODO: Ajouter la validation de complexité du mot de passe ici (longueur, caractères spéciaux, etc.)
 
         if (!empty($errors)) {
             return ['success' => false, 'errors' => $errors];

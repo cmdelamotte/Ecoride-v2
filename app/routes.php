@@ -190,7 +190,15 @@ return [
     ],
     [
         'path' => '/account/update-password',
-        'http_method' => 'POST', // Mise à jour du mot de passe
+        'http_method' => 'GET', // Affichage du formulaire de mise à jour du mot de passe
+        'controller' => 'UserController',
+        'method' => 'updatePassword',
+        'auth' => true,
+        'roles' => []
+    ],
+    [
+        'path' => '/account/update-password',
+        'http_method' => 'POST', // Traitement du formulaire de mise à jour du mot de passe
         'controller' => 'UserController',
         'method' => 'updatePassword',
         'auth' => true,

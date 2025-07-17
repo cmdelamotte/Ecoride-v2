@@ -88,6 +88,25 @@ class ValidationService
         }
 
         // Validation Password
+        $passwordErrors = self::validatePassword($password, $confirmPassword);
+        if (!empty($passwordErrors)) {
+            $errors = array_merge($errors, $passwordErrors);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Valide un mot de passe et sa confirmation.
+     *
+     * @param string $password Le mot de passe.
+     * @param string $confirmPassword La confirmation du mot de passe.
+     * @return array Le tableau des erreurs. Vide s'il n'y a pas d'erreur.
+     */
+    public static function validatePassword(string $password, string $confirmPassword): array
+    {
+        $errors = [];
+
         if (empty($password)) {
             $errors['password'] = 'Le mot de passe est requis.';
         } elseif ($password !== $confirmPassword) {
@@ -101,7 +120,6 @@ class ValidationService
                 $errors['password'] = 'Le mot de passe doit contenir au moins 8 caractères, incluant majuscule, minuscule, chiffre et caractère spécial.';
             }
         }
-
         return $errors;
     }
 
