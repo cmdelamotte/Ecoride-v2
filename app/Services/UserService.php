@@ -86,7 +86,6 @@ class UserService
             'credits' => $user->getCredits(),
             'driver_pref_animals' => $user->getDriverPrefAnimals(),
             'driver_pref_smoker' => $user->getDriverPrefSmoker(),
-            'driver_pref_music' => $user->getDriverPrefMusic(),
             'driver_pref_custom' => $user->getDriverPrefCustom(),
             'reset_token' => $user->getResetToken(),
             'reset_token_expires_at' => $user->getResetTokenExpiresAt(),

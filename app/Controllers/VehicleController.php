@@ -6,6 +6,9 @@ use App\Core\Controller;
 use App\Services\VehicleManagementService;
 use App\Services\BrandService;
 use App\Helpers\RequestHelper;
+use App\Models\Vehicle; // Import du modèle Vehicle
+use App\Helpers\AuthHelper; // Import du AuthHelper pour récupérer l'utilisateur
+use App\Services\ValidationService; // Import du ValidationService
 
 /**
  * Gère toutes les opérations liées aux véhicules des utilisateurs.
@@ -50,10 +53,29 @@ class VehicleController extends Controller
     public function add()
     {
         $requestData = RequestHelper::getApiRequestData();
-        $userId = $requestData['userId'];
+        $user = AuthHelper::getAuthenticatedUser(); // Récupère l'objet User authentifié
         $data = $requestData['data'];
 
-        $result = $this->vehicleManagementService->addVehicle($userId, $data);
+        // Validation des données brutes du formulaire
+        $errors = ValidationService::validateVehicleData($data, null);
+        if (!empty($errors)) {
+            $this->jsonResponse(['success' => false, 'errors' => $errors], 400);
+            return;
+        }
+
+        // Construction de l'objet Vehicle à partir des données validées
+        $vehicle = (new Vehicle())
+            ->setBrandId($data['brand_id'])
+            ->setModelName(htmlspecialchars(trim($data['model'])))
+            ->setColor(htmlspecialchars(trim($data['color'] ?? '')))
+            ->setLicensePlate(htmlspecialchars(trim($data['license_plate'])))
+            ->setRegistrationDate(empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])))
+            ->setPassengerCapacity($data['passenger_capacity'])
+            ->setIsElectric((bool)($data['is_electric'] ?? false))
+            ->setEnergyType(htmlspecialchars(trim($data['energy_type'] ?? '')));
+
+        // Appel du service avec l'objet Vehicle et l'ID utilisateur
+        $result = $this->vehicleManagementService->addVehicle($vehicle, $user->getId());
 
         $this->jsonResponse($result, $result['status'] ?? 200);
     }

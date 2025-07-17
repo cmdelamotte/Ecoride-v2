@@ -15,12 +15,12 @@ use PDO;
  */
 class VehicleManagementService
 {
-    private PDO $db;
+    private Database $db;
     private VehicleService $vehicleService; // Ajout de la propriété pour VehicleService
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance(); // Utilise notre classe Database
         $this->vehicleService = new VehicleService(); // Initialisation de VehicleService
     }
 
@@ -30,47 +30,57 @@ class VehicleManagementService
      * @param array $data Les données du véhicule.
      * @return int|false L'ID du véhicule nouvellement créé ou false en cas d'échec.
      */
-    public function addVehicle(int $userId, array $data): array
+    public function addVehicle(Vehicle $vehicle, int $userId): array
     {
-        $errors = \App\Services\ValidationService::validateVehicleData($data, null);
-
-        if (!empty($errors)) {
-            error_log("addVehicle: Erreurs de validation: " . print_r($errors, true));
-            return ['success' => false, 'errors' => $errors, 'status' => 400];
-        }
+        // La validation des données brutes devrait idéalement être faite avant d'appeler ce service,
+        // par exemple dans le contrôleur ou un service de validation dédié.
+        // Ici, je m'attends à un objet Vehicle déjà partiellement peuplé.
 
         try {
-            $stmt = $this->db->prepare(
-                "INSERT INTO Vehicles (user_id, brand_id, model_name, color, license_plate, registration_date, passenger_capacity, is_electric, energy_type)
-                 VALUES (:user_id, :brand_id, :model_name, :color, :license_plate, :registration_date, :passenger_capacity, :is_electric, :energy_type)"
-            );
+            // Je m'assure que l'ID utilisateur est bien défini sur l'objet Vehicle.
+            $vehicle->setUserId($userId);
 
-            $success = $stmt->execute([
-                ':user_id' => $userId,
-                ':brand_id' => $data['brand_id'],
-                ':model_name' => htmlspecialchars(trim($data['model'])),
-                ':color' => htmlspecialchars(trim($data['color'] ?? '')),
-                ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
-                ':registration_date' => empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])),
-                ':passenger_capacity' => $data['passenger_capacity'],
-                ':is_electric' => (int)($data['is_electric'] ?? false),
-                ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
-            ]);
+            // Je construis le tableau de données à partir des propriétés de l'objet Vehicle.
+            // Cela garantit que seules les données de l'objet sont utilisées pour l'insertion.
+            $data = [
+                'user_id' => $vehicle->getUserId(),
+                'brand_id' => $vehicle->getBrandId(),
+                'model_name' => $vehicle->getModelName(),
+                'color' => $vehicle->getColor(),
+                'license_plate' => $vehicle->getLicensePlate(),
+                'registration_date' => $vehicle->getRegistrationDate(),
+                'passenger_capacity' => $vehicle->getPassengerCapacity(),
+                'is_electric' => (int)$vehicle->getIsElectric(),
+                'energy_type' => $vehicle->getEnergyType(),
+            ];
 
-            if ($success) {
+            // Je filtre les valeurs nulles pour ne pas les inclure dans la requête INSERT.
+            $insertData = array_filter($data, function($value) {
+                return !is_null($value); // Garde les valeurs non nulles
+            });
+
+            $columns = implode(', ', array_keys($insertData));
+            $placeholders = ':' . implode(', :', array_keys($insertData));
+
+            $sql = "INSERT INTO Vehicles ($columns) VALUES ($placeholders)";
+            
+            $rowCount = $this->db->execute($sql, $insertData);
+
+            if ($rowCount > 0) {
                 $vehicleId = (int)$this->db->lastInsertId();
-                $newVehicle = $this->vehicleService->findById($vehicleId);
+                $vehicle->setId($vehicleId); // Met à jour l'ID de l'objet Vehicle
+                
+                // Je récupère l'objet Vehicle complet avec sa marque pour le retour.
+                $newVehicle = $this->vehicleService->findWithBrandById($vehicleId);
+
                 return ['success' => true, 'message' => 'Véhicule ajouté avec succès.', 'vehicle' => $newVehicle, 'status' => 201];
             } else {
-                return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.', 'errors' => [], 'status' => 500"];
+                return ['success' => false, 'error' => "Erreur lors de l'ajout du véhicule.", 'errors' => [], 'status' => 500];
             }
         } catch (\PDOException $e) {
             error_log("VehicleManagementService::addVehicle Error: " . $e->getMessage());
             // Vérifier si l'erreur est due à une contrainte d'unicité (SQLSTATE 23000)
             if ($e->getCode() === '23000') {
-                // Pour MySQL, le message d'erreur contient souvent le nom de la contrainte ou de la colonne.
-                // On peut tenter de parser le message ou supposer que c'est la plaque d'immatriculation.
-                // Ici, on suppose que c'est la plaque d'immatriculation pour cet exemple.
                 return ['success' => false, 'errors' => ['license_plate' => 'Cette plaque d\'immatriculation est déjà enregistrée.'], 'status' => 409];
             } else {
                 return ['success' => false, 'error' => "Erreur interne du serveur lors de l'ajout du véhicule.", 'status' => 500];
@@ -104,30 +114,7 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
             }
 
-            $stmt = $this->db->prepare(
-                "UPDATE Vehicles SET 
-                    brand_id = :brand_id, 
-                    model_name = :model_name, 
-                    color = :color, 
-                    license_plate = :license_plate, 
-                    registration_date = :registration_date, 
-                    passenger_capacity = :passenger_capacity, 
-                    is_electric = :is_electric, 
-                    energy_type = :energy_type
-                 WHERE id = :id"
-            );
-
-            $success = $stmt->execute([
-                ':brand_id' => $data['brand_id'],
-                ':model_name' => htmlspecialchars(trim($data['model'])),
-                ':color' => htmlspecialchars(trim($data['color'] ?? '')),
-                ':license_plate' => htmlspecialchars(trim($data['license_plate'])),
-                ':registration_date' => empty($data['registration_date']) ? null : htmlspecialchars(trim($data['registration_date'])),
-                ':passenger_capacity' => $data['passenger_capacity'],
-                ':is_electric' => (int)($data['is_electric'] ?? false),
-                ':energy_type' => htmlspecialchars(trim($data['energy_type'] ?? '')),
-                ':id' => $vehicleId
-            ]);
+            $rowCount = $this->db->execute($sql, $insertData);
 
             if ($success) {
                 $updatedVehicle = $this->vehicleService->findById($vehicleId);
