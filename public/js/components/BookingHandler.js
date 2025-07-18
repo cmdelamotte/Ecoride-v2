@@ -69,7 +69,7 @@ async function handleConfirmBooking() {
             displayFlashMessage(response.message || 'Réservation réussie !', 'success');
             // Optionnel : rediriger ou rafraîchir une partie de la page
             setTimeout(() => {
-                window.location.reload(); // Laisser le temps au message de s'afficher
+                window.location.href = '/your-rides'; // Laisser le temps au message de s'afficher
             }, 1500); // 1.5 secondes
         } else {
             displayFlashMessage(response.message || 'Une erreur est survenue.', 'danger');
