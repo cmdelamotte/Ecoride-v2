@@ -84,4 +84,68 @@ class RideService
         // Les autres relations (véhicule, avis) seront ajoutées dans les prochaines étapes.
         return $ride;
     }
+
+    /**
+     * Récupère tous les trajets associés à un utilisateur (en tant que conducteur ou passager).
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @param string $type Le type de trajets à récupérer ('all', 'upcoming', 'past').
+     * @return \App\Models\Ride[] Un tableau d'objets Ride.
+     */
+    public function getUserRides(int $userId, string $type = 'all'): array
+    {
+        $upcomingRidesData = [];
+        $pastRidesData = [];
+
+        // Requêtes pour les trajets où l'utilisateur est conducteur
+        $driverUpcomingQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND departure_time >= NOW() ORDER BY departure_time ASC";
+        $driverPastQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND departure_time < NOW() ORDER BY departure_time DESC";
+
+        // Requêtes pour les trajets où l'utilisateur est passager
+        $passengerUpcomingQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND r.departure_time >= NOW() ORDER BY r.departure_time ASC";
+        $passengerPastQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND r.departure_time < NOW() ORDER BY r.departure_time DESC";
+
+        if ($type === 'all' || $type === 'upcoming') {
+            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQuery, ['user_id' => $userId], \App\Models\Ride::class);
+            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQuery, ['user_id' => $userId], \App\Models\Ride::class);
+            $upcomingRidesData = array_merge($driverUpcomingRides, $passengerUpcomingRides);
+            // Supprimer les doublons (si un trajet est à la fois conducteur et passager, ce qui est peu probable mais possible)
+            $upcomingRidesData = array_unique($upcomingRidesData, SORT_REGULAR);
+            // Trier par date de départ
+            usort($upcomingRidesData, function($a, $b) {
+                return strtotime($a->getDepartureTime()) - strtotime($b->getDepartureTime());
+            });
+        }
+
+        if ($type === 'all' || $type === 'past') {
+            $driverPastRides = $this->db->fetchAll($driverPastQuery, ['user_id' => $userId], \App\Models\Ride::class);
+            $passengerPastRides = $this->db->fetchAll($passengerPastQuery, ['user_id' => $userId], \App\Models\Ride::class);
+            $pastRidesData = array_merge($driverPastRides, $passengerPastRides);
+            // Supprimer les doublons
+            $pastRidesData = array_unique($pastRidesData, SORT_REGULAR);
+            // Trier par date de départ (descendant pour les trajets passés)
+            usort($pastRidesData, function($a, $b) {
+                return strtotime($b->getDepartureTime()) - strtotime($a->getDepartureTime());
+            });
+        }
+
+        // Hydrater chaque objet Ride avec les détails du conducteur et du véhicule
+        $hydratedUpcomingRides = [];
+        foreach ($upcomingRidesData as $ride) {
+            $hydratedUpcomingRides[] = $this->findRideDetailsById($ride->getId());
+        }
+
+        $hydratedPastRides = [];
+        foreach ($pastRidesData as $ride) {
+            $hydratedPastRides[] = $this->findRideDetailsById($ride->getId());
+        }
+
+        if ($type === 'upcoming') {
+            return array_filter($hydratedUpcomingRides); // Filtrer les null si findRideDetailsById retourne null
+        } elseif ($type === 'past') {
+            return array_filter($hydratedPastRides); // Filtrer les null
+        } else { // 'all'
+            return array_filter(array_merge($hydratedUpcomingRides, $hydratedPastRides)); // Filtrer les null
+        }
+    }
 }

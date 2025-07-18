@@ -1,0 +1,4 @@
+[2025-07-18 21:37:02] [ERROR] Controller method not found: App\Controllers\RideController::yourRides
+[2025-07-18 21:37:03] [ERROR] Controller method not found: App\Controllers\RideController::yourRides
+[2025-07-18 21:37:04] [ERROR] Controller method not found: App\Controllers\RideController::yourRides
+[2025-07-18 21:37:04] [ERROR] Controller method not found: App\Controllers\RideController::yourRides

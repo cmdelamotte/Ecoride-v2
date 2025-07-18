@@ -326,6 +326,14 @@ return [
         'auth' => true,
         'roles' => []
     ],
+    [
+        'path' => '/api/user-rides',
+        'http_method' => 'GET', // API pour récupérer l'historique des trajets de l'utilisateur
+        'controller' => 'RideController',
+        'method' => 'getUserRidesApi',
+        'auth' => true,
+        'roles' => []
+    ],
 
     // ---------------------------------------------------------------------
     // Routes pour l'administration (AdminController)
