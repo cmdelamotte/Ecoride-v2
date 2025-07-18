@@ -9,6 +9,7 @@ config/settings.local.php
 # Log files
 *.log
 logs/
+debug_log.txt
 
 # IDE and OS files
 .idea/
