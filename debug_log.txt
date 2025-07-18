@@ -1,2 +1,3 @@
 [2025-07-18 21:13:16] [INFO] Booking successful for user #21 on ride #9
 [2025-07-18 21:13:50] [ERROR] Booking failed for user #21 on ride #17: Crédits insuffisants pour effectuer cette réservation.
+[2025-07-18 21:21:11] [INFO] Booking successful for user #21 on ride #17

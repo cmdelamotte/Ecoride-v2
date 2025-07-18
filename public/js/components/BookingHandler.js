@@ -1,4 +1,5 @@
 import { apiClient } from '../utils/apiClient.js';
+import { displayFlashMessage } from '../utils/displayFlashMessage.js'; // <-- IMPORT
 
 /**
  * BookingHandler.js
@@ -65,16 +66,18 @@ async function handleConfirmBooking() {
         modal.hide();
 
         if (response.success) {
-            alert(response.message || 'Réservation réussie !');
+            displayFlashMessage(response.message || 'Réservation réussie !', 'success');
             // Optionnel : rediriger ou rafraîchir une partie de la page
-            window.location.reload(); // La solution la plus simple pour mettre à jour l'état
+            setTimeout(() => {
+                window.location.reload(); // Laisser le temps au message de s'afficher
+            }, 1500); // 1.5 secondes
         } else {
-            alert(`Échec de la réservation : ${response.message}` || 'Une erreur est survenue.');
+            displayFlashMessage(response.message || 'Une erreur est survenue.', 'danger');
         }
 
     } catch (error) {
         console.error('Erreur lors de la réservation:', error);
-        alert('Une erreur de communication est survenue. Veuillez réessayer.');
+        displayFlashMessage('Une erreur de communication est survenue. Veuillez réessayer.', 'danger');
     } finally {
         // Réactiver le bouton
         confirmBookingBtn.disabled = false;
