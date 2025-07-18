@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Core\Logger;
+use App\Services\RideService; // Ajout
+use App\Services\UserService; // Ajout
 use \PDO;
 use \Exception;
 
@@ -15,10 +17,14 @@ use \Exception;
 class BookingService
 {
     private Database $db;
+    private RideService $rideService; // Ajout
+    private UserService $userService; // Ajout
 
     public function __construct()
     {
         $this->db = Database::getInstance();
+        $this->rideService = new RideService(); // Ajout
+        $this->userService = new UserService(); // Ajout
     }
 
     /**
@@ -36,23 +42,22 @@ class BookingService
         try {
             $pdo->beginTransaction();
 
-            // Étape 1: Verrouiller et récupérer les informations critiques pour éviter les race conditions.
-            // On récupère le trajet et l'utilisateur en utilisant FOR UPDATE pour s'assurer
-            // que personne d'autre ne peut modifier ces lignes pendant la transaction.
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId]);
-            $user = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $userId]);
+            // Étape 1: Utiliser les services pour récupérer les objets Ride et User.
+            // Le verrouillage FOR UPDATE est toujours nécessaire pour la concurrence.
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], \App\Models\Ride::class);
+            $user = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $userId], \App\Models\User::class);
 
-            // Étape 2: Valider les conditions métier.
+            // Étape 2: Valider les conditions métier en utilisant les objets.
             if (!$ride) {
                 throw new Exception("Le trajet demandé n'existe pas.");
             }
-            if ($ride->driver_id == $userId) {
+            if ($ride->getDriverId() == $userId) {
                 throw new Exception("Vous ne pouvez pas réserver votre propre trajet.");
             }
-            if ($ride->ride_status !== 'planned') {
+            if ($ride->getRideStatus() !== 'planned') {
                 throw new Exception("Ce trajet n'est plus disponible à la réservation.");
             }
-            if ($user->credits < $ride->price_per_seat) {
+            if ($user->getCredits() < $ride->getPricePerSeat()) {
                 throw new Exception("Crédits insuffisants pour effectuer cette réservation.");
             }
 
@@ -62,7 +67,7 @@ class BookingService
                 ['ride_id' => $rideId]
             );
 
-            if ($bookedSeats >= $ride->seats_offered) {
+            if ($bookedSeats >= $ride->getSeatsOffered()) {
                 throw new Exception("Désolé, il n'y a plus de places disponibles pour ce trajet.");
             }
             
@@ -84,7 +89,7 @@ class BookingService
             );
 
             // 5b. Débiter les crédits du passager.
-            $newCredits = $user->credits - $ride->price_per_seat;
+            $newCredits = $user->getCredits() - $ride->getPricePerSeat();
             $this->db->execute(
                 "UPDATE Users SET credits = :credits WHERE id = :id",
                 ['credits' => $newCredits, 'id' => $userId]
