@@ -107,4 +107,81 @@ class BookingService
             throw $e;
         }
     }
+
+    /**
+     * Gère l'annulation d'un trajet ou d'une réservation par un utilisateur.
+     * Si l'utilisateur est le conducteur, le trajet est annulé pour tous les passagers et les crédits sont remboursés.
+     * Si l'utilisateur est un passager, seule sa réservation est annulée et ses crédits sont remboursés.
+     *
+     * @param int $rideId L'ID du trajet concerné.
+     * @param int $userId L'ID de l'utilisateur qui initie l'annulation.
+     * @throws Exception Si l'annulation échoue pour une raison métier.
+     */
+    public function cancelRide(int $rideId, int $userId): void
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            // Verrouiller le trajet et l'utilisateur pour éviter les problèmes de concurrence
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], \App\Models\Ride::class);
+            $user = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $userId], \App\Models\User::class);
+
+            if (!$ride) {
+                throw new Exception("Le trajet n'existe pas.");
+            }
+            if (!$user) {
+                throw new Exception("Utilisateur non trouvé.");
+            }
+
+            // Vérifier si le trajet est déjà terminé ou annulé
+            if ($ride->getRideStatus() === 'completed' || $ride->getRideStatus() === 'cancelled_driver') {
+                throw new Exception("Ce trajet est déjà terminé ou annulé et ne peut plus être modifié.");
+            }
+
+            // Cas 1 : L'utilisateur est le conducteur du trajet
+            if ($ride->getDriverId() === $userId) {
+                // Annuler le trajet pour tous les passagers
+                $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId]);
+
+                foreach ($bookings as $booking) {
+                    $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->user_id]);
+                    if ($passenger) {
+                        $refundAmount = $ride->getPricePerSeat() * $booking->seats_booked;
+                        $newPassengerCredits = $passenger->credits + $refundAmount;
+                        $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", ['credits' => $newPassengerCredits, 'id' => $passenger->id]);
+                    }
+                    // Mettre à jour le statut de la réservation
+                    $this->db->execute("UPDATE Bookings SET booking_status = 'cancelled_by_driver' WHERE id = :id", ['id' => $booking->id]);
+                }
+
+                // Mettre à jour le statut du trajet
+                $this->db->execute("UPDATE Rides SET ride_status = 'cancelled_driver' WHERE id = :id", ['id' => $rideId]);
+                Logger::info("Ride #{$rideId} cancelled by driver #{$userId}. All passengers refunded.");
+
+            } else { // Cas 2 : L'utilisateur est un passager
+                $booking = $this->db->fetchOne("SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId, 'user_id' => $userId]);
+
+                if (!$booking) {
+                    throw new Exception("Vous n'avez pas de réservation active pour ce trajet.");
+                }
+
+                // Rembourser les crédits au passager
+                $refundAmount = $ride->getPricePerSeat() * $booking->seats_booked;
+                $newUserCredits = $user->getCredits() + $refundAmount;
+                $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", ['credits' => $newUserCredits, 'id' => $userId]);
+
+                // Mettre à jour le statut de la réservation
+                $this->db->execute("UPDATE Bookings SET booking_status = 'cancelled_by_passenger' WHERE id = :id", ['id' => $booking->id]);
+                Logger::info("Booking for ride #{$rideId} cancelled by passenger #{$userId}. Credits refunded.");
+            }
+
+            $pdo->commit();
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Cancellation failed for ride #{$rideId} by user #{$userId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }

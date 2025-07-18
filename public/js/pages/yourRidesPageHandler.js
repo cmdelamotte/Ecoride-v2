@@ -45,6 +45,25 @@ function createRideCard(ride) {
     if (ride.ride_status === 'planned') {
         const cancelButton = createElement('button', ['btn', 'btn-sm', 'btn-danger', 'cancel-ride-btn'], { 'data-ride-id': ride.ride_id }, 'Annuler');
         rideActionsContainer.appendChild(cancelButton);
+
+        // Ajouter l'écouteur d'événement pour le bouton d'annulation
+        cancelButton.addEventListener('click', async () => {
+            if (confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Cette action est irréversible.')) {
+                try {
+                    const response = await apiClient.cancelRide(ride.ride_id);
+                    if (response.success) {
+                        displayFlashMessage(response.message, 'success');
+                        // Recharger les trajets après annulation réussie
+                        loadUserRides();
+                    } else {
+                        displayFlashMessage(response.message || "Erreur lors de l'annulation du trajet.", 'danger');
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de l'appel API d'annulation:", error);
+                    displayFlashMessage("Une erreur de communication est survenue lors de l'annulation.", 'danger');
+                }
+            }
+        });
     }
 
     return card;

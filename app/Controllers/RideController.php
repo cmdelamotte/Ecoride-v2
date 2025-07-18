@@ -51,6 +51,32 @@ class RideController extends Controller
     }
 
     /**
+     * Gère l'annulation d'un trajet ou d'une réservation.
+     *
+     * @param int $id L'ID du trajet à annuler.
+     */
+    public function cancel(int $id)
+    {
+        // Sécurité : Vérifier si l'utilisateur est connecté.
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour annuler un trajet.'], 401); // 401 Unauthorized
+            return;
+        }
+
+        $userId = $_SESSION['user_id'];
+
+        try {
+            // La logique d'annulation est dans le BookingService
+            $this->bookingService->cancelRide($id, $userId);
+            $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été annulé avec succès.']);
+
+        } catch (Exception $e) {
+            Logger::error("Error cancelling ride #{$id} by user #{$userId}: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
      * Affiche la page de l'historique des trajets de l'utilisateur.
      */
     public function yourRides()
