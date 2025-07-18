@@ -98,12 +98,12 @@ class RideService
         $pastRidesData = [];
 
         // Requêtes pour les trajets où l'utilisateur est conducteur
-        $driverUpcomingQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND departure_time >= NOW() ORDER BY departure_time ASC";
-        $driverPastQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND departure_time < NOW() ORDER BY departure_time DESC";
+        $driverUpcomingQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
+        $driverPastQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
 
         // Requêtes pour les trajets où l'utilisateur est passager
-        $passengerUpcomingQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND r.departure_time >= NOW() ORDER BY r.departure_time ASC";
-        $passengerPastQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND r.departure_time < NOW() ORDER BY r.departure_time DESC";
+        $passengerUpcomingQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
+        $passengerPastQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
 
         if ($type === 'all' || $type === 'upcoming') {
             $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQuery, ['user_id' => $userId], \App\Models\Ride::class);
