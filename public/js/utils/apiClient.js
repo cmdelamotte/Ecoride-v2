@@ -51,6 +51,7 @@ export const apiClient = {
     // Trajets
     searchRides: (params) => callApi(`/api/rides/search?${params}`),
     getRideDetails: (id) => callApi(`/api/rides/${id}/details`),
+    bookRide: (id) => callApi(`/rides/${id}/book`, 'POST'),
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

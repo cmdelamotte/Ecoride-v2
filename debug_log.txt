@@ -1,3 +1,0 @@
-[2025-07-17 21:17:20] [ERROR] Controller class not found: App\Controllers\RideController
-[2025-07-17 21:17:36] [ERROR] Controller class not found: App\Controllers\RideController
-[2025-07-17 21:17:45] [ERROR] Controller class not found: App\Controllers\RideController

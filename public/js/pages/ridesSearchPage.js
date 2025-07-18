@@ -4,12 +4,15 @@ import { apiClient } from '../utils/apiClient.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { RideCard } from '../components/RideCard.js';
 import { Pagination } from '../components/Pagination.js';
+import { initBookingHandler } from '../components/BookingHandler.js'; // <-- 1. IMPORT
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialiser le formulaire de recherche principal
     new SearchForm('search-form');
     // Initialiser le formulaire de filtres
     new FilterForm('filter-form');
+    // Initialiser le gestionnaire de réservation
+    initBookingHandler(); // <-- 2. INITIALISATION
 
     const rideResultsContainer = document.getElementById('ride-results-container');
     const noResultsMessage = document.getElementById('no-results-message');
@@ -78,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     data.rides.forEach(ride => {
                         const rideCard = new RideCard(ride);
                         if (rideCard.element) {
+                            // 3. STOCKER LES DONNÉES SUR L'ÉLÉMENT
+                            rideCard.element.dataset.ride = JSON.stringify(ride);
                             rideResultsContainer.appendChild(rideCard.element);
                         }
                     });
