@@ -10,10 +10,11 @@ namespace App\Models;
 class Booking
 {
     private ?int $id = null;
+    private ?int $user_id = null;
     private ?int $ride_id = null;
-    private ?int $passenger_id = null;
-    private ?int $number_of_seats_booked = null;
+    private ?int $seats_booked = null;
     private ?string $booking_status = null;
+    private ?string $booking_date = null;
     private ?string $created_at = null;
     private ?string $updated_at = null;
 
@@ -24,24 +25,29 @@ class Booking
         return $this->id;
     }
 
+    public function getUserId(): ?int
+    {
+        return $this->user_id;
+    }
+
     public function getRideId(): ?int
     {
         return $this->ride_id;
     }
 
-    public function getPassengerId(): ?int
+    public function getSeatsBooked(): ?int
     {
-        return $this->passenger_id;
-    }
-
-    public function getNumberOfSeatsBooked(): ?int
-    {
-        return $this->number_of_seats_booked;
+        return $this->seats_booked;
     }
 
     public function getBookingStatus(): ?string
     {
         return $this->booking_status;
+    }
+
+    public function getBookingDate(): ?string
+    {
+        return $this->booking_date;
     }
 
     public function getCreatedAt(): ?string
@@ -62,27 +68,34 @@ class Booking
         return $this;
     }
 
+    public function setUserId(?int $user_id): self
+    {
+        $this->user_id = $user_id;
+        return $this;
+    }
+
     public function setRideId(?int $ride_id): self
+
     {
         $this->ride_id = $ride_id;
         return $this;
     }
 
-    public function setPassengerId(?int $passenger_id): self
+    public function setSeatsBooked(?int $seats_booked): self
     {
-        $this->passenger_id = $passenger_id;
-        return $this;
-    }
-
-    public function setNumberOfSeatsBooked(?int $number_of_seats_booked): self
-    {
-        $this->number_of_seats_booked = $number_of_seats_booked;
+        $this->seats_booked = $seats_booked;
         return $this;
     }
 
     public function setBookingStatus(?string $booking_status): self
     {
         $this->booking_status = $booking_status;
+        return $this;
+    }
+
+    public function setBookingDate(?string $booking_date): self
+    {
+        $this->booking_date = $booking_date;
         return $this;
     }
 

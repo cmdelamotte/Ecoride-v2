@@ -1,8 +1,5 @@
 <?php
 
-// Front-controller
-
-// 1. Démarrage de la session
 session_start();
 
 // 2. Chargement de l'autoloader de Composer
