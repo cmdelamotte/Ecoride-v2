@@ -77,6 +77,54 @@ class RideController extends Controller
     }
 
     /**
+     * Gère le démarrage d'un trajet par le conducteur.
+     *
+     * @param int $id L'ID du trajet à démarrer.
+     */
+    public function start(int $id)
+    {
+        // Sécurité : Vérifier si l'utilisateur est connecté.
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour démarrer un trajet.'], 401);
+            return;
+        }
+
+        $userId = $_SESSION['user_id'];
+
+        try {
+            $this->rideService->startRide($id, $userId);
+            $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été démarré avec succès.']);
+        } catch (Exception $e) {
+            Logger::error("Error starting ride #{$id} by user #{$userId}: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Gère la fin d'un trajet par le conducteur.
+     *
+     * @param int $id L'ID du trajet à terminer.
+     */
+    public function finish(int $id)
+    {
+        // Sécurité : Vérifier si l'utilisateur est connecté.
+        if (!isset($_SESSION['user_id'])) {
+            $this->jsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour terminer un trajet.'], 401);
+            return;
+        }
+
+        $userId = $_SESSION['user_id'];
+
+        try {
+            $this->rideService->finishRide($id, $userId);
+            $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été terminé avec succès et les crédits ont été transférés.']);
+        } catch (Exception $e) {
+            Logger::error("Error finishing ride #{$id} by user #{$userId}: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
      * Affiche la page de l'historique des trajets de l'utilisateur.
      */
     public function yourRides()
@@ -140,6 +188,7 @@ class RideController extends Controller
                     'seats_offered' => $ride->getSeatsOffered(),
                     'ride_status' => $ride->getRideStatus(),
                     'is_eco_ride' => $ride->isEcoRide(),
+                    'driver_id' => $ride->getDriverId(), // AJOUT
                     'driver_username' => $ride->getDriver() ? $ride->getDriver()->getUsername() : 'N/A',
                     'driver_rating' => $ride->getDriver() ? $ride->getDriver()->getDriverRating() : 0.0,
                     // Ajoutez d'autres champs nécessaires pour l'affichage des cartes

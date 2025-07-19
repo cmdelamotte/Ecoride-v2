@@ -157,3 +157,10 @@
         </div>
     </div>
 </template>
+
+<script type="module" src="/js/pages/yourRidesPageHandler.js"></script>
+
+<script>
+    // Injecter l'ID de l'utilisateur connecté dans le JavaScript
+    const currentUserId = <?php echo json_encode($_SESSION['user_id'] ?? null); ?>;
+</script>

@@ -41,19 +41,18 @@ function createRideCard(ride) {
 
     // Gérer les actions (boutons annuler, noter, etc.)
     const rideActionsContainer = card.querySelector('.ride-actions');
-    // Exemple: Ajouter un bouton d'annulation pour les trajets à venir
+
+    // Bouton Annuler (pour les trajets planifiés)
     if (ride.ride_status === 'planned') {
         const cancelButton = createElement('button', ['btn', 'btn-sm', 'btn-danger', 'cancel-ride-btn'], { 'data-ride-id': ride.ride_id }, 'Annuler');
         rideActionsContainer.appendChild(cancelButton);
 
-        // Ajouter l'écouteur d'événement pour le bouton d'annulation
         cancelButton.addEventListener('click', async () => {
             if (confirm('Êtes-vous sûr de vouloir annuler ce trajet ? Cette action est irréversible.')) {
                 try {
                     const response = await apiClient.cancelRide(ride.ride_id);
                     if (response.success) {
                         displayFlashMessage(response.message, 'success');
-                        // Recharger les trajets après annulation réussie
                         loadUserRides();
                     } else {
                         displayFlashMessage(response.message || "Erreur lors de l'annulation du trajet.", 'danger');
@@ -61,6 +60,54 @@ function createRideCard(ride) {
                 } catch (error) {
                     console.error("Erreur lors de l'appel API d'annulation:", error);
                     displayFlashMessage("Une erreur de communication est survenue lors de l'annulation.", 'danger');
+                }
+            }
+        });
+    }
+
+    // Bouton Démarrer (pour les trajets planifiés et si l'utilisateur est le conducteur)
+    // L'ID de l'utilisateur connecté est maintenant disponible via la variable globale `currentUserId` injectée par PHP.
+
+    if (ride.ride_status === 'planned' && ride.driver_id === currentUserId) {
+        const startButton = createElement('button', ['btn', 'btn-sm', 'btn-primary', 'start-ride-btn'], { 'data-ride-id': ride.ride_id }, 'Démarrer');
+        rideActionsContainer.appendChild(startButton);
+
+        startButton.addEventListener('click', async () => {
+            if (confirm('Êtes-vous sûr de vouloir démarrer ce trajet ?')) {
+                try {
+                    const response = await apiClient.startRide(ride.ride_id);
+                    if (response.success) {
+                        displayFlashMessage(response.message, 'success');
+                        loadUserRides();
+                    } else {
+                        displayFlashMessage(response.message || "Erreur lors du démarrage du trajet.", 'danger');
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de l'appel API de démarrage:", error);
+                    displayFlashMessage("Une erreur de communication est survenue lors du démarrage.", 'danger');
+                }
+            }
+        });
+    }
+
+    // Bouton Terminer (pour les trajets en cours et si l'utilisateur est le conducteur)
+    if (ride.ride_status === 'ongoing' && ride.driver_id === currentUserId) {
+        const finishButton = createElement('button', ['btn', 'btn-sm', 'btn-success', 'finish-ride-btn'], { 'data-ride-id': ride.ride_id }, 'Terminer');
+        rideActionsContainer.appendChild(finishButton);
+
+        finishButton.addEventListener('click', async () => {
+            if (confirm('Êtes-vous sûr de vouloir terminer ce trajet ? Les crédits seront transférés au conducteur.')) {
+                try {
+                    const response = await apiClient.finishRide(ride.ride_id);
+                    if (response.success) {
+                        displayFlashMessage(response.message, 'success');
+                        loadUserRides();
+                    } else {
+                        displayFlashMessage(response.message || "Erreur lors de la fin du trajet.", 'danger');
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de l'appel API de fin de trajet:", error);
+                    displayFlashMessage("Une erreur de communication est survenue lors de la fin du trajet.", 'danger');
                 }
             }
         });

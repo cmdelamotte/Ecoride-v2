@@ -4,6 +4,10 @@ namespace App\Services;
 
 use App\Core\Database;
 use App\Models\Ride;
+use App\Core\Logger;
+use PDO;
+use Exception;
+use App\Models\User;
 // J'importe les services dont j'aurai besoin pour construire l'objet Ride complet.
 use App\Services\UserService;
 use App\Services\VehicleService;
@@ -146,6 +150,109 @@ class RideService
             return array_filter($hydratedPastRides); // Filtrer les null
         } else { // 'all'
             return array_filter(array_merge($hydratedUpcomingRides, $hydratedPastRides)); // Filtrer les null
+        }
+    }
+
+    /**
+     * Démarre un trajet en mettant à jour son statut à 'ongoing'.
+     *
+     * @param int $rideId L'ID du trajet à démarrer.
+     * @param int $driverId L'ID du conducteur qui démarre le trajet.
+     * @throws \Exception Si le trajet n'existe pas, n'est pas planifié, ou si l'utilisateur n'est pas le conducteur.
+     */
+    public function startRide(int $rideId, int $driverId): void
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            /** @var Ride $ride */
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+
+            if (!$ride) {
+                throw new Exception("Le trajet n'existe pas.");
+            }
+            if ($ride->getDriverId() !== $driverId) {
+                throw new Exception("Vous n'êtes pas autorisé à démarrer ce trajet.");
+            }
+            if ($ride->getRideStatus() !== 'planned') {
+                throw new Exception("Le trajet ne peut être démarré que s'il est planifié.");
+            }
+
+            $ride->setRideStatus('ongoing');
+            $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                'ride_status' => $ride->getRideStatus(),
+                'id' => $ride->getId()
+            ]);
+
+            $pdo->commit();
+            Logger::info("Ride #{$rideId} started by driver #{$driverId}.");
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Failed to start ride #{$rideId} by driver #{$driverId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Termine un trajet en mettant à jour son statut à 'completed' et crédite le conducteur.
+     *
+     * @param int $rideId L'ID du trajet à terminer.
+     * @param int $driverId L'ID du conducteur qui termine le trajet.
+     * @throws \Exception Si le trajet n'existe pas, n'est pas en cours, ou si l'utilisateur n'est pas le conducteur.
+     */
+    public function finishRide(int $rideId, int $driverId): void
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            /** @var Ride $ride */
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+
+            if (!$ride) {
+                throw new Exception("Le trajet n'existe pas.");
+            }
+            if ($ride->getDriverId() !== $driverId) {
+                throw new Exception("Vous n'êtes pas autorisé à terminer ce trajet.");
+            }
+            if ($ride->getRideStatus() !== 'ongoing') {
+                throw new Exception("Le trajet ne peut être terminé que s'il est en cours.");
+            }
+
+            // Calculer le montant total des crédits à transférer au conducteur
+            $totalCreditsToDriver = 0;
+            $bookings = $this->db->fetchAll("SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId]);
+            foreach ($bookings as $booking) {
+                $totalCreditsToDriver += $ride->getPricePerSeat() * $booking->seats_booked;
+            }
+
+            // Créditer le conducteur
+            /** @var User $driver */
+            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $driverId], User::class);
+            if ($driver) {
+                $newDriverCredits = $driver->getCredits() + $totalCreditsToDriver;
+                $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
+                    'credits' => $newDriverCredits,
+                    'id' => $driver->getId()
+                ]);
+            }
+
+            // Mettre à jour le statut du trajet
+            $ride->setRideStatus('completed');
+            $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                'ride_status' => $ride->getRideStatus(),
+                'id' => $ride->getId()
+            ]);
+
+            $pdo->commit();
+            Logger::info("Ride #{$rideId} completed by driver #{$driverId}. Driver credited with {$totalCreditsToDriver} credits.");
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Failed to finish ride #{$rideId} by driver #{$driverId}: " . $e->getMessage());
+            throw $e;
         }
     }
 }

@@ -54,6 +54,8 @@ export const apiClient = {
     bookRide: (id) => callApi(`/rides/${id}/book`, 'POST'),
     getUserRides: (type) => callApi(`/api/user-rides?type=${type}`),
     cancelRide: (id) => callApi(`/rides/${id}/cancel`, 'POST'),
+    startRide: (id) => callApi(`/rides/${id}/start`, 'POST'),
+    finishRide: (id) => callApi(`/rides/${id}/finish`, 'POST'),
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };
