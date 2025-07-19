@@ -223,9 +223,10 @@ class RideService
 
             // Calculer le montant total des crédits à transférer au conducteur
             $totalCreditsToDriver = 0;
-            $bookings = $this->db->fetchAll("SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId]);
+            /** @var \App\Models\Booking[] $bookings */
+            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId], \App\Models\Booking::class);
             foreach ($bookings as $booking) {
-                $totalCreditsToDriver += $ride->getPricePerSeat() * $booking->seats_booked;
+                $totalCreditsToDriver += $ride->getPricePerSeat() * $booking->getSeatsBooked();
             }
 
             // Créditer le conducteur

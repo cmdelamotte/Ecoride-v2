@@ -184,15 +184,26 @@ class RideController extends Controller
                     'departure_city' => $ride->getDepartureCity(),
                     'arrival_city' => $ride->getArrivalCity(),
                     'departure_time' => $ride->getDepartureTime(),
+                    'estimated_arrival_time' => $ride->getEstimatedArrivalTime(), // AJOUT
                     'price_per_seat' => $ride->getPricePerSeat(),
                     'seats_offered' => $ride->getSeatsOffered(),
                     'ride_status' => $ride->getRideStatus(),
                     'is_eco_ride' => $ride->isEcoRide(),
-                    'driver_id' => $ride->getDriverId(), // AJOUT
+                    'driver_id' => $ride->getDriverId(),
                     'driver_username' => $ride->getDriver() ? $ride->getDriver()->getUsername() : 'N/A',
                     'driver_rating' => $ride->getDriver() ? $ride->getDriver()->getDriverRating() : 0.0,
-                    // Ajoutez d'autres champs nécessaires pour l'affichage des cartes
+                    'vehicle_model' => $ride->getVehicle() ? $ride->getVehicle()->getModelName() : 'N/A',
+                    'vehicle_brand_name' => ($ride->getVehicle() && $ride->getVehicle()->getBrand()) ? $ride->getVehicle()->getBrand()->getName() : 'N/A',
+                    'seats_booked_by_user' => null, // Initialisation
                 ];
+
+                // Si c'est un trajet où l'utilisateur est passager, récupérer le nombre de sièges réservés
+                if ($ride->getDriverId() !== $userId) { // Si l'utilisateur n'est pas le conducteur
+                    $booking = $this->db->fetchOne("SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'", ['ride_id' => $ride->getId(), 'user_id' => $userId]);
+                    if ($booking) {
+                        $formattedRides[count($formattedRides) - 1]['seats_booked_by_user'] = $booking->seats_booked;
+                    }
+                }
             }
 
             $this->jsonResponse(['success' => true, 'rides' => $formattedRides]);

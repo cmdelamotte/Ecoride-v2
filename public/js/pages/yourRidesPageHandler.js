@@ -12,6 +12,24 @@ const noRidesMessage = document.getElementById('no-rides-message');
 const rideCardTemplate = document.getElementById('ride-card-template');
 
 /**
+ * Calcule la durée entre deux dates/heures et la formate.
+ * @param {string} start La date/heure de début (format ISO).
+ * @param {string} end La date/heure de fin (format ISO).
+ * @returns {string} La durée formatée (ex: "2h30") ou "N/A".
+ */
+const calculateDuration = (start, end) => {
+    const departure = new Date(start.replace(' ', 'T'));
+    const arrival = new Date(end.replace(' ', 'T'));
+    const durationMs = arrival - departure;
+    if (durationMs > 0) {
+        const hours = Math.floor(durationMs / (1000 * 60 * 60));
+        const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+        return `${hours}h${minutes < 10 ? '0' : ''}${minutes}`;
+    }
+    return "N/A";
+};
+
+/**
  * Crée un élément de carte de trajet à partir des données.
  * @param {object} ride Les données du trajet.
  * @returns {HTMLElement} L'élément HTML de la carte de trajet.
@@ -24,7 +42,29 @@ const createRideCard = (ride) => {
     card.querySelector('.ride-title').textContent = `${ride.departure_city} → ${ride.arrival_city}`;
     card.querySelector('.ride-date').textContent = new Date(ride.departure_time).toLocaleDateString('fr-FR');
     card.querySelector('.ride-time').textContent = new Date(ride.departure_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    card.querySelector('.ride-price-amount').textContent = ride.price_per_seat;
+    card.querySelector('.ride-duration').textContent = calculateDuration(ride.departure_time, ride.estimated_arrival_time); // AJOUT
+    card.querySelector('.ride-vehicle-details').textContent = `${ride.vehicle_brand_name} ${ride.vehicle_model}`; // AJOUT
+    // Gérer le rôle (conducteur/passager) et l'affichage du prix
+    const priceLabelEl = card.querySelector('.price-label');
+    const ridePriceAmountEl = card.querySelector('.ride-price-amount');
+
+    if (ride.driver_id === currentUserId) {
+        // L'utilisateur est le conducteur de ce trajet
+        priceLabelEl.textContent = 'Gain estimé : ';
+        // Calculer le gain estimé (prix par siège * (sièges offerts - sièges disponibles))
+        const estimatedGain = ride.price_per_seat * (ride.seats_offered - (ride.seats_available || 0));
+        ridePriceAmountEl.textContent = `${estimatedGain.toFixed(2)} crédits`;
+    } else {
+        // L'utilisateur est un passager de ce trajet
+        priceLabelEl.textContent = 'Prix payé : ';
+        ridePriceAmountEl.textContent = `${ride.price_per_seat} crédits`;
+    }
+
+    // Afficher le nombre de sièges réservés si l'utilisateur est passager
+    if (ride.driver_id !== currentUserId && ride.seats_booked_by_user) {
+        const seatsBookedEl = createElement('p', ['card-text', 'mb-1'], {}, `Sièges réservés : ${ride.seats_booked_by_user}`);
+        card.querySelector('.role-specific-info').appendChild(seatsBookedEl);
+    }
     card.querySelector('.ride-status-text').textContent = ride.ride_status;
 
     // Gérer le badge éco
