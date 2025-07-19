@@ -158,7 +158,7 @@
     </div>
 </template>
 
-<script type="module" src="/js/pages/yourRidesPageHandler.js"></script>
+
 
 <script>
     // Injecter l'ID de l'utilisateur connecté dans le JavaScript
