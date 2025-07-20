@@ -53,7 +53,7 @@ const createRideCard = (ride) => {
         priceLabelEl.textContent = 'Gain estimé : ';
         // Calculer le gain estimé (prix par siège * (sièges offerts - sièges disponibles))
         const estimatedGain = ride.price_per_seat * (ride.seats_offered - (ride.seats_available || 0));
-        ridePriceAmountEl.textContent = `${estimatedGain.toFixed(2)} crédits`;
+        ridePriceAmountEl.textContent = `${estimatedGain.toFixed(2)}`;
     } else {
         // L'utilisateur est un passager de ce trajet
         priceLabelEl.textContent = 'Prix payé : ';
