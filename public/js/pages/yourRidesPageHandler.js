@@ -71,6 +71,14 @@ const createRideCard = (ride) => {
     }
     card.querySelector('.ride-status-text').textContent = ride.ride_status;
 
+    // Afficher le nombre de passagers
+    const passengersCurrentEl = card.querySelector('.ride-passengers-current');
+    const passengersMaxEl = card.querySelector('.ride-passengers-max');
+    if (passengersCurrentEl && passengersMaxEl) {
+        passengersCurrentEl.textContent = ride.passengers_count; // Correction ici
+        passengersMaxEl.textContent = ride.seats_offered;
+    }
+
     // Gérer le badge éco
     const ecoBadge = card.querySelector('.ride-eco-badge');
     if (ride.is_eco_ride) {
