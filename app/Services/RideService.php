@@ -11,6 +11,7 @@ use App\Models\User;
 // J'importe les services dont j'aurai besoin pour construire l'objet Ride complet.
 use App\Services\UserService;
 use App\Services\VehicleService;
+use App\Services\CommissionService;
 // use App\Services\ReviewService; // Ce service sera créé prochainement.
 
 /**
@@ -24,6 +25,7 @@ class RideService
     private Database $db;
     private UserService $userService;
     private VehicleService $vehicleService;
+    private CommissionService $commissionService;
     // private ReviewService $reviewService;
 
     /**
@@ -36,6 +38,7 @@ class RideService
         $this->db = Database::getInstance();
         $this->userService = new UserService();
         $this->vehicleService = new VehicleService();
+        $this->commissionService = new CommissionService();
         // $this->reviewService = new ReviewService(); // À activer quand le service existera.
     }
 
@@ -196,11 +199,11 @@ class RideService
     }
 
     /**
-     * Termine un trajet en mettant à jour son statut à 'completed' et crédite le conducteur.
+     * Termine un trajet, crédite le conducteur (moins la commission) et enregistre la commission.
      *
      * @param int $rideId L'ID du trajet à terminer.
      * @param int $driverId L'ID du conducteur qui termine le trajet.
-     * @throws \Exception Si le trajet n'existe pas, n'est pas en cours, ou si l'utilisateur n'est pas le conducteur.
+     * @throws \Exception Si une erreur survient durant le processus.
      */
     public function finishRide(int $rideId, int $driverId): void
     {
@@ -221,26 +224,37 @@ class RideService
                 throw new Exception("Le trajet ne peut être terminé que s'il est en cours.");
             }
 
-            // Calculer le montant total des crédits à transférer au conducteur
-            $totalCreditsToDriver = 0;
+            // Calculer le montant total brut des crédits générés par les réservations.
+            $totalGrossCredits = 0;
             /** @var \App\Models\Booking[] $bookings */
             $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId], \App\Models\Booking::class);
             foreach ($bookings as $booking) {
-                $totalCreditsToDriver += $ride->getPricePerSeat() * $booking->getSeatsBooked();
+                $totalGrossCredits += $ride->getPricePerSeat() * $booking->getSeatsBooked();
             }
 
-            // Créditer le conducteur
-            /** @var User $driver */
-            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $driverId], User::class);
-            if ($driver) {
-                $newDriverCredits = $driver->getCredits() + $totalCreditsToDriver;
-                $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
-                    'credits' => $newDriverCredits,
-                    'id' => $driver->getId()
-                ]);
+            // La commission est fixe, définie dans le CommissionService.
+            $commissionAmount = CommissionService::PLATFORM_COMMISSION;
+            
+            // Le gain net pour le conducteur est le total brut moins la commission.
+            $netCreditsForDriver = $totalGrossCredits - $commissionAmount;
+
+            // Créditer le conducteur du montant net.
+            if ($netCreditsForDriver > 0) {
+                /** @var User $driver */
+                $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $driverId], User::class);
+                if ($driver) {
+                    $newDriverCredits = $driver->getCredits() + $netCreditsForDriver;
+                    $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
+                        'credits' => $newDriverCredits,
+                        'id' => $driver->getId()
+                    ]);
+                }
             }
 
-            // Mettre à jour le statut du trajet
+            // Enregistrer la commission prélevée dans MongoDB.
+            $this->commissionService->recordCommission($ride->getId(), $commissionAmount);
+
+            // Mettre à jour le statut du trajet.
             $ride->setRideStatus('completed');
             $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
                 'ride_status' => $ride->getRideStatus(),
@@ -248,11 +262,11 @@ class RideService
             ]);
 
             $pdo->commit();
-            Logger::info("Ride #{$rideId} completed by driver #{$driverId}. Driver credited with {$totalCreditsToDriver} credits.");
+            Logger::info("Ride #{$rideId} completed. Driver #{$driverId} credited with {$netCreditsForDriver} (net). Commission of {$commissionAmount} recorded.");
 
         } catch (Exception $e) {
             $pdo->rollBack();
-            Logger::error("Failed to finish ride #{$rideId} by driver #{$driverId}: " . $e->getMessage());
+            Logger::error("Failed to finish ride #{$rideId}: " . $e->getMessage());
             throw $e;
         }
     }

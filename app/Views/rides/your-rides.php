@@ -140,7 +140,7 @@
                         <p class="card-text mb-1 ride-vehicle-info">
                             <span class="form-label">Véhicule :</span> <span class="ride-vehicle-details"></span>
                         </p>
-                        <p class="card-text mb-1 driver-view-passengers-info d-none">
+                        <p class="card-text mb-1 driver-view-passengers-info">
                             <span class="form-label">Passagers inscrits :</span> <span class="ride-passengers-current"></span> / <span class="ride-passengers-max"></span>
                         </p>
                         <p class="card-text mb-1 ride-price-info">
