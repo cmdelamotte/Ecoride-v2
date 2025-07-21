@@ -10,8 +10,8 @@ use App\Core\DotEnv;
 DotEnv::load(__DIR__ . '/../');
 
 // 4. Chargement du routeur
-$router = new App\Core\Router();
+use App\Core\Router;
+$router = new Router();
 
 // 5. Lancement de l'application
 $router->run();
-

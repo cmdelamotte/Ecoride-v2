@@ -52,6 +52,16 @@ class Logger
     }
 
     /**
+     * Retourne le chemin complet du fichier de log.
+     *
+     * @return string
+     */
+    public static function getLogFilePath(): string
+    {
+        return self::$logFilePath;
+    }
+
+    /**
      * Méthode générique pour enregistrer les messages dans le fichier de log.
      *
      * @param string $level Le niveau de log (DEBUG, INFO, WARNING, ERROR).

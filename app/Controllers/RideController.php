@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\BookingService;
 use App\Services\RideService; // Ajout
-use App\Core\Logger;
+
 use \Exception;
 
 /**
@@ -71,7 +71,7 @@ class RideController extends Controller
             $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été annulé avec succès.']);
 
         } catch (Exception $e) {
-            Logger::error("Error cancelling ride #{$id} by user #{$userId}: " . $e->getMessage());
+            error_log("Error cancelling ride #{$id} by user #{$userId}: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
@@ -95,7 +95,7 @@ class RideController extends Controller
             $this->rideService->startRide($id, $userId);
             $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été démarré avec succès.']);
         } catch (Exception $e) {
-            Logger::error("Error starting ride #{$id} by user #{$userId}: " . $e->getMessage());
+            error_log("Error starting ride #{$id} by user #{$userId}: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
@@ -107,6 +107,7 @@ class RideController extends Controller
      */
     public function finish(int $id)
     {
+        error_log("RideController::finish() - Début de la méthode pour le trajet #{$id}.");
         // Sécurité : Vérifier si l'utilisateur est connecté.
         if (!isset($_SESSION['user_id'])) {
             $this->jsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour terminer un trajet.'], 401);
@@ -119,7 +120,7 @@ class RideController extends Controller
             $this->rideService->finishRide($id, $userId);
             $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été terminé avec succès et les crédits ont été transférés.']);
         } catch (Exception $e) {
-            Logger::error("Error finishing ride #{$id} by user #{$userId}: " . $e->getMessage());
+            error_log("Error finishing ride #{$id} by user #{$userId}: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
@@ -209,7 +210,7 @@ class RideController extends Controller
             $this->jsonResponse(['success' => true, 'rides' => $formattedRides]);
 
         } catch (Exception $e) {
-            Logger::error("Error fetching user rides API: " . $e->getMessage());
+            error_log("Error fetching user rides API: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => 'Erreur lors de la récupération de vos trajets.'], 500);
         }
     }

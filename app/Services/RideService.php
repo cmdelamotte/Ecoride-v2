@@ -189,11 +189,11 @@ class RideService
             ]);
 
             $pdo->commit();
-            Logger::info("Ride #{$rideId} started by driver #{$driverId}.");
+            error_log("Ride #{$rideId} started by driver #{$driverId}.");
 
         } catch (Exception $e) {
             $pdo->rollBack();
-            Logger::error("Failed to start ride #{$rideId} by driver #{$driverId}: " . $e->getMessage());
+            error_log("Failed to start ride #{$rideId} by driver #{$driverId}: " . $e->getMessage());
             throw $e;
         }
     }
@@ -207,12 +207,15 @@ class RideService
      */
     public function finishRide(int $rideId, int $driverId): void
     {
+        error_log("RideService::finishRide() - Début de la méthode pour le trajet #{$rideId} par le conducteur #{$driverId}.");
         $pdo = $this->db->getConnection();
         try {
             $pdo->beginTransaction();
+            error_log("RideService::finishRide() - Transaction démarrée.");
 
             /** @var Ride $ride */
             $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+            error_log("RideService::finishRide() - Trajet récupéré. Statut: " . ($ride ? $ride->getRideStatus() : 'null'));
 
             if (!$ride) {
                 throw new Exception("Le trajet n'existe pas.");
@@ -223,20 +226,24 @@ class RideService
             if ($ride->getRideStatus() !== 'ongoing') {
                 throw new Exception("Le trajet ne peut être terminé que s'il est en cours.");
             }
+            error_log("RideService::finishRide() - Vérifications initiales passées.");
 
             // Calculer le montant total brut des crédits générés par les réservations.
             $totalGrossCredits = 0;
             /** @var \App\Models\Booking[] $bookings */
             $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId], \App\Models\Booking::class);
+            error_log("RideService::finishRide() - " . count($bookings) . " réservations confirmées trouvées.");
             foreach ($bookings as $booking) {
                 $totalGrossCredits += $ride->getPricePerSeat() * $booking->getSeatsBooked();
             }
+            error_log("RideService::finishRide() - Total brut des crédits calculé: {$totalGrossCredits}.");
 
             // La commission est fixe, définie dans le CommissionService.
             $commissionAmount = CommissionService::PLATFORM_COMMISSION;
             
             // Le gain net pour le conducteur est le total brut moins la commission.
             $netCreditsForDriver = $totalGrossCredits - $commissionAmount;
+            error_log("RideService::finishRide() - Commission: {$commissionAmount}, Gain net pour le conducteur: {$netCreditsForDriver}.");
 
             // Créditer le conducteur du montant net.
             if ($netCreditsForDriver > 0) {
@@ -248,11 +255,17 @@ class RideService
                         'credits' => $newDriverCredits,
                         'id' => $driver->getId()
                     ]);
+                    error_log("RideService::finishRide() - Conducteur #{$driverId} crédité de {$netCreditsForDriver} crédits. Nouveau solde: {$newDriverCredits}.");
+                } else {
+                    error_log("RideService::finishRide() - Conducteur #{$driverId} non trouvé pour crédit.");
                 }
+            } else {
+                error_log("RideService::finishRide() - Gain net non positif, pas de crédit pour le conducteur.");
             }
 
             // Enregistrer la commission prélevée dans MongoDB.
             $this->commissionService->recordCommission($ride->getId(), $commissionAmount);
+            error_log("RideService::finishRide() - Commission enregistrée dans MongoDB.");
 
             // Mettre à jour le statut du trajet.
             $ride->setRideStatus('completed');
@@ -260,13 +273,15 @@ class RideService
                 'ride_status' => $ride->getRideStatus(),
                 'id' => $ride->getId()
             ]);
+            error_log("RideService::finishRide() - Statut du trajet #{$rideId} mis à jour à 'completed'.");
 
             $pdo->commit();
-            Logger::info("Ride #{$rideId} completed. Driver #{$driverId} credited with {$netCreditsForDriver} (net). Commission of {$commissionAmount} recorded.");
+            error_log("Ride #{$rideId} completed. Driver #{$driverId} credited with {$netCreditsForDriver} (net). Commission of {$commissionAmount} recorded.");
 
         } catch (Exception $e) {
+            error_log("RideService::finishRide() - ERREUR CATCHÉE: " . $e->getMessage());
             $pdo->rollBack();
-            Logger::error("Failed to finish ride #{$rideId}: " . $e->getMessage());
+            error_log("RideService::finishRide() - Échec de la finalisation du trajet #{$rideId} par le conducteur #{$driverId}: " . $e->getMessage());
             throw $e;
         }
     }
