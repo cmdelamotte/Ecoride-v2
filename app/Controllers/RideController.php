@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\BookingService;
 use App\Services\RideService; // Ajout
-
+use App\Helpers\RideHelper;
 use \Exception;
 
 /**
@@ -176,33 +176,23 @@ class RideController extends Controller
 
         try {
             $rides = $this->rideService->getUserRides($userId, $type);
-            // Formater les trajets pour l'API si nécessaire (similaire à RideHelper::formatCollectionForSearchApi)
-            // Pour l'instant, je retourne les objets tels quels, le JS devra les traiter.
-            $formattedRides = [];
-            foreach ($rides as $ride) {
-                $formattedRides[] = [
-                    'ride_id' => $ride->getId(),
-                    'departure_city' => $ride->getDepartureCity(),
-                    'arrival_city' => $ride->getArrivalCity(),
-                    'departure_time' => $ride->getDepartureTime(),
-                    'estimated_arrival_time' => $ride->getEstimatedArrivalTime(), // AJOUT
-                    'price_per_seat' => $ride->getPricePerSeat(),
-                    'seats_offered' => $ride->getSeatsOffered(),
-                    'ride_status' => $ride->getRideStatus(),
-                    'is_eco_ride' => $ride->isEcoRide(),
-                    'driver_id' => $ride->getDriverId(),
-                    'driver_username' => $ride->getDriver() ? $ride->getDriver()->getUsername() : 'N/A',
-                    'driver_rating' => $ride->getDriver() ? $ride->getDriver()->getDriverRating() : 0.0,
-                    'vehicle_model' => $ride->getVehicle() ? $ride->getVehicle()->getModelName() : 'N/A',
-                    'vehicle_brand_name' => ($ride->getVehicle() && $ride->getVehicle()->getBrand()) ? $ride->getVehicle()->getBrand()->getName() : 'N/A',
-                    'seats_booked_by_user' => null, // Initialisation
-                ];
+            // Utiliser RideHelper pour formater les trajets
+            $formattedRides = RideHelper::formatCollectionForSearchApi($rides);
 
-                // Si c'est un trajet où l'utilisateur est passager, récupérer le nombre de sièges réservés
-                if ($ride->getDriverId() !== $userId) { // Si l'utilisateur n'est pas le conducteur
-                    $booking = $this->db->fetchOne("SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'", ['ride_id' => $ride->getId(), 'user_id' => $userId]);
+            // Ajouter seats_booked_by_user pour les trajets où l'utilisateur est passager
+            foreach ($formattedRides as $key => $rideData) {
+                $formattedRides[$key]['seats_booked_by_user'] = null; // Initialisation
+
+                // Si c'est un trajet où l'utilisateur est passager (et non le conducteur)
+                if ($rideData['driver_id'] !== $userId) {
+                    // Récupérer le nombre de sièges réservés par cet utilisateur pour ce trajet
+                    // Accéder à la connexion DB via le RideService
+                    $booking = $this->rideService->db->fetchOne(
+                        "SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
+                        ['ride_id' => $rideData['ride_id'], 'user_id' => $userId]
+                    );
                     if ($booking) {
-                        $formattedRides[count($formattedRides) - 1]['seats_booked_by_user'] = $booking->seats_booked;
+                        $formattedRides[$key]['seats_booked_by_user'] = $booking->seats_booked;
                     }
                 }
             }

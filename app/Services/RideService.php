@@ -65,6 +65,21 @@ class RideService
             return null; // Si le trajet n'existe pas, je m'arrête ici.
         }
 
+        // Calculer le nombre total de sièges réservés pour ce trajet
+        $totalSeatsBooked = 0;
+        $bookings = $this->db->fetchAll(
+            "SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",
+            ['ride_id' => $rideId]
+        );
+
+        foreach ($bookings as $booking) {
+            $totalSeatsBooked += $booking->seats_booked;
+        }
+
+        // Calculer et définir le nombre de sièges disponibles
+        $calculatedSeatsAvailable = $ride->getSeatsOffered() - $totalSeatsBooked;
+        $ride->setSeatsAvailable($calculatedSeatsAvailable);
+
         // Étape 2 : Hydrater les relations (charger les objets associés).
         
         // 2a. Charger le conducteur (objet User).
@@ -234,6 +249,7 @@ class RideService
             $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId], \App\Models\Booking::class);
             error_log("RideService::finishRide() - " . count($bookings) . " réservations confirmées trouvées.");
             foreach ($bookings as $booking) {
+                error_log("RideService::finishRide() - Booking ID: {$booking->getId()}, Seats Booked: {$booking->getSeatsBooked()}");
                 $totalGrossCredits += $ride->getPricePerSeat() * $booking->getSeatsBooked();
             }
             error_log("RideService::finishRide() - Total brut des crédits calculé: {$totalGrossCredits}.");

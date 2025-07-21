@@ -105,6 +105,7 @@ class RideHelper
                 'driver_message' => $ride->getDriverMessage(),
                 'is_eco_ride' => $ride->isEcoRide(),
                 'seats_available' => $ride->getSeatsAvailable(), // La clé cruciale !
+                'passengers_count' => $ride->getSeatsOffered() - $ride->getSeatsAvailable(), // Ajout du nombre de passagers
 
                 'driver_id' => $driver ? $driver->getId() : null,
                 'driver_username' => $driver ? $driver->getUsername() : 'N/A',
@@ -126,3 +127,4 @@ class RideHelper
         return $formattedRides;
     }
 }
+// Commentaire pour forcer le rechargement

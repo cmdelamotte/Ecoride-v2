@@ -51,10 +51,10 @@ const createRideCard = (ride) => {
     if (ride.driver_id === currentUserId) {
         // L'utilisateur est le conducteur de ce trajet
         priceLabelEl.textContent = 'Gain estimé : ';
-        const seatsBooked = ride.seats_offered - (ride.seats_available || 0);
+        // Utiliser passengers_count pour le calcul du gain estimé
         let estimatedGain = 0;
-        if (seatsBooked > 0) {
-            const grossGain = ride.price_per_seat * seatsBooked;
+        if (ride.passengers_count > 0) {
+            const grossGain = ride.price_per_seat * ride.passengers_count;
             estimatedGain = grossGain - 2; // On déduit systématiquement la commission de 2 crédits
         }
         ridePriceAmountEl.textContent = `${estimatedGain.toFixed(2)}`;
@@ -70,6 +70,16 @@ const createRideCard = (ride) => {
         card.querySelector('.role-specific-info').appendChild(seatsBookedEl);
     }
     card.querySelector('.ride-status-text').textContent = ride.ride_status;
+
+    // Afficher le nombre de passagers
+    const passengersCurrentEl = card.querySelector('.ride-passengers-current');
+    const passengersMaxEl = card.querySelector('.ride-passengers-max');
+    if (passengersCurrentEl && passengersMaxEl) {
+        console.log('Debug: ride.passengers_count =', ride.passengers_count);
+        console.log('Debug: ride.seats_offered =', ride.seats_offered);
+        passengersCurrentEl.textContent = ride.passengers_count;
+        passengersMaxEl.textContent = ride.seats_offered;
+    }
 
     // Gérer le badge éco
     const ecoBadge = card.querySelector('.ride-eco-badge');
