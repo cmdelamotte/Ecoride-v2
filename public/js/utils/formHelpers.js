@@ -37,11 +37,7 @@ export function validateForm(form) {
 
     if (!form.checkValidity()) {
         isValid = false;
-        form.querySelectorAll('input, select, textarea').forEach(field => {
-            if (!field.checkValidity()) {
-                field.classList.add('is-invalid');
-            }
-        });
+        form.reportValidity(); // Déclenche l'affichage des messages d'erreur natifs du navigateur
     }
 
     form.classList.add('was-validated');
