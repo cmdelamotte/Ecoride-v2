@@ -5,6 +5,57 @@ import { validateForm, getFormData, setFormLoadingState, displayFormErrors } fro
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#publish-ride-form');
     const vehicleSelect = document.querySelector('#vehicle-id');
+    const departureDatetimeInput = document.querySelector('#departure-datetime');
+    const estimatedArrivalDatetimeInput = document.querySelector('#estimated-arrival-datetime');
+
+    /**
+     * Valide le formulaire de publication de trajet, y compris la date.
+     * @returns {boolean} True si le formulaire est valide, false sinon.
+     */
+    function validatePublishForm() {
+        // Réinitialiser la validité personnalisée avant de re-valider
+        if (departureDatetimeInput) {
+            departureDatetimeInput.setCustomValidity('');
+        }
+        if (estimatedArrivalDatetimeInput) {
+            estimatedArrivalDatetimeInput.setCustomValidity('');
+        }
+
+        // Validation HTML5 native
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return false;
+        }
+
+        // Validation spécifique de la date de départ (ne doit pas être dans le passé)
+        if (departureDatetimeInput && departureDatetimeInput.value) {
+            const today = new Date();
+            const selectedDate = new Date(departureDatetimeInput.value);
+            // Comparer les dates sans l'heure pour éviter les problèmes de fuseau horaire
+            today.setHours(0, 0, 0, 0);
+            selectedDate.setHours(0, 0, 0, 0);
+
+            if (selectedDate < today) {
+                departureDatetimeInput.setCustomValidity("La date du trajet ne peut pas être dans le passé.");
+                form.reportValidity(); // Déclenche l'affichage du pop-up
+                return false;
+            }
+        }
+
+        // Validation : la date d'arrivée estimée ne peut pas être avant la date de départ
+        if (departureDatetimeInput && departureDatetimeInput.value && estimatedArrivalDatetimeInput && estimatedArrivalDatetimeInput.value) {
+            const departureDate = new Date(departureDatetimeInput.value);
+            const estimatedArrivalDate = new Date(estimatedArrivalDatetimeInput.value);
+
+            if (estimatedArrivalDate <= departureDate) {
+                estimatedArrivalDatetimeInput.setCustomValidity("L'heure d'arrivée doit être postérieure à l'heure de départ.");
+                form.reportValidity();
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     /**
      * Charge les véhicules de l'utilisateur et les ajoute au menu déroulant.
@@ -36,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handlePublishRide(e) {
         e.preventDefault();
 
-        if (!validateForm(form)) {
+        if (!validatePublishForm()) {
             return;
         }
 
