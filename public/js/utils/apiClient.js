@@ -52,7 +52,7 @@ export const apiClient = {
     searchRides: (params) => callApi(`/api/rides/search?${params}`),
     getRideDetails: (id) => callApi(`/api/rides/${id}/details`),
     bookRide: (id) => callApi(`/rides/${id}/book`, 'POST'),
-    getUserRides: (type) => callApi(`/api/user-rides?type=${type}`),
+    getUserRides: (type, page = 1, limit = 10) => callApi(`/api/user-rides?type=${type}&page=${page}&limit=${limit}`),
     cancelRide: (id) => callApi(`/rides/${id}/cancel`, 'POST'),
     startRide: (id) => callApi(`/rides/${id}/start`, 'POST'),
     finishRide: (id) => callApi(`/rides/${id}/finish`, 'POST'),

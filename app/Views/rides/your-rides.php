@@ -28,16 +28,25 @@
                     <div class="tab-pane fade show active" id="upcoming-rides" role="tabpanel" aria-labelledby="upcoming-rides-tab">
                         <h3 class="visually-hidden">Trajets à venir</h3>
                         <div class="rides-list-container"></div>
+                        <nav aria-label="Pagination des trajets à venir">
+                            <ul class="pagination justify-content-center" id="upcoming-rides-pagination"></ul>
+                        </nav>
                     </div>
 
                     <div class="tab-pane fade" id="past-rides" role="tabpanel" aria-labelledby="past-rides-tab">
                         <h3 class="visually-hidden">Trajets passés</h3>
                         <div class="rides-list-container"></div>
+                        <nav aria-label="Pagination des trajets passés">
+                            <ul class="pagination justify-content-center" id="past-rides-pagination"></ul>
+                        </nav>
                     </div>
 
                     <div class="tab-pane fade" id="all-rides" role="tabpanel" aria-labelledby="all-rides-tab">
-                        <p class="text-center text-muted mt-4">Affichage de tous les trajets (à venir et passés).</p>
+                        <p class="visually-hidden">Affichage de tous les trajets (à venir et passés).</p>
                         <div class="rides-list-container"></div>
+                        <nav aria-label="Pagination de tous les trajets">
+                            <ul class="pagination justify-content-center" id="all-rides-pagination"></ul>
+                        </nav>
                     </div>
                 </div>
                 

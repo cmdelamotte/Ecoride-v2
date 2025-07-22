@@ -24,7 +24,10 @@ export class Pagination {
 
         // Bouton Précédent
         const prevDisabled = currentPage === 1;
-        const prevLi = createElement('li', ['page-item', prevDisabled ? 'disabled' : '']);
+        const prevLi = createElement('li', ['page-item']);
+        if (prevDisabled) {
+            prevLi.classList.add('disabled');
+        }
         const prevLink = createElement('a', ['page-link'], { href: '#' }, 'Précédent');
         if (!prevDisabled) {
             prevLink.addEventListener('click', (e) => {
@@ -37,7 +40,10 @@ export class Pagination {
 
         // Numéros de page
         for (let i = 1; i <= totalPages; i++) {
-            const pageLi = createElement('li', ['page-item', i === currentPage ? 'active' : '']);
+            const pageLi = createElement('li', ['page-item']);
+            if (i === currentPage) {
+                pageLi.classList.add('active');
+            }
             const pageLink = createElement('a', ['page-link'], { href: '#' }, i);
             
             if (i !== currentPage) {
@@ -52,7 +58,10 @@ export class Pagination {
 
         // Bouton Suivant
         const nextDisabled = currentPage === totalPages;
-        const nextLi = createElement('li', ['page-item', nextDisabled ? 'disabled' : '']);
+        const nextLi = createElement('li', ['page-item']);
+        if (nextDisabled) {
+            nextLi.classList.add('disabled');
+        }
         const nextLink = createElement('a', ['page-link'], { href: '#' }, 'Suivant');
         if (!nextDisabled) {
             nextLink.addEventListener('click', (e) => {

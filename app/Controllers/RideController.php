@@ -107,7 +107,6 @@ class RideController extends Controller
      */
     public function finish(int $id)
     {
-        error_log("RideController::finish() - Début de la méthode pour le trajet #{$id}.");
         // Sécurité : Vérifier si l'utilisateur est connecté.
         if (!isset($_SESSION['user_id'])) {
             $this->jsonResponse(['success' => false, 'message' => 'Vous devez être connecté pour terminer un trajet.'], 401);
@@ -168,6 +167,9 @@ class RideController extends Controller
 
         $userId = $_SESSION['user_id'];
         $type = $_GET['type'] ?? 'all'; // Récupérer le type de trajets demandé (upcoming, past, all)
+        $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+        $limit = filter_var($_GET['limit'] ?? 10, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 10;
+        $offset = ($page - 1) * $limit;
 
         // Valider le type pour éviter des valeurs inattendues
         if (!in_array($type, ['all', 'upcoming', 'past'])) {
@@ -175,7 +177,10 @@ class RideController extends Controller
         }
 
         try {
-            $rides = $this->rideService->getUserRides($userId, $type);
+            $rides = $this->rideService->getUserRides($userId, $type, $limit, $offset);
+            $totalRides = $this->rideService->countUserRides($userId, $type);
+            $totalPages = ceil($totalRides / $limit);
+
             // Utiliser RideHelper pour formater les trajets
             $formattedRides = RideHelper::formatCollectionForSearchApi($rides);
 
@@ -197,7 +202,16 @@ class RideController extends Controller
                 }
             }
 
-            $this->jsonResponse(['success' => true, 'rides' => $formattedRides]);
+            $this->jsonResponse([
+                'success' => true,
+                'rides' => $formattedRides,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $totalPages,
+                    'total_rides' => $totalRides,
+                    'limit' => $limit
+                ]
+            ]);
 
         } catch (Exception $e) {
             error_log("Error fetching user rides API: " . $e->getMessage());

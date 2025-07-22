@@ -1,6 +1,7 @@
 import { apiClient } from '../utils/apiClient.js';
 import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
+import { Pagination } from '../components/Pagination.js';
 
 // Sélecteurs des conteneurs de trajets
 const upcomingRidesContainer = document.querySelector('#upcoming-rides .rides-list-container');
@@ -8,8 +9,24 @@ const pastRidesContainer = document.querySelector('#past-rides .rides-list-conta
 const allRidesContainer = document.querySelector('#all-rides .rides-list-container');
 const noRidesMessage = document.getElementById('no-rides-message');
 
+// Sélecteurs des conteneurs de pagination
+const upcomingPaginationContainer = document.querySelector('#upcoming-rides-pagination');
+const pastPaginationContainer = document.querySelector('#past-rides-pagination');
+const allPaginationContainer = document.querySelector('#all-rides-pagination');
+
+// Instances de pagination
+let upcomingPagination;
+let pastPagination;
+let allPagination;
+
 // Template pour les cartes de trajet
 const rideCardTemplate = document.getElementById('ride-card-template');
+
+// Variables pour l'état de la pagination
+const RIDES_PER_PAGE = 5; // Nombre de trajets par page
+let currentUpcomingPage = 1;
+let currentPastPage = 1;
+let currentAllPage = 1;
 
 /**
  * Calcule la durée entre deux dates/heures et la formate.
@@ -75,8 +92,6 @@ const createRideCard = (ride) => {
     const passengersCurrentEl = card.querySelector('.ride-passengers-current');
     const passengersMaxEl = card.querySelector('.ride-passengers-max');
     if (passengersCurrentEl && passengersMaxEl) {
-        console.log('Debug: ride.passengers_count =', ride.passengers_count);
-        console.log('Debug: ride.seats_offered =', ride.seats_offered);
         passengersCurrentEl.textContent = ride.passengers_count;
         passengersMaxEl.textContent = ride.seats_offered;
     }
@@ -180,7 +195,26 @@ const handleRideAction = async (event) => {
 
         if (response.success) {
             displayFlashMessage(response.message, 'success');
-            loadUserRides(); // Recharger les trajets après action réussie
+            // Recharger la page actuelle de l'onglet actif après action réussie
+            const activeTab = document.querySelector('#ridesTabs button.active');
+            if (activeTab) {
+                const tabType = activeTab.id.replace('-rides-tab', ''); // 'upcoming', 'past', 'all'
+                let currentPage;
+                switch (tabType) {
+                    case 'upcoming':
+                        currentPage = currentUpcomingPage;
+                        break;
+                    case 'past':
+                        currentPage = currentPastPage;
+                        break;
+                    case 'all':
+                        currentPage = currentAllPage;
+                        break;
+                    default:
+                        currentPage = 1;
+                }
+                loadUserRides(tabType, currentPage);
+            }
         } else {
             displayFlashMessage(response.message || `Erreur lors de l'action (statut ${response.status}).`, 'danger');
         }
@@ -194,49 +228,102 @@ const handleRideAction = async (event) => {
 };
 
 /**
- * Charge et affiche les trajets de l'utilisateur.
+ * Charge et affiche les trajets de l'utilisateur pour un type et une page donnés.
+ * @param {string} type Le type de trajets à charger ('all', 'upcoming', 'past').
+ * @param {number} page Le numéro de page à charger.
  */
-const loadUserRides = async () => {
+const loadUserRides = async (type, page) => {
     // Cacher le message 'aucun trajet' par défaut
     noRidesMessage.classList.add('d-none');
 
+    let container;
+    let paginationInstance;
+    let currentPageVar;
+
+    switch (type) {
+        case 'upcoming':
+            container = upcomingRidesContainer;
+            paginationInstance = upcomingPagination;
+            currentPageVar = 'currentUpcomingPage';
+            break;
+        case 'past':
+            container = pastRidesContainer;
+            paginationInstance = pastPagination;
+            currentPageVar = 'currentPastPage';
+            break;
+        case 'all':
+            container = allRidesContainer;
+            paginationInstance = allPagination;
+            currentPageVar = 'currentAllPage';
+            break;
+        default:
+            console.error('Type de trajet inconnu:', type);
+            return;
+    }
+
     // Afficher un indicateur de chargement si nécessaire
-    // displayFlashMessage('Chargement de vos trajets...', 'info');
+    clearChildren(container); // Vider le conteneur avant de charger
+    container.appendChild(createElement('p', ['text-center', 'text-muted'], {}, 'Chargement des trajets...'));
 
     try {
-        // Récupérer tous les trajets
-        const allRidesResponse = await apiClient.getUserRides('all');
-        if (allRidesResponse.success) {
-            displayRides(allRidesContainer, allRidesResponse.rides);
+        const response = await apiClient.getUserRides(type, page, RIDES_PER_PAGE);
+
+        if (response.success) {
+            // Mettre à jour la variable de page actuelle
+            window[currentPageVar] = page;
+
+            displayRides(container, response.rides);
+            
+            // Rendre la pagination
+            if (paginationInstance) {
+                paginationInstance.render(response.pagination.current_page, response.pagination.total_pages);
+            }
+
+            // Gérer le message 'aucun trajet' globalement
+            // La logique pour afficher/cacher noRidesMessage est maintenant gérée par updateNoRidesMessage()
+
         } else {
-            displayFlashMessage(allRidesResponse.message || 'Erreur lors du chargement de tous les trajets.', 'danger');
-        }
-
-        // Récupérer les trajets à venir
-        const upcomingRidesResponse = await apiClient.getUserRides('upcoming');
-        if (upcomingRidesResponse.success) {
-            displayRides(upcomingRidesContainer, upcomingRidesResponse.rides);
-        }
-
-        // Récupérer les trajets passés
-        const pastRidesResponse = await apiClient.getUserRides('past');
-        if (pastRidesResponse.success) {
-            displayRides(pastRidesContainer, pastRidesResponse.rides);
-        }
-
-        // Afficher le message 'aucun trajet' si toutes les listes sont vides
-        if (allRidesResponse.rides.length === 0) {
-            noRidesMessage.classList.remove('d-none');
+            displayFlashMessage(response.message || `Erreur lors du chargement des trajets ${type}.`, 'danger');
+            container.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Erreur lors du chargement des trajets.'));
         }
 
     } catch (error) {
-        console.error("Erreur lors du chargement des trajets de l'utilisateur:", error);
+        console.error(`Erreur lors du chargement des trajets ${type}:`, error);
         displayFlashMessage('Une erreur de communication est survenue lors du chargement de vos trajets.', 'danger');
+        container.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Erreur de communication.'));
+    } finally {
+        updateNoRidesMessage(); // Toujours mettre à jour le message après un chargement
+    }
+};
+
+/**
+ * Met à jour l'affichage du message "Vous n'avez aucun trajet" en fonction du nombre total de trajets.
+ */
+const updateNoRidesMessage = async () => {
+    try {
+        const response = await apiClient.getUserRides('all', 1, 1); // Juste pour obtenir le total_rides
+        if (response.success && response.pagination.total_rides === 0) {
+            noRidesMessage.classList.remove('d-none');
+        } else {
+            noRidesMessage.classList.add('d-none');
+        }
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour du message 'aucun trajet':", error);
+        // Ne pas afficher de flash message ici pour éviter de spammer l'utilisateur
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadUserRides();
+    // Initialiser les instances de pagination
+    upcomingPagination = new Pagination('#upcoming-rides-pagination', (page) => loadUserRides('upcoming', page));
+    pastPagination = new Pagination('#past-rides-pagination', (page) => loadUserRides('past', page));
+    allPagination = new Pagination('#all-rides-pagination', (page) => loadUserRides('all', page));
+
+    // Charger les trajets à venir par défaut
+    loadUserRides('upcoming', currentUpcomingPage);
+
+    // Mettre à jour le message 'aucun trajet' après le chargement initial
+    updateNoRidesMessage();
 
     // Listeners pour les actions et les onglets 
     const ridesHistorySection = document.querySelector('.rides-history-section');
@@ -247,25 +334,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const rideTabs = document.querySelectorAll('#ridesTabs button[data-bs-toggle="tab"]');
     rideTabs.forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (event) {
-            const activeTabPaneId = event.target.getAttribute('data-bs-target'); 
-            const activeTabPane = document.querySelector(activeTabPaneId);
-            const noRidesMessageGlobal = document.getElementById('no-rides-message');
-
-            if (noRidesMessageGlobal) {
-                const hasContentInActiveTab = activeTabPane?.querySelector('.ride-card');
-                const isCurrentRideVisible = !document.getElementById('current-ride-highlight')?.classList.contains('d-none');
-
-                if (hasContentInActiveTab || isCurrentRideVisible) {
-                    noRidesMessageGlobal.classList.add('d-none');
-                } else {
-                    const allRidesContainer = document.querySelector('#all-rides .rides-list-container');
-                    if (allRidesContainer?.children.length === 0 && !isCurrentRideVisible) {
-                        noRidesMessageGlobal.classList.remove('d-none');
-                    } else {
-                        noRidesMessageGlobal.classList.add('d-none'); 
-                    }
-                }
+            const tabType = event.target.id.replace('-rides-tab', ''); // 'upcoming', 'past', 'all'
+            let currentPage;
+            switch (tabType) {
+                case 'upcoming':
+                    currentPage = currentUpcomingPage;
+                    break;
+                case 'past':
+                    currentPage = currentPastPage;
+                    break;
+                case 'all':
+                    currentPage = currentAllPage;
+                    break;
+                default:
+                    currentPage = 1;
             }
+            loadUserRides(tabType, currentPage);
         });
     });
 });
+
+// Exposer loadUserRides pour le débogage si nécessaire
+// window.loadUserRides = loadUserRides;

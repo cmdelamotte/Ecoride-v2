@@ -112,63 +112,107 @@ class RideService
      *
      * @param int $userId L'ID de l'utilisateur.
      * @param string $type Le type de trajets à récupérer ('all', 'upcoming', 'past').
-     * @return \App\Models\Ride[] Un tableau d'objets Ride.
+     * Compte le nombre total de trajets pour un utilisateur donné, filtrés par type.
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @param string $type Le type de trajets à compter ('all', 'upcoming', 'past').
+     * @return int Le nombre total de trajets.
      */
-    public function getUserRides(int $userId, string $type = 'all'): array
+    public function countUserRides(int $userId, string $type = 'all'): int
     {
-        $upcomingRidesData = [];
-        $pastRidesData = [];
+        $count = 0;
 
         // Requêtes pour les trajets où l'utilisateur est conducteur
-        $driverUpcomingQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
-        $driverPastQuery = "SELECT * FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
+        $driverUpcomingQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing')";
+        $driverPastQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         // Requêtes pour les trajets où l'utilisateur est passager
-        $passengerUpcomingQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
-        $passengerPastQuery = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
+        $passengerUpcomingQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing')";
+        $passengerPastQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         if ($type === 'all' || $type === 'upcoming') {
-            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQuery, ['user_id' => $userId], \App\Models\Ride::class);
-            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQuery, ['user_id' => $userId], \App\Models\Ride::class);
-            $upcomingRidesData = array_merge($driverUpcomingRides, $passengerUpcomingRides);
-            // Supprimer les doublons (si un trajet est à la fois conducteur et passager, ce qui est peu probable mais possible)
-            $upcomingRidesData = array_unique($upcomingRidesData, SORT_REGULAR);
-            // Trier par date de départ
-            usort($upcomingRidesData, function($a, $b) {
-                return strtotime($a->getDepartureTime()) - strtotime($b->getDepartureTime());
-            });
+            $driverUpcomingCount = $this->db->fetchColumn($driverUpcomingQuery, ['user_id' => $userId]);
+            $passengerUpcomingCount = $this->db->fetchColumn($passengerUpcomingQuery, ['user_id' => $userId]);
+            $count += $driverUpcomingCount + $passengerUpcomingCount;
         }
 
         if ($type === 'all' || $type === 'past') {
-            $driverPastRides = $this->db->fetchAll($driverPastQuery, ['user_id' => $userId], \App\Models\Ride::class);
-            $passengerPastRides = $this->db->fetchAll($passengerPastQuery, ['user_id' => $userId], \App\Models\Ride::class);
-            $pastRidesData = array_merge($driverPastRides, $passengerPastRides);
-            // Supprimer les doublons
-            $pastRidesData = array_unique($pastRidesData, SORT_REGULAR);
-            // Trier par date de départ (descendant pour les trajets passés)
-            usort($pastRidesData, function($a, $b) {
+            $driverPastCount = $this->db->fetchColumn($driverPastQuery, ['user_id' => $userId]);
+            $passengerPastCount = $this->db->fetchColumn($passengerPastQuery, ['user_id' => $userId]);
+            $count += $driverPastCount + $passengerPastCount;
+        }
+        
+        return $count;
+    }
+
+    /**
+     * Récupère tous les trajets associés à un utilisateur (en tant que conducteur ou passager).
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @param string $type Le type de trajets à récupérer ('all', 'upcoming', 'past').
+     * @param int $limit Le nombre maximum de trajets à retourner.
+     * @param int $offset Le décalage à partir duquel commencer à récupérer les trajets.
+     * @return \App\Models\Ride[] Un tableau d'objets Ride.
+     */
+    public function getUserRides(int $userId, string $type = 'all', int $limit = 10, int $offset = 0): array
+    {
+        $ridesData = [];
+        $params = [':user_id' => $userId];
+
+        // Requêtes de base sans LIMIT/OFFSET pour le type 'all'
+        $driverUpcomingQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
+        $driverPastQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
+        $passengerUpcomingQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
+        $passengerPastQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
+
+        if ($type === 'all') {
+            // Pour 'all', récupérer tous les trajets sans pagination SQL, puis paginer en PHP
+            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQueryBase, $params, \App\Models\Ride::class);
+            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQueryBase, $params, \App\Models\Ride::class);
+            $driverPastRides = $this->db->fetchAll($driverPastQueryBase, $params, \App\Models\Ride::class);
+            $passengerPastRides = $this->db->fetchAll($passengerPastQueryBase, $params, \App\Models\Ride::class);
+
+            $ridesData = array_merge($driverUpcomingRides, $passengerUpcomingRides, $driverPastRides, $passengerPastRides);
+            $ridesData = array_unique($ridesData, SORT_REGULAR);
+
+            // Trier l'ensemble des trajets
+            usort($ridesData, function($a, $b) {
+                return strtotime($a->getDepartureTime()) - strtotime($b->getDepartureTime());
+            });
+
+            // Appliquer la pagination PHP
+            $ridesData = array_slice($ridesData, $offset, $limit);
+
+        } elseif ($type === 'upcoming') {
+            $params[':limit'] = $limit;
+            $params[':offset'] = $offset;
+            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $ridesData = array_merge($driverUpcomingRides, $passengerUpcomingRides);
+            $ridesData = array_unique($ridesData, SORT_REGULAR);
+            usort($ridesData, function($a, $b) {
+                return strtotime($a->getDepartureTime()) - strtotime($b->getDepartureTime());
+            });
+
+        } elseif ($type === 'past') {
+            $params[':limit'] = $limit;
+            $params[':offset'] = $offset;
+            $driverPastRides = $this->db->fetchAll($driverPastQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $passengerPastRides = $this->db->fetchAll($passengerPastQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $ridesData = array_merge($driverPastRides, $passengerPastRides);
+            $ridesData = array_unique($ridesData, SORT_REGULAR);
+            usort($ridesData, function($a, $b) {
                 return strtotime($b->getDepartureTime()) - strtotime($a->getDepartureTime());
             });
         }
 
         // Hydrater chaque objet Ride avec les détails du conducteur et du véhicule
-        $hydratedUpcomingRides = [];
-        foreach ($upcomingRidesData as $ride) {
-            $hydratedUpcomingRides[] = $this->findRideDetailsById($ride->getId());
+        $hydratedRides = [];
+        foreach ($ridesData as $ride) {
+            $hydratedRides[] = $this->findRideDetailsById($ride->getId());
         }
 
-        $hydratedPastRides = [];
-        foreach ($pastRidesData as $ride) {
-            $hydratedPastRides[] = $this->findRideDetailsById($ride->getId());
-        }
-
-        if ($type === 'upcoming') {
-            return array_filter($hydratedUpcomingRides); // Filtrer les null si findRideDetailsById retourne null
-        } elseif ($type === 'past') {
-            return array_filter($hydratedPastRides); // Filtrer les null
-        } else { // 'all'
-            return array_filter(array_merge($hydratedUpcomingRides, $hydratedPastRides)); // Filtrer les null
-        }
+        return array_filter($hydratedRides); // Filtrer les null si findRideDetailsById retourne null
     }
 
     /**
