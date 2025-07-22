@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.vehicles.forEach(vehicle => {
                     const option = document.createElement('option');
                     option.value = vehicle.id;
-                    option.textContent = `${vehicle.brand_name} ${vehicle.model}`;
+                    option.textContent = `${vehicle.brand_name} ${vehicle.model_name}`;
                     vehicleSelect.appendChild(option);
                 });
             } else {
