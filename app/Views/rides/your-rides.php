@@ -153,7 +153,7 @@
                             <span class="form-label">Passagers inscrits :</span> <span class="ride-passengers-current"></span> / <span class="ride-passengers-max"></span>
                         </p>
                         <p class="card-text mb-1 ride-price-info">
-                            <span class="form-label price-label"></span><span class="ride-price-amount"></span> crédits
+                            <span class="form-label price-label"></span><span class="ride-price-amount"></span>
                         </p>
                     </div>
                 </div>

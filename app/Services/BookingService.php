@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Ride;
 use App\Services\RideService;
 use App\Services\UserService;
+use App\Services\EmailService; // Ajout de l'import pour EmailService
 use \PDO;
 use \Exception;
 
@@ -22,12 +23,14 @@ class BookingService
     private Database $db;
     private RideService $rideService;
     private UserService $userService;
+    private EmailService $emailService; // Ajout de la propriété pour EmailService
 
     public function __construct()
     {
         $this->db = Database::getInstance();
         $this->rideService = new RideService();
         $this->userService = new UserService();
+        $this->emailService = new EmailService(); // Initialisation de EmailService
     }
 
     /**
@@ -173,6 +176,9 @@ class BookingService
                         Logger::info("Driver cancellation: Refunding {$refundAmount} credits to passenger #{$passenger->getId()}. Old credits: {$oldPassengerCredits}, New credits: {$newPassengerCredits}");
                         $updateUserCount = $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", ['credits' => $newPassengerCredits, 'id' => $passenger->getId()]);
                         Logger::info("Driver cancellation: User #{$passenger->getId()} credits update rowCount: {$updateUserCount}");
+
+                        // Envoyer l'email de notification d'annulation au passager
+                        $this->emailService->sendRideCancellationEmailToPassenger($passenger, $ride, $refundAmount);
                     }
                     // Mettre à jour le statut de la réservation
                     $booking->setBookingStatus('cancelled_by_driver');
