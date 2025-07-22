@@ -212,4 +212,20 @@ class BookingService
             throw $e;
         }
     }
+
+    /**
+     * Récupère une réservation spécifique par l'ID du trajet et l'ID de l'utilisateur.
+     *
+     * @param int $rideId L'ID du trajet.
+     * @param int $userId L'ID de l'utilisateur.
+     * @return Booking|null L'objet Booking si trouvé, sinon null.
+     */
+    public function getBookingByRideAndUser(int $rideId, int $userId): ?Booking
+    {
+        return $this->db->fetchOne(
+            "SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
+            ['ride_id' => $rideId, 'user_id' => $userId],
+            Booking::class
+        );
+    }
 }

@@ -182,25 +182,7 @@ class RideController extends Controller
             $totalPages = ceil($totalRides / $limit);
 
             // Utiliser RideHelper pour formater les trajets
-            $formattedRides = RideHelper::formatCollectionForSearchApi($rides);
-
-            // Ajouter seats_booked_by_user pour les trajets où l'utilisateur est passager
-            foreach ($formattedRides as $key => $rideData) {
-                $formattedRides[$key]['seats_booked_by_user'] = null; // Initialisation
-
-                // Si c'est un trajet où l'utilisateur est passager (et non le conducteur)
-                if ($rideData['driver_id'] !== $userId) {
-                    // Récupérer le nombre de sièges réservés par cet utilisateur pour ce trajet
-                    // Accéder à la connexion DB via le RideService
-                    $booking = $this->rideService->db->fetchOne(
-                        "SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
-                        ['ride_id' => $rideData['ride_id'], 'user_id' => $userId]
-                    );
-                    if ($booking) {
-                        $formattedRides[$key]['seats_booked_by_user'] = $booking->seats_booked;
-                    }
-                }
-            }
+            $formattedRides = RideHelper::formatCollectionForSearchApi($rides, $userId);
 
             $this->jsonResponse([
                 'success' => true,

@@ -68,13 +68,14 @@ class RideService
         // Calculer le nombre total de sièges réservés pour ce trajet
         $totalSeatsBooked = 0;
         $bookings = $this->db->fetchAll(
-            "SELECT seats_booked FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",
-            ['ride_id' => $rideId]
-        );
+            "SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",['ride_id' => $rideId],
+            \App\Models\Booking::class
+);
 
         foreach ($bookings as $booking) {
-            $totalSeatsBooked += $booking->seats_booked;
+            $totalSeatsBooked += $booking->getSeatsBooked();
         }
+        $ride->setBookings($bookings);
 
         // Calculer et définir le nombre de sièges disponibles
         $calculatedSeatsAvailable = $ride->getSeatsOffered() - $totalSeatsBooked;
