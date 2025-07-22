@@ -21,8 +21,7 @@ class RideSearchController extends Controller
 
     public function __construct()
     {
-        $database = Database::getInstance();
-        $this->searchFilterService = new SearchFilterService($database);
+        $this->searchFilterService = new SearchFilterService();
         $this->rideService = new RideService();
     }
 
