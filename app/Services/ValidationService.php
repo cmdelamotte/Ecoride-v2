@@ -225,4 +225,33 @@ class ValidationService
 
         return $errors;
     }
+
+    /**
+     * Valide les données pour le formulaire de contact.
+     *
+     * @param array $data Les données du formulaire (name, email, subject, message).
+     * @return array Le tableau des erreurs, vide si la validation réussit.
+     */
+    public static function validateContactForm(array $data): array
+    {
+        $errors = [];
+
+        if (empty($data['name'])) {
+            $errors['name'] = 'Le nom est requis.';
+        }
+
+        if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Un email valide est requis.';
+        }
+
+        if (empty($data['subject'])) {
+            $errors['subject'] = 'Le sujet est requis.';
+        }
+
+        if (empty($data['message']) || strlen($data['message']) < 10) {
+            $errors['message'] = 'Le message doit contenir au moins 10 caractères.';
+        }
+
+        return $errors;
+    }
 }

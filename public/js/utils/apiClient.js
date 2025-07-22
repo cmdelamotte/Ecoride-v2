@@ -59,5 +59,8 @@ export const apiClient = {
     finishRide: (id) => callApi(`/rides/${id}/finish`, 'POST'),
     publishRide: (data) => callApi('/publish-ride', 'POST', data),
 
+    // Contact
+    submitContactForm: (data) => callApi('/contact', 'POST', data),
+
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

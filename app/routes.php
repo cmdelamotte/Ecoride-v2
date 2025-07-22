@@ -80,7 +80,7 @@ return [
         'path' => '/contact',
         'http_method' => 'POST', // Soumission du formulaire de contact
         'controller' => 'ContactController',
-        'method' => 'submit', // Supposons une méthode 'submit' pour le POST
+        'method' => 'submit',
         'auth' => false,
         'roles' => []
     ],
