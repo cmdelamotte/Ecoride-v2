@@ -15,7 +15,7 @@
                         <h2 class="card-title mb-4">Informations</h2>
                         <div class="flex-grow-1">
                             <p><i class="bi bi-geo-alt-fill me-2 text-primary"></i>Adresse : 123 Rue Écologie, 35000 Rennes, France (Exemple)</p>
-                            <p><i class="bi bi-envelope-fill me-2 text-primary"></i>Email : <a href="mailto:ecoride@contact.fr" class="link">ecoride@contact.fr</a></p>
+                            <p><i class="bi bi-envelope-fill me-2 text-primary"></i>Email : <a href="mailto:ecoride.ecf.dev@gmail.com" class="link">ecoride.ecf.dev@gmail.com</a></p>
                             <p><i class="bi bi-telephone-fill me-2 text-primary"></i>Téléphone : 01 23 45 67 89 (Exemple)</p>
                         </div>
                         <hr class="my-4">
