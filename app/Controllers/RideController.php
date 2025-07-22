@@ -6,6 +6,8 @@ use App\Core\Controller;
 use App\Services\BookingService;
 use App\Services\RideService; // Ajout
 use App\Helpers\RideHelper;
+use App\Helpers\RequestHelper;
+use App\Exceptions\ValidationException;
 use \Exception;
 
 /**
@@ -198,6 +200,60 @@ class RideController extends Controller
         } catch (Exception $e) {
             error_log("Error fetching user rides API: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => 'Erreur lors de la récupération de vos trajets.'], 500);
+        }
+    }
+
+    /**
+     * Affiche le formulaire de publication de trajet.
+     * Le routeur s'est déjà assuré que l'utilisateur a le rôle nécessaire.
+     */
+    public function publishForm()
+    {
+        $this->render('rides/publish', [
+            'pageTitle' => 'Publier un Trajet',
+            // Le script JS s'occupera de charger les véhicules de l'utilisateur via une API dédiée.
+            'pageScripts' => ['/js/pages/publishRidePage.js'] 
+        ]);
+    }
+
+    /**
+     * Gère la soumission du formulaire de publication de trajet via l'API.
+     */
+    public function publish()
+    {
+        // Sécurité : Le routeur a déjà vérifié l'authentification et le rôle.
+        $driverId = $_SESSION['user_id'];
+        
+        // Récupérer les données JSON envoyées par le client.
+        $requestData = RequestHelper::getApiRequestData();
+        $data = $requestData['data'];
+
+        if (!$data) {
+            $this->jsonResponse(['success' => false, 'message' => 'Données invalides ou manquantes.'], 400);
+            return;
+        }
+
+        try {
+            // La logique métier est entièrement dans le RideService.
+            $ride = $this->rideService->createRide($data, $driverId);
+            
+            // Si tout réussit, on renvoie une réponse de succès.
+            $this->jsonResponse([
+                'success' => true, 
+                'message' => 'Trajet publié avec succès ! Vous allez être redirigé.',
+                'ride_id' => $ride->getId()
+            ]);
+
+        } catch (ValidationException $e) {
+            // Le service a levé une exception de validation.
+            // On renvoie les erreurs spécifiques au client pour qu'il puisse les afficher.
+            $this->jsonResponse(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->getErrors()], $e->getCode());
+        
+        } catch (Exception $e) {
+            // Une autre erreur s'est produite (ex: véhicule non trouvé, erreur DB...).
+            // On log l'erreur côté serveur et on renvoie un message générique.
+            error_log("Ride publication failed for user {$driverId}: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Une erreur technique est survenue. Veuillez réessayer plus tard.'], 500);
         }
     }
 }

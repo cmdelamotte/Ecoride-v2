@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Services\UserService;
 use App\Services\VehicleService;
 use App\Services\CommissionService;
+use App\Services\ValidationService;
+use App\Exceptions\ValidationException;
 // use App\Services\ReviewService; // Ce service sera créé prochainement.
 
 /**
@@ -40,6 +42,69 @@ class RideService
         $this->vehicleService = new VehicleService();
         $this->commissionService = new CommissionService();
         // $this->reviewService = new ReviewService(); // À activer quand le service existera.
+    }
+
+    /**
+     * Crée un nouveau trajet.
+     *
+     * @param array $data Les données du trajet.
+     * @param int $driverId L'ID du conducteur.
+     * @return Ride Le nouvel objet Ride.
+     * @throws ValidationException Si les données sont invalides.
+     * @throws Exception Si une autre erreur se produit (ex: le véhicule n'appartient pas au conducteur).
+     */
+    public function createRide(array $data, int $driverId): Ride
+    {
+        // 1. Valider les données
+        $errors = ValidationService::validateRideCreation($data);
+        if (!empty($errors)) {
+            throw new ValidationException($errors);
+        }
+
+        // 2. Vérifier que le véhicule appartient bien au conducteur
+        $vehicle = $this->vehicleService->findById($data['vehicle_id']);
+        if (!$vehicle || $vehicle->getUserId() !== $driverId) {
+            throw new Exception("Le véhicule sélectionné n'est pas valide ou ne vous appartient pas.", 403);
+        }
+
+        // 3. Créer et hydrater l'objet Ride
+        $ride = new Ride();
+        $ride->setDriverId($driverId)
+            ->setVehicleId($data['vehicle_id'])
+            ->setDepartureCity($data['departure_city'])
+            ->setArrivalCity($data['arrival_city'])
+            ->setDepartureAddress($data['departure_address'])
+            ->setArrivalAddress($data['arrival_address'])
+            ->setDepartureTime($data['departure_datetime'])
+            ->setEstimatedArrivalTime($data['estimated_arrival_datetime'])
+            ->setPricePerSeat((float)$data['price_per_seat'])
+            ->setSeatsOffered((int)$data['seats_offered'])
+            ->setDriverMessage($data['driver_message'] ?? null)
+            ->setRideStatus('planned'); // Statut par défaut
+
+        // 4. Insérer en base de données
+        $sql = "INSERT INTO Rides (driver_id, vehicle_id, departure_city, arrival_city, departure_address, arrival_address, departure_time, estimated_arrival_time, price_per_seat, seats_offered, driver_message, ride_status) VALUES (:driver_id, :vehicle_id, :departure_city, :arrival_city, :departure_address, :arrival_address, :departure_time, :estimated_arrival_time, :price_per_seat, :seats_offered, :driver_message, :ride_status)";
+        
+        $params = [
+            ':driver_id' => $ride->getDriverId(),
+            ':vehicle_id' => $ride->getVehicleId(),
+            ':departure_city' => $ride->getDepartureCity(),
+            ':arrival_city' => $ride->getArrivalCity(),
+            ':departure_address' => $ride->getDepartureAddress(),
+            ':arrival_address' => $ride->getArrivalAddress(),
+            ':departure_time' => $ride->getDepartureTime(),
+            ':estimated_arrival_time' => $ride->getEstimatedArrivalTime(),
+            ':price_per_seat' => $ride->getPricePerSeat(),
+            ':seats_offered' => $ride->getSeatsOffered(),
+            ':driver_message' => $ride->getDriverMessage(),
+            ':ride_status' => $ride->getRideStatus(),
+        ];
+
+        $this->db->execute($sql, $params);
+        $rideId = $this->db->lastInsertId();
+        $ride->setId((int)$rideId);
+
+        return $ride;
     }
 
     /**

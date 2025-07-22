@@ -23,6 +23,33 @@ export function getFormData(formElement) {
 }
 
 /**
+ * Valide un formulaire entier en se basant sur les attributs HTML5 (required, min, max, etc.).
+ * Affiche les messages d'erreur Bootstrap personnalisés.
+ *
+ * @param {HTMLFormElement} form - L'élément formulaire à valider.
+ * @returns {boolean} - `true` si le formulaire est valide, `false` sinon.
+ */
+export function validateForm(form) {
+    let isValid = true;
+    // Supprime les anciennes validations
+    form.classList.remove('was-validated');
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+    if (!form.checkValidity()) {
+        isValid = false;
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            if (!field.checkValidity()) {
+                field.classList.add('is-invalid');
+            }
+        });
+    }
+
+    form.classList.add('was-validated');
+
+    return isValid;
+}
+
+/**
  * Affiche les messages d'erreur sous les champs de formulaire.
  * @param {Object} errors Un objet où les clés sont les noms des champs et les valeurs sont les messages d'erreur.
  * @param {HTMLFormElement} formElement L'élément formulaire.
@@ -49,6 +76,37 @@ export function displayFormErrors(errors, formElement) {
                 // Vous pouvez ajouter une logique pour afficher ces erreurs générales
                 // par exemple, dans une alerte globale en haut du formulaire.
             }
+        }
+    }
+}
+
+/**
+ * Active ou désactive le bouton de soumission d'un formulaire et affiche un état de chargement.
+ *
+ * @param {HTMLFormElement} form - L'élément formulaire.
+ * @param {boolean} isLoading - `true` pour afficher l'état de chargement, `false` pour le retirer.
+ * @param {string} [loadingText='Chargement...'] - Le texte à afficher sur le bouton pendant le chargement.
+ */
+export function setFormLoadingState(form, isLoading, loadingText = 'Chargement...') {
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) return;
+
+    if (isLoading) {
+        submitButton.disabled = true;
+        submitButton.dataset.originalText = submitButton.textContent;
+
+        const spinner = document.createElement('span');
+        spinner.classList.add('spinner-border', 'spinner-border-sm');
+        spinner.setAttribute('role', 'status');
+        spinner.setAttribute('aria-hidden', 'true');
+
+        submitButton.innerHTML = ''; // Vider le contenu existant de manière sécurisée
+        submitButton.appendChild(spinner);
+        submitButton.appendChild(document.createTextNode(` ${loadingText}`));
+    } else {
+        submitButton.disabled = false;
+        if (submitButton.dataset.originalText) {
+            submitButton.innerHTML = submitButton.dataset.originalText;
         }
     }
 }

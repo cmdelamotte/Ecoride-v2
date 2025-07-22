@@ -9,6 +9,8 @@ use App\Helpers\RequestHelper;
 use App\Models\Vehicle; // Import du modèle Vehicle
 use App\Helpers\AuthHelper; // Import du AuthHelper pour récupérer l'utilisateur
 use App\Services\ValidationService; // Import du ValidationService
+use App\Services\VehicleService; // Import du VehicleService
+use App\Helpers\VehicleHelper;
 
 /**
  * Gère toutes les opérations liées aux véhicules des utilisateurs.
@@ -19,11 +21,13 @@ class VehicleController extends Controller
 {
     private VehicleManagementService $vehicleManagementService;
     private BrandService $brandService;
+    private VehicleService $vehicleService;
 
     public function __construct()
     {
         $this->vehicleManagementService = new VehicleManagementService();
         $this->brandService = new BrandService();
+        $this->vehicleService = new VehicleService();
     }
 
     /**
@@ -126,5 +130,20 @@ class VehicleController extends Controller
         $result = $this->vehicleManagementService->deleteVehicle($vehicleId, $userId);
 
         $this->jsonResponse($result, $result['status'] ?? 200);
+    }
+
+    /**
+     * Récupère les véhicules de l'utilisateur connecté pour l'API.
+     */
+    public function getUserVehiclesApi()
+    {
+        // Le routeur a déjà vérifié l'authentification et le rôle.
+        $userId = $_SESSION['user_id'];
+        $vehicles = $this->vehicleService->findByUserId($userId);
+        
+        // Formater les véhicules pour la réponse API
+        $formattedVehicles = VehicleHelper::formatCollectionForApi($vehicles);
+
+        $this->jsonResponse(['success' => true, 'vehicles' => $formattedVehicles]);
     }
 }

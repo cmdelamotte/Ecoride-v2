@@ -42,6 +42,7 @@ export const apiClient = {
     addVehicle: (data) => callApi('/api/vehicles', 'POST', data),
     updateVehicle: (id, data) => callApi(`/api/vehicles/${id}/update`, 'POST', data),
     deleteVehicle: (id) => callApi(`/api/vehicles/${id}/delete`, 'POST'),
+    getUserVehicles: () => callApi('/api/user/vehicles'),
 
     // Utilisateurs (rôles, préférences, etc.)
     updateUserRole: (role) => callApi('/account/update-role', 'POST', { role: role }),
@@ -56,6 +57,7 @@ export const apiClient = {
     cancelRide: (id) => callApi(`/rides/${id}/cancel`, 'POST'),
     startRide: (id) => callApi(`/rides/${id}/start`, 'POST'),
     finishRide: (id) => callApi(`/rides/${id}/finish`, 'POST'),
+    publishRide: (data) => callApi('/publish-ride', 'POST', data),
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

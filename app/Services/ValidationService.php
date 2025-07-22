@@ -180,4 +180,49 @@ class ValidationService
 
         return $errors;
     }
+
+    /**
+     * Valide les données pour la création d'un nouveau trajet.
+     *
+     * @param array $data Les données du formulaire.
+     * @return array Le tableau des erreurs, vide si la validation réussit.
+     */
+    public static function validateRideCreation(array $data): array
+    {
+        $errors = [];
+
+        if (empty($data['departure_city'])) {
+            $errors['departure_city'] = 'La ville de départ est obligatoire.';
+        }
+
+        if (empty($data['arrival_city'])) {
+            $errors['arrival_city'] = 'La ville d\'arrivée est obligatoire.';
+        }
+
+        if (empty($data['departure_datetime'])) {
+            $errors['departure_datetime'] = 'La date et l\'heure de départ sont obligatoires.';
+        } elseif (new \DateTime() > new \DateTime($data['departure_datetime'])) {
+            $errors['departure_datetime'] = 'La date de départ ne peut pas être dans le passé.';
+        }
+
+        if (empty($data['estimated_arrival_datetime'])) {
+            $errors['estimated_arrival_datetime'] = 'La date et l\'heure d\'arrivée sont obligatoires.';
+        } elseif (!empty($data['departure_datetime']) && new \DateTime($data['estimated_arrival_datetime']) <= new \DateTime($data['departure_datetime'])) {
+            $errors['estimated_arrival_datetime'] = 'L\'heure d\'arrivée doit être postérieure à l\'heure de départ.';
+        }
+
+        if (empty($data['seats_offered']) || !filter_var($data['seats_offered'], FILTER_VALIDATE_INT) || $data['seats_offered'] < 1 || $data['seats_offered'] > 8) {
+            $errors['seats_offered'] = 'Le nombre de places doit être un chiffre entre 1 et 8.';
+        }
+
+        if (empty($data['price_per_seat']) || !is_numeric($data['price_per_seat']) || $data['price_per_seat'] < 2) {
+            $errors['price_per_seat'] = 'Le prix par place doit être d\'au moins 2 crédits.';
+        }
+
+        if (empty($data['vehicle_id']) || !filter_var($data['vehicle_id'], FILTER_VALIDATE_INT)) {
+            $errors['vehicle_id'] = 'Veuillez sélectionner un véhicule valide.';
+        }
+
+        return $errors;
+    }
 }

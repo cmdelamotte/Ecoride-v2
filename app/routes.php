@@ -61,6 +61,14 @@ return [
         'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER']
     ],
     [
+        'path' => '/api/user/vehicles',
+        'http_method' => 'GET',
+        'controller' => 'VehicleController',
+        'method' => 'getUserVehiclesApi',
+        'auth' => true,
+        'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER']
+    ],
+    [
         'path' => '/contact',
         'http_method' => 'GET', // Affichage du formulaire de contact
         'controller' => 'ContactController',
@@ -263,7 +271,7 @@ return [
     // ---------------------------------------------------------------------
 
     [
-        'path' => '/rides/publish',
+        'path' => '/publish-ride',
         'http_method' => 'GET', // Affichage du formulaire de publication de trajet
         'controller' => 'RideController',
         'method' => 'publishForm', // Renommé pour clarté
@@ -271,7 +279,7 @@ return [
         'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER'] // Seuls les chauffeurs peuvent publier
     ],
     [
-        'path' => '/rides/publish',
+        'path' => '/publish-ride',
         'http_method' => 'POST', // Soumission du formulaire de publication de trajet
         'controller' => 'RideController',
         'method' => 'publish',
