@@ -35,22 +35,38 @@ class ReportController extends Controller
         $booking = null;
         $ride = null;
         $reporterUser = null;
-        $reportedUser = null;
+        $reportedDriver = null; // Renommé pour clarté dans le contrôleur
+        $errorMessage = null;
 
         if ($token) {
             try {
                 $booking = $this->bookingService->getBookingByToken($token);
                 if ($booking) {
-                    // Récupérer le trajet et les utilisateurs associés pour pré-remplir le formulaire
-                    $ride = $this->reportService->getRideDetailsForReport($booking->getRideId());
-                    $reporterUser = $this->reportService->getUserDetailsForReport($booking->getUserId());
-                    $reportedUser = $this->reportService->getUserDetailsForReport($ride->getDriverId());
+                    // Vérifier l'expiration du token
+                    $now = new \DateTime();
+                    $tokenExpiresAt = new \DateTime($booking->getTokenExpiresAt());
+                    if ($now > $tokenExpiresAt) {
+                        $errorMessage = "Le lien de signalement a expiré.";
+                    } else {
+                        // Récupérer le trajet et les utilisateurs associés pour pré-remplir le formulaire
+                        $ride = $this->reportService->getRideDetailsForReport($booking->getRideId());
+                        $reporterUser = $this->reportService->getUserDetailsForReport($booking->getUserId());
+                        $reportedDriver = $this->reportService->getUserDetailsForReport($ride->getDriverId());
+
+                        // S'assurer que tous les objets nécessaires sont bien récupérés
+                        if (!$ride || !$reporterUser || !$reportedDriver) {
+                            $errorMessage = "Les informations associées à ce signalement sont incomplètes ou introuvables.";
+                        }
+                    }
+                } else {
+                    $errorMessage = "Le lien de signalement est invalide ou le signalement n'existe pas.";
                 }
             } catch (Exception $e) {
-                // Gérer l'erreur de token invalide/expiré ici si nécessaire
-                // Pour l'instant, on laisse le formulaire vide ou on affiche un message d'erreur générique
                 error_log("Error retrieving booking for report: " . $e->getMessage());
+                $errorMessage = "Une erreur est survenue lors du chargement du formulaire de signalement.";
             }
+        } else {
+            $errorMessage = "Le lien de signalement est manquant.";
         }
 
         $this->render('report/form', [
@@ -58,8 +74,9 @@ class ReportController extends Controller
             'booking' => $booking,
             'ride' => $ride,
             'reporterUser' => $reporterUser,
-            'reportedDriver' => $reportedUser, // Renommé pour clarté
-            'token' => $token
+            'reportedDriver' => $reportedDriver,
+            'token' => $token,
+            'errorMessage' => $errorMessage // Passer le message d'erreur à la vue
         ]);
     }
 

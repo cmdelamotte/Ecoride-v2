@@ -8,10 +8,25 @@
 <section class="content-section py-5">
     <div class="container">
         <div class="row g-4 justify-content-center">
-
             <div class="col-lg-7 d-flex">
-                <div class="card w-100"> <div class="card-body">
+                <div class="card w-100">
+                    <div class="card-body">
                         <h2 class="card-title mb-4">Signaler un problème</h2>
+
+                        <?php if (isset($errorMessage) && $errorMessage): ?>
+                            <div class="alert alert-danger" role="alert">
+                                <?= htmlspecialchars($errorMessage) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($ride) && $ride && isset($reporterUser) && $reporterUser && isset($reportedDriver) && $reportedDriver): ?>
+                            <div class="mb-4">
+                                <p><strong>Trajet concerné :</strong> De <?= htmlspecialchars($ride->getDepartureCity()) ?> à <?= htmlspecialchars($ride->getArrivalCity()) ?> le <?= (new DateTime($ride->getDepartureTime()))->format('d/m/Y à H:i') ?></p>
+                                <p><strong>Passager rapporteur :</strong> <?= htmlspecialchars($reporterUser->getFirstName() . ' ' . $reporterUser->getLastName()) ?></p>
+                                <p><strong>Conducteur signalé :</strong> <?= htmlspecialchars($reportedDriver->getFirstName() . ' ' . $reportedDriver->getLastName()) ?></p>
+                            </div>
+                        <?php endif; ?>
+
                         <form id="report-form" novalidate>
                             <div class="row g-3">
 
@@ -24,7 +39,7 @@
                                     <label for="reason" class="form-label">Raison du signalement</label>
                                     <div class="form-input-custom d-flex align-items-start">
                                         <i class="bi bi-pencil me-2 pt-1"></i>
-                                        <textarea class="form-control-custom flex-grow-1" id="reason" name="reason" rows="5" placeholder="Décrivez le problème en détail..." required maxlength="1000"></textarea>
+                                        <textarea class="form-control-custom flex-grow-1" id="reason" name="reason" rows="5" placeholder="Décrivez le problème en détail..." required minlength="10" maxlength="1000"></textarea>
                                     </div>
                                     <div class="invalid-feedback">Veuillez décrire la raison du signalement (au moins 10 caractères).</div>
                                 </div>
