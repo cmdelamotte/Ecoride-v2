@@ -20,11 +20,13 @@ class ConfirmationService
 {
     private Database $db;
     private UserService $userService;
+    private BookingService $bookingService; // Ajout de la dépendance
 
     public function __construct()
     {
         $this->db = Database::getInstance();
         $this->userService = new UserService();
+        $this->bookingService = new BookingService(); // Initialisation
     }
 
     /**
@@ -43,11 +45,7 @@ class ConfirmationService
             Logger::debug("ConfirmationService::confirmRide - Transaction démarrée.");
 
             /** @var Booking $booking */
-            $booking = $this->db->fetchOne(
-                "SELECT * FROM Bookings WHERE confirmation_token = :token FOR UPDATE",
-                ['token' => $token],
-                Booking::class
-            );
+            $booking = $this->bookingService->getBookingByToken($token);
             Logger::debug("ConfirmationService::confirmRide - Booking trouvé: " . ($booking ? $booking->getId() : 'null'));
 
             if (!$booking) {
