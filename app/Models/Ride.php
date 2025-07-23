@@ -21,6 +21,7 @@ class Ride
     private ?float $price_per_seat = null;
     private ?int $seats_offered = null;
     private ?string $ride_status = null;
+    private ?float $total_net_credits_earned = null;
     private ?string $driver_message = null;
     private ?bool $is_eco_ride = null;
     private ?string $created_at = null;
@@ -47,6 +48,7 @@ class Ride
     public function getPricePerSeat(): ?float { return $this->price_per_seat; }
     public function getSeatsOffered(): ?int { return $this->seats_offered; }
     public function getRideStatus(): ?string { return $this->ride_status; }
+    public function getTotalNetCreditsEarned(): ?float { return $this->total_net_credits_earned; }
     public function getDriverMessage(): ?string { return $this->driver_message; }
     public function isEcoRide(): ?bool { return $this->is_eco_ride; }
     public function getSeatsAvailable(): ?int { return $this->seats_available; }
@@ -73,6 +75,7 @@ class Ride
     public function setPricePerSeat(?float $price_per_seat): self { $this->price_per_seat = $price_per_seat; return $this; }
     public function setSeatsOffered(?int $seats_offered): self { $this->seats_offered = $seats_offered; return $this; }
     public function setRideStatus(?string $ride_status): self { $this->ride_status = $ride_status; return $this; }
+    public function setTotalNetCreditsEarned(?float $total_net_credits_earned): self { $this->total_net_credits_earned = $total_net_credits_earned; return $this; }
     public function setDriverMessage(?string $driver_message): self { $this->driver_message = $driver_message; return $this; }
     public function setIsEcoRide(?bool $is_eco_ride): self { $this->is_eco_ride = $is_eco_ride; return $this; }
     public function setSeatsAvailable(?int $seats_available): self { $this->seats_available = $seats_available; return $this; }

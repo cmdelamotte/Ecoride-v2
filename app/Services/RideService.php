@@ -15,6 +15,8 @@ use App\Services\CommissionService;
 use App\Services\ValidationService;
 use App\Services\EmailService; // Ajout de l'import pour EmailService
 use App\Exceptions\ValidationException;
+use Ramsey\Uuid\Uuid; // Pour générer des UUIDs
+use \DateTime; // Pour manipuler les dates
 // use App\Services\ReviewService; // Ce service sera créé prochainement.
 
 /**
@@ -333,17 +335,14 @@ class RideService
      * @param int $driverId L'ID du conducteur qui termine le trajet.
      * @throws \Exception Si une erreur survient durant le processus.
      */
-    public function finishRide(int $rideId, int $driverId): void
+        public function finishRide(int $rideId, int $driverId): void
     {
-        error_log("RideService::finishRide() - Début de la méthode pour le trajet #{$rideId} par le conducteur #{$driverId}.");
         $pdo = $this->db->getConnection();
         try {
             $pdo->beginTransaction();
-            error_log("RideService::finishRide() - Transaction démarrée.");
 
             /** @var Ride $ride */
             $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
-            error_log("RideService::finishRide() - Trajet récupéré. Statut: " . ($ride ? $ride->getRideStatus() : 'null'));
 
             if (!$ride) {
                 throw new Exception("Le trajet n'existe pas.");
@@ -354,72 +353,47 @@ class RideService
             if ($ride->getRideStatus() !== 'ongoing') {
                 throw new Exception("Le trajet ne peut être terminé que s'il est en cours.");
             }
-            error_log("RideService::finishRide() - Vérifications initiales passées.");
 
-            // Calculer le montant total brut des crédits générés par les réservations.
-            $totalGrossCredits = 0;
-            /** @var \App\Models\Booking[] $bookings */
-            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'", ['ride_id' => $rideId], \App\Models\Booking::class);
-            error_log("RideService::finishRide() - " . count($bookings) . " réservations confirmées trouvées.");
-            foreach ($bookings as $booking) {
-                error_log("RideService::finishRide() - Booking ID: {$booking->getId()}, Seats Booked: {$booking->getSeatsBooked()}");
-                $totalGrossCredits += $ride->getPricePerSeat() * $booking->getSeatsBooked();
-            }
-            error_log("RideService::finishRide() - Total brut des crédits calculé: {$totalGrossCredits}.");
-
-            // La commission est fixe, définie dans le CommissionService.
-            $commissionAmount = CommissionService::PLATFORM_COMMISSION;
-            
-            // Le gain net pour le conducteur est le total brut moins la commission.
-            $netCreditsForDriver = $totalGrossCredits - $commissionAmount;
-            error_log("RideService::finishRide() - Commission: {$commissionAmount}, Gain net pour le conducteur: {$netCreditsForDriver}.");
-
-            // Créditer le conducteur du montant net.
-            if ($netCreditsForDriver > 0) {
-                /** @var User $driver */
-                $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $driverId], User::class);
-                if ($driver) {
-                    $newDriverCredits = $driver->getCredits() + $netCreditsForDriver;
-                    $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
-                        'credits' => $newDriverCredits,
-                        'id' => $driver->getId()
-                    ]);
-                    error_log("RideService::finishRide() - Conducteur #{$driverId} crédité de {$netCreditsForDriver} crédits. Nouveau solde: {$newDriverCredits}.");
-                } else {
-                    error_log("RideService::finishRide() - Conducteur #{$driverId} non trouvé pour crédit.");
-                }
-            } else {
-                error_log("RideService::finishRide() - Gain net non positif, pas de crédit pour le conducteur.");
-            }
-
-            // Enregistrer la commission prélevée dans MongoDB.
-            $this->commissionService->recordCommission($ride->getId(), $commissionAmount);
-            error_log("RideService::finishRide() - Commission enregistrée dans MongoDB.");
-
-            // Mettre à jour le statut du trajet.
-            $ride->setRideStatus('completed');
-            $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+            // Mettre à jour le statut du trajet à 'completed_pending_confirmation'
+            $ride->setRideStatus('completed_pending_confirmation');
+            $this->db->execute("UPDATE Rides SET ride_status = :ride_status, total_net_credits_earned = 0 WHERE id = :id", [
                 'ride_status' => $ride->getRideStatus(),
                 'id' => $ride->getId()
             ]);
-            error_log("RideService::finishRide() - Statut du trajet #{$rideId} mis à jour à 'completed'.");
 
-            // Envoyer un email de notification de fin de trajet à chaque passager
+            // Récupérer toutes les réservations confirmées pour ce trajet
+            /** @var \App\Models\Booking[] $bookings */
+            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], \App\Models\Booking::class);
+
+            $tokenExpiresAt = (new \DateTime())->modify('+48 hours'); // Token valide 48 heures
+
             foreach ($bookings as $booking) {
                 /** @var User $passenger */
                 $passenger = $this->userService->findById($booking->getUserId());
+                
                 if ($passenger) {
-                    $this->emailService->sendRideCompletionEmailToPassenger($passenger, $ride);
+                    $confirmationToken = Uuid::uuid4()->toString();
+
+                    // Mettre à jour le statut de la réservation et stocker le token
+                    $this->db->execute(
+                        "UPDATE Bookings SET booking_status = :booking_status, confirmation_token = :token, token_expires_at = :expires_at, credits_transferred_for_this_booking = FALSE WHERE id = :id",
+                        [
+                            'booking_status' => 'confirmed_pending_passenger_confirmation',
+                            'token' => $confirmationToken,
+                            'expires_at' => $tokenExpiresAt->format('Y-m-d H:i:s'),
+                            'id' => $booking->getId()
+                        ]
+                    );
+
+                    // Envoyer l'email de demande de confirmation au passager
+                    $this->emailService->sendRideConfirmationRequestEmail($passenger, $ride, $confirmationToken);
                 }
             }
 
             $pdo->commit();
-            error_log("Ride #{$rideId} completed. Driver #{$driverId} credited with {$netCreditsForDriver} (net). Commission of {$commissionAmount} recorded.");
 
         } catch (Exception $e) {
-            error_log("RideService::finishRide() - ERREUR CATCHÉE: " . $e->getMessage());
             $pdo->rollBack();
-            error_log("RideService::finishRide() - Échec de la finalisation du trajet #{$rideId} par le conducteur #{$driverId}: " . $e->getMessage());
             throw $e;
         }
     }

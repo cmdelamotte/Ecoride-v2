@@ -327,6 +327,14 @@ return [
         'roles' => ['ROLE_DRIVER', 'ROLE_PASSENGER_DRIVER'] // Seuls les chauffeurs peuvent terminer
     ],
     [
+        'path' => '/confirm-ride',
+        'http_method' => 'GET', // Confirmation de trajet par le passager via token
+        'controller' => 'ConfirmationController',
+        'method' => 'confirmRide',
+        'auth' => false, // Accessible via un lien email, donc pas d'authentification requise sur la route
+        'roles' => []
+    ],
+    [
         'path' => '/your-rides',
         'http_method' => 'GET', // Affichage de l'historique des trajets de l'utilisateur
         'controller' => 'RideController',

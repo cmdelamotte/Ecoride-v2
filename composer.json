@@ -10,7 +10,8 @@
     ],
     "require": {
         "mongodb/mongodb": "*",
-        "phpmailer/phpmailer": "^6.10"
+        "phpmailer/phpmailer": "^6.10",
+        "ramsey/uuid": "^4.9"
     },
     "autoload": {
         "psr-4": {

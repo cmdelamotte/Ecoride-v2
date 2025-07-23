@@ -97,4 +97,44 @@ class EmailService
             throw $e; // Re-lancer l'exception pour que le service appelant puisse la gérer
         }
     }
+
+    /**
+     * Envoie un email de demande de confirmation de trajet à un passager.
+     *
+     * @param User $passenger L'objet User du passager.
+     * @param Ride $ride L'objet Ride du trajet.
+     * @param string $confirmationToken Le token de confirmation unique pour cette réservation.
+     * @throws PHPMailerException Si l'envoi de l'email échoue.
+     */
+    public function sendRideConfirmationRequestEmail(User $passenger, Ride $ride, string $confirmationToken): void
+    {
+        try {
+            $this->mailer->clearAllRecipients(); // Nettoyer les destinataires précédents
+            $this->mailer->addAddress($passenger->getEmail(), $passenger->getFirstName() . ' ' . $passenger->getLastName());
+            $this->mailer->Subject = 'Confirmez votre trajet EcoRide et laissez un avis !';
+            $this->mailer->isHTML(true);
+
+            // Construire les liens de confirmation et de report
+            $confirmLink = getenv('APP_BASE_URL') . '/confirm-ride?token=' . $confirmationToken;
+            $reportLink = getenv('APP_BASE_URL') . '/report-ride?token=' . $confirmationToken;
+
+            $body = "<p>Bonjour {$passenger->getFirstName()},</p>";
+            $body .= "<p>Votre trajet de <strong>{$ride->getDepartureCity()}</strong> à <strong>{$ride->getArrivalCity()}</strong>, prévu le <strong>" . (new \DateTime($ride->getDepartureTime()))->format('d/m/Y à H:i') . "</strong>, est maintenant terminé.</p>";
+            $body .= "<p>Pour que le conducteur reçoive ses crédits, veuillez confirmer que le trajet s'est bien passé :</p>";
+            $body .= "<p><a href=\"{$confirmLink}\" style=\"background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Confirmer le trajet</a></p>";
+            $body .= "<p>Si vous avez rencontré un problème, veuillez le signaler ici :</p>";
+            $body .= "<p><a href=\"{$reportLink}\" style=\"color: #dc3545; text-decoration: none;\">Signaler un problème</a></p>";
+            $body .= "<p>Merci de votre participation à EcoRide !</p>";
+            $body .= "<p>L'équipe EcoRide</p>";
+
+            $this->mailer->Body = $body;
+            $this->mailer->AltBody = strip_tags($body); // Version texte
+
+            $this->mailer->send();
+            Logger::info("Email de demande de confirmation envoyé au passager #{$passenger->getId()} pour le trajet #{$ride->getId()}.");
+        } catch (PHPMailerException $e) {
+            Logger::error("Erreur lors de l'envoi de l'email de demande de confirmation au passager #{$passenger->getId()} pour le trajet #{$ride->getId()}: " . $e->getMessage());
+            throw $e; // Re-lancer l'exception pour que le service appelant puisse la gérer
+        }
+    }
 }

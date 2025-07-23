@@ -15,6 +15,10 @@ class Booking
     private ?int $seats_booked = null;
     private ?string $booking_status = null;
     private ?string $booking_date = null;
+    private ?string $confirmation_token = null;
+    private ?string $token_expires_at = null;
+    private ?string $passenger_confirmed_at = null;
+    private ?bool $credits_transferred_for_this_booking = null;
     private ?string $created_at = null;
     private ?string $updated_at = null;
 
@@ -48,6 +52,26 @@ class Booking
     public function getBookingDate(): ?string
     {
         return $this->booking_date;
+    }
+
+    public function getConfirmationToken(): ?string
+    {
+        return $this->confirmation_token;
+    }
+
+    public function getTokenExpiresAt(): ?string
+    {
+        return $this->token_expires_at;
+    }
+
+    public function getPassengerConfirmedAt(): ?string
+    {
+        return $this->passenger_confirmed_at;
+    }
+
+    public function getCreditsTransferredForThisBooking(): ?bool
+    {
+        return $this->credits_transferred_for_this_booking;
     }
 
     public function getCreatedAt(): ?string
@@ -96,6 +120,30 @@ class Booking
     public function setBookingDate(?string $booking_date): self
     {
         $this->booking_date = $booking_date;
+        return $this;
+    }
+
+    public function setConfirmationToken(?string $confirmation_token): self
+    {
+        $this->confirmation_token = $confirmation_token;
+        return $this;
+    }
+
+    public function setTokenExpiresAt(?string $token_expires_at): self
+    {
+        $this->token_expires_at = $token_expires_at;
+        return $this;
+    }
+
+    public function setPassengerConfirmedAt(?string $passenger_confirmed_at): self
+    {
+        $this->passenger_confirmed_at = $passenger_confirmed_at;
+        return $this;
+    }
+
+    public function setCreditsTransferredForThisBooking(?bool $credits_transferred_for_this_booking): self
+    {
+        $this->credits_transferred_for_this_booking = $credits_transferred_for_this_booking;
         return $this;
     }
 
