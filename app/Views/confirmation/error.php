@@ -6,9 +6,21 @@
 </section>
 
 <section class="content-section py-5">
-    <div class="container text-center">
-        <p>Le lien de confirmation est peut-être invalide, expiré, ou le trajet a déjà été traité.</p>
-        <p>Si le problème persiste, veuillez contacter le support.</p>
-        <a href="/" class="btn primary-btn mt-4">Retour à l'accueil</a>
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-7 d-flex">
+                <div class="card w-100">
+                    <div class="card-body d-flex flex-column text-center">
+                        <h2 class="card-title mb-4">Problème de Confirmation</h2>
+                        <div class="flex-grow-1">
+                            <p><?= htmlspecialchars($message ?? 'Le lien de confirmation est peut-être invalide, expiré, ou le trajet a déjà été traité.') ?></p>
+                            <p>Si le problème persiste, veuillez contacter le support.</p>
+                        </div>
+                        <hr class="my-4">
+                        <a href="/" class="btn primary-btn mt-2">Retour à l'accueil</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
