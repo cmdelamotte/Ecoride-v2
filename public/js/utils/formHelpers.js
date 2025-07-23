@@ -106,3 +106,17 @@ export function setFormLoadingState(form, isLoading, loadingText = 'Chargement..
         }
     }
 }
+
+/**
+ * Réinitialise l'état de validation d'un formulaire.
+ *
+ * @param {HTMLFormElement} form - L'élément formulaire à réinitialiser.
+ */
+export function resetFormValidation(form) {
+    form.classList.remove('was-validated');
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    form.querySelectorAll('.invalid-feedback').forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
+    });
+}

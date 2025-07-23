@@ -1,6 +1,6 @@
 import { apiClient } from '../utils/apiClient.js';
 import { displayFlashMessage } from '../utils/displayFlashMessage.js';
-import { validateForm, getFormData, setFormLoadingState, displayFormErrors } from '../utils/formHelpers.js';
+import { validateForm, getFormData, setFormLoadingState, displayFormErrors, resetFormValidation } from '../utils/formHelpers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.querySelector('#report-form');
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.success) {
                     displayFlashMessage(response.message, 'success');
                     form.reset(); // Réinitialiser le formulaire en cas de succès
+                    resetFormValidation(form); // Réinitialiser l'état de validation
                 } else {
                     // Afficher les erreurs spécifiques aux champs si elles existent
                     if (response.errors) {
