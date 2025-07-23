@@ -52,18 +52,16 @@ class ReportService
                ->setReportedUserId($data['reported_user_id'])
                ->setRideId($data['ride_id'])
                ->setReason($data['reason'])
-               ->setDescription($data['description'] ?? null)
                ->setReportStatus('pending'); // Statut par défaut
 
         // 3. Insérer en base de données
-        $sql = "INSERT INTO Reports (reporter_user_id, reported_user_id, ride_id, reason, description, status) VALUES (:reporter_user_id, :reported_user_id, :ride_id, :reason, :description, :status)";
+        $sql = "INSERT INTO Reports (reporter_user_id, reported_user_id, ride_id, reason, status) VALUES (:reporter_user_id, :reported_user_id, :ride_id, :reason, :status)";
         
         $params = [
             ':reporter_user_id' => $report->getReporterUserId(),
             ':reported_user_id' => $report->getReportedUserId(),
             ':ride_id' => $report->getRideId(),
             ':reason' => $report->getReason(),
-            ':description' => $report->getDescription(),
             ':status' => $report->getReportStatus(),
         ];
 

@@ -279,10 +279,10 @@ class ValidationService
 
         if (empty($data['reason'])) {
             $errors['reason'] = 'La raison du signalement est requise.';
-        }
-
-        if (isset($data['description']) && strlen($data['description']) > 1000) {
-            $errors['description'] = 'La description ne doit pas dépasser 1000 caractères.';
+        } elseif (strlen($data['reason']) < 10) {
+            $errors['reason'] = 'La raison du signalement doit contenir au moins 10 caractères.';
+        } elseif (strlen($data['reason']) > 1000) {
+            $errors['reason'] = 'La raison du signalement ne doit pas dépasser 1000 caractères.';
         }
 
         return $errors;

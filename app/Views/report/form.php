@@ -19,21 +19,8 @@
 
                         <div class="col-12">
                             <label for="reason" class="form-label">Raison du signalement</label>
-                            <select class="form-select-custom flex-grow-1" id="reason" name="reason" required>
-                                <option value="">Sélectionnez une raison</option>
-                                <option value="Comportement inapproprié du conducteur">Comportement inapproprié du conducteur</option>
-                                <option value="Problème avec le véhicule">Problème avec le véhicule</option>
-                                <option value="Retard important">Retard important</option>
-                                <option value="Annulation non justifiée">Annulation non justifiée</option>
-                                <option value="Autre">Autre</option>
-                            </select>
-                            <div class="invalid-feedback">Veuillez sélectionner une raison.</div>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="description" class="form-label">Description détaillée (optionnel)</label>
-                            <textarea class="form-control-custom flex-grow-1" id="description" name="description" rows="5" placeholder="Décrivez le problème en détail..." maxlength="1000"></textarea>
-                            <div class="invalid-feedback">La description ne doit pas dépasser 1000 caractères.</div>
+                            <textarea class="form-control-custom flex-grow-1" id="reason" name="reason" rows="5" placeholder="Décrivez le problème en détail..." required maxlength="1000"></textarea>
+                            <div class="invalid-feedback">Veuillez décrire la raison du signalement (au moins 10 caractères).</div>
                         </div>
 
                         <div class="col-12 mt-3">

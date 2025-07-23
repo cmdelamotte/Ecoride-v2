@@ -68,7 +68,8 @@ class ReportController extends Controller
      */
     public function submitReport()
     {
-        $data = RequestHelper::getJsonBody();
+        $requestData = RequestHelper::getApiRequestData();
+        $data = $requestData['data'];
 
         if (!$data) {
             $this->jsonResponse(['success' => false, 'message' => 'Données invalides ou manquantes.'], 400);
