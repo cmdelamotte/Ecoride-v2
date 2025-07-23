@@ -13,6 +13,7 @@ use App\Services\UserService;
 use App\Services\VehicleService;
 use App\Services\CommissionService;
 use App\Services\ValidationService;
+use App\Services\EmailService; // Ajout de l'import pour EmailService
 use App\Exceptions\ValidationException;
 // use App\Services\ReviewService; // Ce service sera créé prochainement.
 
@@ -28,6 +29,7 @@ class RideService
     private UserService $userService;
     private VehicleService $vehicleService;
     private CommissionService $commissionService;
+    private EmailService $emailService; // Ajout de la propriété pour EmailService
     // private ReviewService $reviewService;
 
     /**
@@ -41,6 +43,7 @@ class RideService
         $this->userService = new UserService();
         $this->vehicleService = new VehicleService();
         $this->commissionService = new CommissionService();
+        $this->emailService = new EmailService(); // Initialisation de EmailService
         // $this->reviewService = new ReviewService(); // À activer quand le service existera.
     }
 
@@ -400,6 +403,15 @@ class RideService
                 'id' => $ride->getId()
             ]);
             error_log("RideService::finishRide() - Statut du trajet #{$rideId} mis à jour à 'completed'.");
+
+            // Envoyer un email de notification de fin de trajet à chaque passager
+            foreach ($bookings as $booking) {
+                /** @var User $passenger */
+                $passenger = $this->userService->findById($booking->getUserId());
+                if ($passenger) {
+                    $this->emailService->sendRideCompletionEmailToPassenger($passenger, $ride);
+                }
+            }
 
             $pdo->commit();
             error_log("Ride #{$rideId} completed. Driver #{$driverId} credited with {$netCreditsForDriver} (net). Commission of {$commissionAmount} recorded.");
