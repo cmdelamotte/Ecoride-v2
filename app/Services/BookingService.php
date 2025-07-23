@@ -234,4 +234,19 @@ class BookingService
             Booking::class
         );
     }
+
+        /**
+     * Récupère une réservation spécifique par son token de confirmation.
+     *
+     * @param string $token Le token de confirmation.
+     * @return Booking|null L'objet Booking si trouvé, sinon null.
+     */
+    public function getBookingByToken(string $token): ?Booking
+    {
+        return $this->db->fetchOne(
+            "SELECT * FROM Bookings WHERE confirmation_token = :token",
+            ['token' => $token],
+            Booking::class
+        );
+    }
 }

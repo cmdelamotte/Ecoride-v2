@@ -5,6 +5,10 @@ namespace App\Services;
 use App\Core\Database;
 use App\Core\Logger;
 use App\Models\Report;
+use App\Models\Ride;
+use App\Models\User;
+use App\Services\RideService;
+use App\Services\UserService;
 use App\Exceptions\ValidationException;
 use \Exception;
 
@@ -16,10 +20,14 @@ use \Exception;
 class ReportService
 {
     private Database $db;
+    private RideService $rideService;
+    private UserService $userService;
 
     public function __construct()
     {
         $this->db = Database::getInstance();
+        $this->rideService = new RideService();
+        $this->userService = new UserService();
     }
 
     /**
@@ -45,7 +53,7 @@ class ReportService
                ->setRideId($data['ride_id'])
                ->setReason($data['reason'])
                ->setDescription($data['description'] ?? null)
-               ->setStatus('pending'); // Statut par défaut
+               ->setReportStatus('pending'); // Statut par défaut
 
         // 3. Insérer en base de données
         $sql = "INSERT INTO Reports (reporter_user_id, reported_user_id, ride_id, reason, description, status) VALUES (:reporter_user_id, :reported_user_id, :ride_id, :reason, :description, :status)";
@@ -56,7 +64,7 @@ class ReportService
             ':ride_id' => $report->getRideId(),
             ':reason' => $report->getReason(),
             ':description' => $report->getDescription(),
-            ':status' => $report->getStatus(),
+            ':status' => $report->getReportStatus(),
         ];
 
         $this->db->execute($sql, $params);
@@ -66,5 +74,27 @@ class ReportService
         Logger::info("New report created: #{$report->getId()} by user #{$report->getReporterUserId()} against user #{$report->getReportedUserId()} for ride #{$report->getRideId()}.");
 
         return $report;
+    }
+
+    /**
+     * Récupère les détails d'un trajet pour le formulaire de signalement.
+     *
+     * @param int $rideId L'ID du trajet.
+     * @return Ride|null L'objet Ride complet, ou null si non trouvé.
+     */
+    public function getRideDetailsForReport(int $rideId): ?Ride
+    {
+        return $this->rideService->findRideDetailsById($rideId);
+    }
+
+    /**
+     * Récupère les détails d'un utilisateur pour le formulaire de signalement.
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @return User|null L'objet User, ou null si non trouvé.
+     */
+    public function getUserDetailsForReport(int $userId): ?User
+    {
+        return $this->userService->findById($userId);
     }
 }
