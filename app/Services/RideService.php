@@ -255,26 +255,26 @@ class RideService
             $ridesData = array_slice($ridesData, $offset, $limit);
 
         } elseif ($type === 'upcoming') {
-            $params[':limit'] = $limit;
-            $params[':offset'] = $offset;
-            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
-            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $driverUpcomingRides = $this->db->fetchAll($driverUpcomingQueryBase, $params, \App\Models\Ride::class);
+            $passengerUpcomingRides = $this->db->fetchAll($passengerUpcomingQueryBase, $params, \App\Models\Ride::class);
             $ridesData = array_merge($driverUpcomingRides, $passengerUpcomingRides);
             $ridesData = array_unique($ridesData, SORT_REGULAR);
             usort($ridesData, function($a, $b) {
                 return strtotime($a->getDepartureTime()) - strtotime($b->getDepartureTime());
             });
+            // Appliquer la pagination PHP
+            $ridesData = array_slice($ridesData, $offset, $limit);
 
         } elseif ($type === 'past') {
-            $params[':limit'] = $limit;
-            $params[':offset'] = $offset;
-            $driverPastRides = $this->db->fetchAll($driverPastQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
-            $passengerPastRides = $this->db->fetchAll($passengerPastQueryBase . " LIMIT :limit OFFSET :offset", $params, \App\Models\Ride::class);
+            $driverPastRides = $this->db->fetchAll($driverPastQueryBase, $params, \App\Models\Ride::class);
+            $passengerPastRides = $this->db->fetchAll($passengerPastQueryBase, $params, \App\Models\Ride::class);
             $ridesData = array_merge($driverPastRides, $passengerPastRides);
             $ridesData = array_unique($ridesData, SORT_REGULAR);
             usort($ridesData, function($a, $b) {
                 return strtotime($b->getDepartureTime()) - strtotime($a->getDepartureTime());
             });
+            // Appliquer la pagination PHP
+            $ridesData = array_slice($ridesData, $offset, $limit);
         }
 
         // Hydrater chaque objet Ride avec les détails du conducteur et du véhicule
