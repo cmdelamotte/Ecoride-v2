@@ -46,7 +46,21 @@ class ReportService
             throw new ValidationException($errors, "Données du signalement invalides.");
         }
 
-        // 2. Créer et hydrater l'objet Report
+        // 2. Vérifier si un signalement similaire existe déjà
+        $existingReport = $this->db->fetchOne(
+            "SELECT id FROM Reports WHERE reporter_id = :reporter_id AND ride_id = :ride_id AND reported_driver_id = :reported_driver_id AND report_status IN ('new', 'under_investigation')",
+            [
+                ':reporter_id' => $data['reporter_id'],
+                ':ride_id' => $data['ride_id'],
+                ':reported_driver_id' => $data['reported_driver_id']
+            ]
+        );
+
+        if ($existingReport) {
+            throw new ValidationException(['general' => 'Vous avez déjà soumis un signalement pour ce trajet et ce conducteur.'], "Signalement déjà existant.");
+        }
+
+        // 3. Créer et hydrater l'objet Report
         $report = new Report();
         $report->setReporterId($data['reporter_id'])
                ->setReportedDriverId($data['reported_driver_id'])
@@ -54,7 +68,7 @@ class ReportService
                ->setReason($data['reason'])
                ->setReportStatus('new'); // Statut par défaut: 'new'
 
-        // 3. Insérer en base de données
+        // 4. Insérer en base de données
         $sql = "INSERT INTO Reports (reporter_id, reported_driver_id, ride_id, reason, report_status) VALUES (:reporter_id, :reported_driver_id, :ride_id, :reason, :report_status)";
         
         $params = [

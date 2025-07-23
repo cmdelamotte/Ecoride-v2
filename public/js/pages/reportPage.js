@@ -28,12 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     displayFlashMessage(response.message, 'success');
                     form.reset(); // Réinitialiser le formulaire en cas de succès
                     resetFormValidation(form); // Réinitialiser l'état de validation
+                    setTimeout(() => {
+                        window.location.href = '/'; // Redirection vers l'accueil
+                    }, 3000); // Redirection après 3 secondes
                 } else {
                     // Afficher les erreurs spécifiques aux champs si elles existent
                     if (response.errors) {
                         displayFormErrors(response.errors, form);
                     }
                     displayFlashMessage(response.message || 'Une erreur est survenue.', 'error');
+                    // Redirection même en cas d'erreur de validation pour les doublons
+                    if (response.errors && response.errors.general) {
+                        setTimeout(() => {
+                            window.location.href = '/'; // Redirection vers l'accueil
+                        }, 3000); // Redirection après 3 secondes
+                    }
                 }
             } catch (error) {
                 console.error('Erreur lors de la soumission du signalement:', error);

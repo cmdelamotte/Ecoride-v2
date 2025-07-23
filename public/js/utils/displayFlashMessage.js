@@ -18,7 +18,8 @@ export function displayFlashMessage(message, type = 'info', containerId = 'dynam
 
     // Créer l'élément alerte
     const alertDiv = document.createElement('div');
-    alertDiv.classList.add('alert', `alert-${type}`, 'alert-dismissible', 'fade', 'show');
+    const alertClass = type === 'error' ? 'alert-danger' : `alert-${type}`;
+    alertDiv.classList.add('alert', alertClass, 'alert-dismissible', 'fade', 'show');
     alertDiv.setAttribute('role', 'alert');
     alertDiv.textContent = message;
 
