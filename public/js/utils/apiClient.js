@@ -62,5 +62,8 @@ export const apiClient = {
     // Contact
     submitContactForm: (data) => callApi('/contact', 'POST', data),
 
+    // Reports
+    submitReport: (data) => callApi('/api/reports', 'POST', data),
+
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

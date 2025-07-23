@@ -1,0 +1,5 @@
+ALTER TABLE Rides
+MODIFY COLUMN ride_status VARCHAR(60) NOT NULL DEFAULT 'planned';
+
+ALTER TABLE Bookings
+MODIFY COLUMN booking_status VARCHAR(60) NOT NULL DEFAULT 'pending';

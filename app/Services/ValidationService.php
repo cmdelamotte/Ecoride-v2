@@ -254,4 +254,37 @@ class ValidationService
 
         return $errors;
     }
+
+    /**
+     * Valide les données pour la création d'un signalement.
+     *
+     * @param array $data Les données du signalement (reporter_user_id, reported_user_id, ride_id, reason, description).
+     * @return array Le tableau des erreurs, vide si la validation réussit.
+     */
+    public static function validateReportData(array $data): array
+    {
+        $errors = [];
+
+        if (empty($data['reporter_user_id']) || !filter_var($data['reporter_user_id'], FILTER_VALIDATE_INT)) {
+            $errors['reporter_user_id'] = 'L\'ID de l\'utilisateur rapporteur est requis et doit être un entier.';
+        }
+
+        if (empty($data['reported_user_id']) || !filter_var($data['reported_user_id'], FILTER_VALIDATE_INT)) {
+            $errors['reported_user_id'] = 'L\'ID de l\'utilisateur signalé est requis et doit être un entier.';
+        }
+
+        if (empty($data['ride_id']) || !filter_var($data['ride_id'], FILTER_VALIDATE_INT)) {
+            $errors['ride_id'] = 'L\'ID du trajet est requis et doit être un entier.';
+        }
+
+        if (empty($data['reason'])) {
+            $errors['reason'] = 'La raison du signalement est requise.';
+        }
+
+        if (isset($data['description']) && strlen($data['description']) > 1000) {
+            $errors['description'] = 'La description ne doit pas dépasser 1000 caractères.';
+        }
+
+        return $errors;
+    }
 }

@@ -335,6 +335,22 @@ return [
         'roles' => []
     ],
     [
+        'path' => '/report-ride',
+        'http_method' => 'GET', // Affichage du formulaire de signalement via token
+        'controller' => 'ReportController',
+        'method' => 'reportRide',
+        'auth' => false, // Accessible via un lien email
+        'roles' => []
+    ],
+    [
+        'path' => '/api/reports',
+        'http_method' => 'POST', // Soumission du signalement
+        'controller' => 'ReportController',
+        'method' => 'submitReport',
+        'auth' => false, // Le token gère l'autorisation
+        'roles' => []
+    ],
+    [
         'path' => '/your-rides',
         'http_method' => 'GET', // Affichage de l'historique des trajets de l'utilisateur
         'controller' => 'RideController',
