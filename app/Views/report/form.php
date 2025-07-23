@@ -13,8 +13,8 @@
                     <div class="row g-3">
 
                         <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
-                        <input type="hidden" name="reporter_user_id" value="<?= htmlspecialchars($reporterUser->getId() ?? '') ?>">
-                        <input type="hidden" name="reported_user_id" value="<?= htmlspecialchars($reportedUser->getId() ?? '') ?>">
+                        <input type="hidden" name="reporter_id" value="<?= htmlspecialchars($reporterUser->getId() ?? '') ?>">
+                        <input type="hidden" name="reported_driver_id" value="<?= htmlspecialchars($reportedDriver->getId() ?? '') ?>">
                         <input type="hidden" name="ride_id" value="<?= htmlspecialchars($ride->getId() ?? '') ?>">
 
                         <div class="col-12">

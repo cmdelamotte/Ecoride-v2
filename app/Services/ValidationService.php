@@ -265,12 +265,12 @@ class ValidationService
     {
         $errors = [];
 
-        if (empty($data['reporter_user_id']) || !filter_var($data['reporter_user_id'], FILTER_VALIDATE_INT)) {
-            $errors['reporter_user_id'] = 'L\'ID de l\'utilisateur rapporteur est requis et doit être un entier.';
+        if (empty($data['reporter_id']) || !filter_var($data['reporter_id'], FILTER_VALIDATE_INT)) {
+            $errors['reporter_id'] = 'L\'ID de l\'utilisateur rapporteur est requis et doit être un entier.';
         }
 
-        if (empty($data['reported_user_id']) || !filter_var($data['reported_user_id'], FILTER_VALIDATE_INT)) {
-            $errors['reported_user_id'] = 'L\'ID de l\'utilisateur signalé est requis et doit être un entier.';
+        if (empty($data['reported_driver_id']) || !filter_var($data['reported_driver_id'], FILTER_VALIDATE_INT)) {
+            $errors['reported_driver_id'] = 'L\'ID du conducteur signalé est requis et doit être un entier.';
         }
 
         if (empty($data['ride_id']) || !filter_var($data['ride_id'], FILTER_VALIDATE_INT)) {

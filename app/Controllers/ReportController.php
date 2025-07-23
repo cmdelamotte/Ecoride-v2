@@ -58,7 +58,7 @@ class ReportController extends Controller
             'booking' => $booking,
             'ride' => $ride,
             'reporterUser' => $reporterUser,
-            'reportedUser' => $reportedUser,
+            'reportedDriver' => $reportedUser, // Renommé pour clarté
             'token' => $token
         ]);
     }

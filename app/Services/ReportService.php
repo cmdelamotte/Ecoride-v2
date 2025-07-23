@@ -48,28 +48,28 @@ class ReportService
 
         // 2. Créer et hydrater l'objet Report
         $report = new Report();
-        $report->setReporterUserId($data['reporter_user_id'])
-               ->setReportedUserId($data['reported_user_id'])
+        $report->setReporterId($data['reporter_id'])
+               ->setReportedDriverId($data['reported_driver_id'])
                ->setRideId($data['ride_id'])
                ->setReason($data['reason'])
-               ->setReportStatus('pending'); // Statut par défaut
+               ->setReportStatus('new'); // Statut par défaut: 'new'
 
         // 3. Insérer en base de données
-        $sql = "INSERT INTO Reports (reporter_user_id, reported_user_id, ride_id, reason, status) VALUES (:reporter_user_id, :reported_user_id, :ride_id, :reason, :status)";
+        $sql = "INSERT INTO Reports (reporter_id, reported_driver_id, ride_id, reason, report_status) VALUES (:reporter_id, :reported_driver_id, :ride_id, :reason, :report_status)";
         
         $params = [
-            ':reporter_user_id' => $report->getReporterUserId(),
-            ':reported_user_id' => $report->getReportedUserId(),
+            ':reporter_id' => $report->getReporterId(),
+            ':reported_driver_id' => $report->getReportedDriverId(),
             ':ride_id' => $report->getRideId(),
             ':reason' => $report->getReason(),
-            ':status' => $report->getReportStatus(),
+            ':report_status' => $report->getReportStatus(),
         ];
 
         $this->db->execute($sql, $params);
         $reportId = $this->db->lastInsertId();
         $report->setId((int)$reportId);
 
-        Logger::info("New report created: #{$report->getId()} by user #{$report->getReporterUserId()} against user #{$report->getReportedUserId()} for ride #{$report->getRideId()}.");
+        Logger::info("New report created: #{$report->getId()} by user #{$report->getReporterId()} against user #{$report->getReportedDriverId()} for ride #{$report->getRideId()}.");
 
         return $report;
     }

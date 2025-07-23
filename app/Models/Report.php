@@ -10,8 +10,8 @@ namespace App\Models;
 class Report
 {
     private ?int $id = null;
-    private ?int $reporter_user_id = null;
-    private ?int $reported_user_id = null;
+    private ?int $reporter_id = null;
+    private ?int $reported_driver_id = null;
     private ?int $ride_id = null;
     private ?string $reason = null;
     private ?string $report_status = null;
@@ -24,14 +24,14 @@ class Report
         return $this->id;
     }
 
-    public function getReporterUserId(): ?int
+    public function getReporterId(): ?int
     {
-        return $this->reporter_user_id;
+        return $this->reporter_id;
     }
 
-    public function getReportedUserId(): ?int
+    public function getReportedDriverId(): ?int
     {
-        return $this->reported_user_id;
+        return $this->reported_driver_id;
     }
 
     public function getRideId(): ?int
@@ -62,15 +62,15 @@ class Report
         return $this;
     }
 
-    public function setReporterUserId(?int $reporter_user_id): self
+    public function setReporterId(?int $reporter_id): self
     {
-        $this->reporter_user_id = $reporter_user_id;
+        $this->reporter_id = $reporter_id;
         return $this;
     }
 
-    public function setReportedUserId(?int $reported_user_id): self
+    public function setReportedDriverId(?int $reported_driver_id): self
     {
-        $this->reported_user_id = $reported_user_id;
+        $this->reported_driver_id = $reported_driver_id;
         return $this;
     }
 
