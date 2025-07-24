@@ -51,4 +51,24 @@ class ReviewService
 
         return $stmt->execute();
     }
+
+    /**
+     * Vérifie si un utilisateur a déjà laissé un avis pour un trajet spécifique.
+     *
+     * @param int $userId L'ID de l'utilisateur (auteur de l'avis).
+     * @param int $rideId L'ID du trajet.
+     * @return bool True si un avis existe, false sinon.
+     */
+    public function hasUserReviewedRide(int $userId, int $rideId): bool
+    {
+        $sql = "SELECT COUNT(*) as review_count FROM reviews WHERE author_id = :author_id AND ride_id = :ride_id";
+        $params = [
+            ':author_id' => $userId,
+            ':ride_id' => $rideId
+        ];
+        error_log("ReviewService: hasUserReviewedRide SQL: " . $sql . " Params: " . print_r($params, true));
+        $result = $this->db->fetchOne($sql, $params);
+        error_log("ReviewService: hasUserReviewedRide Result: " . print_r($result, true));
+        return isset($result['review_count']) && $result['review_count'] > 0;
+    }
 }

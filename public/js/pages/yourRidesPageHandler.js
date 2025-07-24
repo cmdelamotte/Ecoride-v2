@@ -146,9 +146,15 @@ const createRideCard = (ride) => {
         // Action pour un trajet en cours (uniquement pour le conducteur).
         const finishButton = createElement('button', ['btn', 'primary-btn', 'btn-sm', 'mb-1', 'w-100', 'action-finish-ride'], { 'data-ride-id': ride.ride_id }, 'Arrivée à destination');
         rideActionsContainer.appendChild(finishButton);
-    } else if ((ride.ride_status === 'completed' || ride.ride_status === 'completed_pending_confirmation') && ride.driver_id !== currentUserId) {
+    } else if ((ride.ride_status === 'completed' || ride.ride_status === 'completed_upon_confirmation') && ride.driver_id !== currentUserId) {
+        console.log('createRideCard: Processing completed/confirmed ride for passenger', ride);
+        console.log('createRideCard: ride.has_reviewed =', ride.has_reviewed);
         // Action pour un trajet terminé (uniquement pour les passagers) : laisser un avis.
         const reviewButton = createElement('button', ['btn', 'secondary-btn', 'btn-sm', 'w-100', 'action-leave-review'], { 'data-ride-id': ride.ride_id }, 'Laisser un avis');
+        if (ride.has_reviewed) {
+            reviewButton.textContent = 'Avis soumis';
+            reviewButton.disabled = true;
+        }
         rideActionsContainer.appendChild(reviewButton);
     }
 
