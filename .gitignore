@@ -1,6 +1,7 @@
 
 # Composer dependencies
 /vendor/
+/node_modules/
 
 # Local configuration files
 .env
