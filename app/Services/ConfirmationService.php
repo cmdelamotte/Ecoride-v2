@@ -9,6 +9,7 @@ use App\Models\Ride;
 use App\Models\User;
 use \Exception;
 use \DateTime;
+use App\Services\MongoLogService; // Ajout de la dépendance
 
 /**
  * ConfirmationService
@@ -20,13 +21,15 @@ class ConfirmationService
 {
     private Database $db;
     private UserService $userService;
-    private BookingService $bookingService; // Ajout de la dépendance
+    private BookingService $bookingService;
+    private MongoLogService $mongoLogService; // Ajout de la dépendance
 
     public function __construct()
     {
         $this->db = Database::getInstance();
         $this->userService = new UserService();
-        $this->bookingService = new BookingService(); // Initialisation
+        $this->bookingService = new BookingService();
+        $this->mongoLogService = new MongoLogService(); // Initialisation
     }
 
     /**
@@ -111,6 +114,12 @@ class ConfirmationService
                 'id' => $booking->getId()
             ]);
             Logger::debug("ConfirmationService::confirmRide - Réservation #{$booking->getId()} statut mis à jour à confirmed_and_credited.");
+
+            // Enregistrer le transfert de crédits dans MongoDB
+            $this->mongoLogService->logCreditsTransferred($ride->getId(), $passenger->getId(), $driver->getId(), $netAmount);
+
+            // Enregistrer la commission dans MongoDB
+            $this->mongoLogService->logCommission($ride->getId(), $passenger->getId(), 2.00); // 2 crédits de commission par passager
 
             $pdo->commit();
             Logger::info("Booking #{$booking->getId()} confirmed by passenger #{$passenger->getId()}. Driver #{$driver->getId()} credited with {$netAmount} credits.");

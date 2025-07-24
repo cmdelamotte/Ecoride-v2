@@ -11,7 +11,7 @@ use App\Models\User;
 // J'importe les services dont j'aurai besoin pour construire l'objet Ride complet.
 use App\Services\UserService;
 use App\Services\VehicleService;
-use App\Services\CommissionService;
+use App\Services\MongoLogService; // Utilise le nouveau service de log MongoDB
 use App\Services\ValidationService;
 use App\Services\EmailService; // Ajout de l'import pour EmailService
 use App\Exceptions\ValidationException;
@@ -30,7 +30,7 @@ class RideService
     private Database $db;
     private UserService $userService;
     private VehicleService $vehicleService;
-    private CommissionService $commissionService;
+    private MongoLogService $mongoLogService; // Utilise le nouveau service de log MongoDB
     private EmailService $emailService; // Ajout de la propriété pour EmailService
     // private ReviewService $reviewService;
 
@@ -44,7 +44,7 @@ class RideService
         $this->db = Database::getInstance();
         $this->userService = new UserService();
         $this->vehicleService = new VehicleService();
-        $this->commissionService = new CommissionService();
+        $this->mongoLogService = new MongoLogService(); // Initialisation du nouveau service de log MongoDB
         $this->emailService = new EmailService(); // Initialisation de EmailService
         // $this->reviewService = new ReviewService(); // À activer quand le service existera.
     }
@@ -360,6 +360,9 @@ class RideService
                 'ride_status' => $ride->getRideStatus(),
                 'id' => $ride->getId()
             ]);
+
+            // Enregistrer la fin du trajet dans MongoDB (ride_analytics)
+            $this->mongoLogService->logRideAnalytics($rideId, $ride->getSeatsOffered() - $ride->getSeatsAvailable());
 
             // Récupérer toutes les réservations confirmées pour ce trajet
             /** @var \App\Models\Booking[] $bookings */
