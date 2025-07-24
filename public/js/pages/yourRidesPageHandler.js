@@ -68,13 +68,9 @@ const createRideCard = (ride) => {
     if (ride.driver_id === currentUserId) {
         // L'utilisateur est le conducteur de ce trajet
         priceLabelEl.textContent = 'Gain estimé : ';
-        // Utiliser passengers_count pour le calcul du gain estimé
-        let estimatedGain = 0;
-        if (ride.passengers_count > 0) {
-            const grossGain = ride.price_per_seat * ride.passengers_count;
-            estimatedGain = grossGain - 2; // On déduit systématiquement la commission de 2 crédits
-        }
-        ridePriceAmountEl.textContent = `${estimatedGain.toFixed(2)}`;
+        // Utiliser la propriété estimated_earnings_per_passenger du backend
+        let totalEstimatedGain = ride.estimated_earnings_per_passenger * ride.passengers_count;
+        ridePriceAmountEl.textContent = `${totalEstimatedGain.toFixed(2)}`;
     } else {
         // L'utilisateur est un passager de ce trajet
         priceLabelEl.textContent = 'Prix payé : ';

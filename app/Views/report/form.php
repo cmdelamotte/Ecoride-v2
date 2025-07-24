@@ -11,7 +11,7 @@
             <div class="col-lg-7 d-flex">
                 <div class="card w-100">
                     <div class="card-body">
-                        <h2 class="card-title mb-4">Signaler un problème</h2>
+                        <h2 class="card-title mb-4 form-label">Signaler un problème</h2>
 
                         <?php if (isset($errorMessage) && $errorMessage): ?>
                             <div class="alert alert-danger" role="alert">
@@ -21,9 +21,9 @@
 
                         <?php if (isset($ride) && $ride && isset($reporterUser) && $reporterUser && isset($reportedDriver) && $reportedDriver): ?>
                             <div class="mb-4">
-                                <p><strong>Trajet concerné :</strong> De <?= htmlspecialchars($ride->getDepartureCity()) ?> à <?= htmlspecialchars($ride->getArrivalCity()) ?> le <?= (new DateTime($ride->getDepartureTime()))->format('d/m/Y à H:i') ?></p>
-                                <p><strong>Passager rapporteur :</strong> <?= htmlspecialchars($reporterUser->getFirstName() . ' ' . $reporterUser->getLastName()) ?></p>
-                                <p><strong>Conducteur signalé :</strong> <?= htmlspecialchars($reportedDriver->getFirstName() . ' ' . $reportedDriver->getLastName()) ?></p>
+                                <p class="form-label"><strong>Trajet concerné :</strong> De <?= htmlspecialchars($ride->getDepartureCity()) ?> à <?= htmlspecialchars($ride->getArrivalCity()) ?> le <?= (new DateTime($ride->getDepartureTime()))->format('d/m/Y à H:i') ?></p>
+                                <p class="form-label"><strong>Passager rapporteur :</strong> <?= htmlspecialchars($reporterUser->getFirstName() . ' ' . $reporterUser->getLastName()) ?></p>
+                                <p class="form-label"><strong>Conducteur signalé :</strong> <?= htmlspecialchars($reportedDriver->getFirstName() . ' ' . $reportedDriver->getLastName()) ?></p>
                             </div>
                         <?php endif; ?>
 

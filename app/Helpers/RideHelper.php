@@ -50,8 +50,9 @@ class RideHelper
             'price_per_seat' => $ride->getPricePerSeat(),
             'seats_offered' => $ride->getSeatsOffered(),
             'ride_status' => $ride->getRideStatus(),
-            'driver_message' => $ride->getDriverMessage(),
-            'is_eco_ride' => $ride->isEcoRide(),
+            'estimated_earnings_per_passenger' => $ride->getPricePerSeat() - 2.00, // Gains estimés par passager (prix par place - 2 crédits de commission)
+            'driver' => $driver ? [
+                'id' => $driver->getId(),
 
             // Informations sur le conducteur (depuis l'objet User)
             'driver_id' => $driver ? $driver->getId() : null,
@@ -60,6 +61,7 @@ class RideHelper
             'driver_pref_smoker' => $driver ? $driver->getDriverPrefSmoker() : null,
             'driver_pref_animals' => $driver ? $driver->getDriverPrefAnimals() : null,
             'driver_pref_custom' => $driver ? $driver->getDriverPrefCustom() : null,
+            ] : null,
 
             // Informations sur le véhicule (depuis l'objet Vehicle)
             'vehicle_model' => $vehicle ? $vehicle->getModelName() : 'N/A',
@@ -73,7 +75,7 @@ class RideHelper
 
             // Avis sur le conducteur
             'reviews' => $formattedReviews
-        ];
+            ];
     }
 
     /**
@@ -116,6 +118,7 @@ class RideHelper
     'is_eco_ride' => $ride->isEcoRide(),
     'seats_available' => $ride->getSeatsAvailable(), // La clé cruciale !
     'passengers_count' => $ride->getSeatsOffered() - $ride->getSeatsAvailable(), // Ajout du nombre de passagers
+    'estimated_earnings_per_passenger' => $ride->getPricePerSeat() - 2.00, // Gains estimés par passager (prix par place - 2 crédits de commission)
 
     'driver_id' => $driver ? $driver->getId() : null,
     'driver_username' => $driver ? $driver->getUsername() : 'N/A',
