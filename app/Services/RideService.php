@@ -194,7 +194,7 @@ class RideService
         $count = 0;
 
         // Requêtes pour les trajets où l'utilisateur est conducteur
-        $driverUpcomingQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing')";
+        $driverUpcomingQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND (ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing')";
         $driverPastQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         // Requêtes pour les trajets où l'utilisateur est passager
