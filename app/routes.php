@@ -85,18 +85,6 @@ return [
         'roles' => []
     ],
     [
-        'path' => '/legal-mentions',
-        'http_method' => 'GET', // Affichage des mentions légales
-        'controller' => 'LegalMentionsController',
-        'method' => 'index',
-        'auth' => false,
-        'roles' => []
-    ],
-
-    // ---------------------------------------------------------------------
-    // Routes d'authentification
-    // ---------------------------------------------------------------------
-    [
         'path' => '/login',
         'http_method' => 'GET', // Affichage du formulaire de connexion
         'controller' => 'AuthController',
@@ -446,7 +434,17 @@ return [
         'auth' => true,
         'roles' => ['ROLE_EMPLOYEE']
     ],
-
+    // ---------------------------------------------------------------------
+    // Route Mentions Légales
+    // ---------------------------------------------------------------------
+    [
+        'path' => '/legal-mentions',
+        'http_method' => 'GET', // Affichage des mentions légales
+        'controller' => 'HomeController',
+        'method' => 'legalMentions',
+        'auth' => false,
+        'roles' => []
+    ],
     // ---------------------------------------------------------------------
     // Route 404 (à placer en dernier)
     // ---------------------------------------------------------------------

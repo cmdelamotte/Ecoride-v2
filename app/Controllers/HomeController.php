@@ -10,4 +10,9 @@ class HomeController extends Controller
     {
         $this->render('home');
     }
+
+    public function legalMentions()
+    {
+        $this->render('legal_mentions');
+    }
 }
