@@ -361,12 +361,12 @@ class RideService
                 'id' => $ride->getId()
             ]);
 
-            // Enregistrer la fin du trajet dans MongoDB (ride_analytics)
-            $this->mongoLogService->logRideAnalytics($rideId, $ride->getSeatsOffered() - $ride->getSeatsAvailable());
-
             // Récupérer toutes les réservations confirmées pour ce trajet
             /** @var \App\Models\Booking[] $bookings */
-            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], \App\Models\Booking::class);
+            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], \App\Models\Booking::class) ?? [];
+
+            // Enregistrer la fin du trajet dans MongoDB (ride_analytics)
+            $this->mongoLogService->logRideAnalytics($rideId, count($bookings));
 
             $tokenExpiresAt = (new \DateTime())->modify('+48 hours'); // Token valide 48 heures
 

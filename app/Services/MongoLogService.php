@@ -8,11 +8,10 @@ use MongoDB\Collection;
 use DateTime;
 
 /**
- * CommissionService
+ * MongoLogService
  * 
- * Gère toute la logique métier liée aux commissions de la plateforme.
- * Ce service interagit avec la base de données MongoDB pour stocker
- * et récupérer les données de commission.
+ * Gère la journalisation des événements et des statistiques dans MongoDB.
+ * Centralise les interactions avec différentes collections de logs.
  */
 class MongoLogService
 {
@@ -39,26 +38,19 @@ class MongoLogService
      */
     public function logRideCompletion(int $rideId, int $driverId): bool
     {
-        try {
-            $result = $this->logsCollection->insertOne([
-                'event_type' => 'ride_completed',
-                'ride_id' => $rideId,
-                'driver_id' => $driverId,
-                'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-            ]);
-
-            if ($result->getInsertedCount() === 1) {
-                Logger::info("Ride completion for ride #{$rideId} by driver #{$driverId} logged in MongoDB (logsCollection).");
-                return true;
-            }
-        } catch (\Exception $e) {
-            Logger::error("Failed to log ride completion for ride #{$rideId}: " . $e->getMessage());
-        }
-        return false;
+        $document = [
+            'event_type' => 'ride_completed',
+            'ride_id' => $rideId,
+            'driver_id' => $driverId,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        $success1 = $this->_logToCollection($this->rideAnalyticsCollection, $document, "Ride completion for ride #{$rideId} by driver #{$driverId} (rideAnalyticsCollection)");
+        $success2 = $this->_logToCollection($this->logsCollection, $document, "Ride completion for ride #{$rideId} by driver #{$driverId} (logsCollection)");
+        return $success1 && $success2;
     }
 
     /**
-     * Enregistre un événement de transfert de crédits dans la collection 'logs'.
+     * Enregistre un événement de transfert de crédits dans la collection 'platform_stats'.
      *
      * @param int $rideId L'ID du trajet.
      * @param int $passengerId L'ID du passager qui a confirmé.
@@ -68,24 +60,17 @@ class MongoLogService
      */
     public function logCreditsTransferred(int $rideId, int $passengerId, int $driverId, float $amount): bool
     {
-        try {
-            $result = $this->logsCollection->insertOne([
-                'event_type' => 'credits_transferred',
-                'ride_id' => $rideId,
-                'passenger_id' => $passengerId,
-                'driver_id' => $driverId,
-                'amount' => $amount,
-                'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-            ]);
-
-            if ($result->getInsertedCount() === 1) {
-                Logger::info("Credits transfer of {$amount} for ride #{$rideId} (passenger #{$passengerId} to driver #{$driverId}) logged in MongoDB (logsCollection).");
-                return true;
-            }
-        } catch (\Exception $e) {
-            Logger::error("Failed to log credits transfer for ride #{$rideId}: " . $e->getMessage());
-        }
-        return false;
+        $document = [
+            'event_type' => 'credits_transferred',
+            'ride_id' => $rideId,
+            'passenger_id' => $passengerId,
+            'driver_id' => $driverId,
+            'amount' => $amount,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        $success1 = $this->_logToCollection($this->platformStatsCollection, $document, "Credits transfer of {$amount} for ride #{$rideId} (passenger #{$passengerId} to driver #{$driverId}) (platformStatsCollection)");
+        $success2 = $this->_logToCollection($this->logsCollection, $document, "Credits transfer of {$amount} for ride #{$rideId} (passenger #{$passengerId} to driver #{$driverId}) (logsCollection)");
+        return $success1 && $success2;
     }
 
     /**
@@ -98,22 +83,16 @@ class MongoLogService
      */
     public function logCommission(int $rideId, int $passengerId, float $amount): bool
     {
-        try {
-            $result = $this->commissionsCollection->insertOne([
-                'ride_id' => $rideId,
-                'passenger_id' => $passengerId,
-                'amount' => $amount,
-                'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-            ]);
-
-            if ($result->getInsertedCount() === 1) {
-                Logger::info("Commission of {$amount} for ride #{$rideId} (passenger #{$passengerId}) logged in MongoDB (commissionsCollection).");
-                return true;
-            }
-        } catch (\Exception $e) {
-            Logger::error("Failed to log commission for ride #{$rideId}: " . $e->getMessage());
-        }
-        return false;
+        $document = [
+            'event_type' => 'commission_recorded',
+            'ride_id' => $rideId,
+            'passenger_id' => $passengerId,
+            'amount' => $amount,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        $success1 = $this->_logToCollection($this->commissionsCollection, $document, "Commission of {$amount} for ride #{$rideId} (passenger #{$passengerId}) (commissionsCollection)");
+        $success2 = $this->_logToCollection($this->logsCollection, $document, "Commission of {$amount} for ride #{$rideId} (passenger #{$passengerId}) (logsCollection)");
+        return $success1 && $success2;
     }
 
     /**
@@ -125,24 +104,12 @@ class MongoLogService
      */
     public function logPlatformStat(string $statName, float $value): bool
     {
-        try {
-            // Pour les stats de plateforme, on peut soit insérer un nouveau document à chaque fois,
-            // soit mettre à jour un document existant pour une stat donnée.
-            // Pour l'agrégation, l'insertion est plus simple et l'agrégation se fait à la lecture.
-            $result = $this->platformStatsCollection->insertOne([
-                'stat_name' => $statName,
-                'value' => $value,
-                'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-            ]);
-
-            if ($result->getInsertedCount() === 1) {
-                Logger::info("Platform stat '{$statName}' with value {$value} logged in MongoDB (platformStatsCollection).");
-                return true;
-            }
-        } catch (\Exception $e) {
-            Logger::error("Failed to log platform stat '{$statName}': " . $e->getMessage());
-        }
-        return false;
+        $document = [
+            'stat_name' => $statName,
+            'value' => $value,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        return $this->_logToCollection($this->platformStatsCollection, $document, "Platform stat '{$statName}' with value {$value}");
     }
 
     /**
@@ -154,19 +121,33 @@ class MongoLogService
      */
     public function logRideAnalytics(int $rideId, int $passengersCount): bool
     {
+        $document = [
+            'ride_id' => $rideId,
+            'passengers_count' => $passengersCount,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        return $this->_logToCollection($this->rideAnalyticsCollection, $document, "Ride analytics for ride #{$rideId} (passengers: {$passengersCount})");
+    }
+
+    /**
+     * Méthode privée générique pour loguer un document dans une collection spécifique.
+     *
+     * @param Collection $collection La collection MongoDB cible.
+     * @param array $document Le document à insérer.
+     * @param string $logMessage Le message à logger en cas de succès.
+     * @return bool True en cas de succès, false sinon.
+     */
+    private function _logToCollection(Collection $collection, array $document, string $logMessage): bool
+    {
         try {
-            $result = $this->rideAnalyticsCollection->insertOne([
-                'ride_id' => $rideId,
-                'passengers_count' => $passengersCount,
-                'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-            ]);
+            $result = $collection->insertOne($document);
 
             if ($result->getInsertedCount() === 1) {
-                Logger::info("Ride analytics for ride #{$rideId} (passengers: {$passengersCount}) logged in MongoDB (rideAnalyticsCollection).");
+                Logger::info("{$logMessage} logged in MongoDB.");
                 return true;
             }
         } catch (\Exception $e) {
-            Logger::error("Failed to log ride analytics for ride #{$rideId}: " . $e->getMessage());
+            Logger::error("Failed to log: {$logMessage}. Error: " . $e->getMessage());
         }
         return false;
     }
