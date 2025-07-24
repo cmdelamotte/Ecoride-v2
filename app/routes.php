@@ -455,5 +455,16 @@ return [
         'method' => 'notFound',
         'auth' => false,
         'roles' => []
+    ],
+    // ---------------------------------------------------------------------
+    // Routes pour les avis (ReviewController)
+    // ---------------------------------------------------------------------
+    [
+        'path' => '/api/reviews',
+        'http_method' => 'POST',
+        'controller' => 'ReviewController',
+        'method' => 'store',
+        'auth' => true,
+        'roles' => []
     ]
 ];
