@@ -6,7 +6,8 @@ import { setFormLoadingState, resetFormValidation } from '../utils/formHelpers.j
  * Gère la logique de la modale de soumission d'avis.
  */
 export class ReviewModalHandler {
-    constructor() {
+    constructor(currentUserId) {
+        this.currentUserId = currentUserId;
         this.modalElement = document.getElementById('reviewModal');
         if (!this.modalElement) {
             console.error('Review modal element (#reviewModal) not found.');
@@ -106,7 +107,7 @@ export class ReviewModalHandler {
 
         const reviewData = {
             ride_id: this.currentRide.ride_id,
-            author_id: currentUserId, // Variable globale injectée par PHP
+            author_id: this.currentUserId, // Utilisation de this.currentUserId
             driver_id: this.currentRide.driver_id,
             rating: rating,
             comment: this.commentInput.value.trim()

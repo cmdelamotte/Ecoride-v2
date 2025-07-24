@@ -74,21 +74,7 @@
                     <p>Avec : <strong id="review-modal-driver-name">[PseudoChauffeur]</strong></p>
                     <hr>
 
-                    <div class="mb-3">
-                        <label class="form-label mb-1">Le trajet s'est-il globalement bien passé ?</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tripOverallExperience" id="tripGood" value="good" checked>
-                            <label class="form-check-label" for="tripGood">
-                                Oui, tout s'est bien déroulé.
-                            </label>
-                            </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tripOverallExperience" id="tripBad" value="bad">
-                            <label class="form-check-label" for="tripBad">
-                                Non, j'ai rencontré un problème.
-                            </label>
-                            </div>
-                    </div>
+                    
 
                     <div class="mb-3">
                         <label for="review-rating-stars" class="form-label mb-1">Votre note pour [PseudoChauffeur] :</label> <div id="review-rating-stars" class="rating-stars mb-2">
@@ -107,11 +93,7 @@
                         <textarea class="form-control form-control-custom-modal" id="review-comment" rows="4" placeholder="Partagez votre expérience..."></textarea>
                     </div>
 
-                    <div id="report-problem-section" class="mb-3 border p-3 rounded bg-light d-none">
-                        <label for="report-comment" class="form-label mb-1 text-danger">Veuillez décrire le problème rencontré :</label>
-                        <textarea class="form-control form-control-custom-modal" id="report-comment" rows="4" placeholder="Expliquez en détail ce qui ne s'est pas bien passé..."></textarea>
-                        <small class="form-text text-muted">Ces informations seront transmises à notre équipe pour examen.</small>
-                    </div>
+                    
 
                 </div>
                 <div class="modal-footer"> 

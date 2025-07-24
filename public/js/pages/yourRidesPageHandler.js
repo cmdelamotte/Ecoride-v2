@@ -132,6 +132,7 @@ const handleRideAction = async (event) => {
     }
 
     if (actionButton.classList.contains('action-leave-review')) {
+        event.preventDefault(); // Empêche l'action par défaut du bouton
         const rideData = ridesCache.get(rideId);
         if (rideData) {
             reviewModalHandler.open(rideData);
@@ -273,7 +274,9 @@ const updateNoRidesMessage = async () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    reviewModalHandler = new ReviewModalHandler();
+    reviewModalHandler = new ReviewModalHandler(currentUserId);
+    console.log('DOMContentLoaded: reviewModalHandler', reviewModalHandler);
+    console.log('DOMContentLoaded: typeof reviewModalHandler.open', typeof reviewModalHandler.open);
 
     upcomingPagination = new Pagination('#upcoming-rides-pagination', (page) => loadUserRides('upcoming', page));
     pastPagination = new Pagination('#past-rides-pagination', (page) => loadUserRides('past', page));
