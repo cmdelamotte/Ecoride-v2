@@ -20,7 +20,7 @@ class ReviewService
      * @param array $data Données de l'avis.
      * @return bool Retourne true si l'avis a été créé avec succès, sinon false.
      */
-    public function createReview(array $data): bool
+    public function createReview(array $data): Review
     {
         $review = new Review();
         $review->setRideId($data['ride_id']);
@@ -29,7 +29,8 @@ class ReviewService
         $review->setRating($data['rating']);
         $review->setComment($data['comment']);
 
-        return $this->save($review);
+        $this->save($review);
+        return $review;
     }
 
     /**
@@ -49,7 +50,11 @@ class ReviewService
         $stmt->bindValue(':rating', $review->getRating(), \PDO::PARAM_INT);
         $stmt->bindValue(':comment', $review->getComment(), \PDO::PARAM_STR);
 
-        return $stmt->execute();
+        $success = $stmt->execute();
+        if ($success) {
+            $review->setId((int)$this->db->lastInsertId());
+        }
+        return $success;
     }
 
     /**

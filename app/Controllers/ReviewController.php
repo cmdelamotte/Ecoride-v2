@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\ReviewService;
+use App\Helpers\ReviewHelper;
 
 class ReviewController extends Controller
 {
@@ -24,12 +25,13 @@ class ReviewController extends Controller
 
             // TODO: Ajouter une validation plus robuste des données
 
-            $result = $this->reviewService->createReview($data);
+            $review = $this->reviewService->createReview($data);
 
-            if ($result) {
+            if ($review) {
                 $this->jsonResponse([
                     'success' => true,
-                    'message' => 'Avis soumis avec succès. Il sera examiné par notre équipe.'
+                    'message' => 'Avis soumis avec succès. Il sera examiné par notre équipe.',
+                    'review' => ReviewHelper::formatReviewForApi($review)
                 ]);
             } else {
                 $this->jsonResponse([
