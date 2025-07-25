@@ -411,14 +411,6 @@ return [
     // Routes pour les employés (EmployeeController)
     // ---------------------------------------------------------------------
     [
-        'path' => '/employee/dashboard',
-        'http_method' => 'GET', // Affichage du tableau de bord employé
-        'controller' => 'EmployeeController',
-        'method' => 'dashboard',
-        'auth' => true,
-        'roles' => ['ROLE_EMPLOYEE']
-    ],
-    [
         'path' => '/employee-dashboard',
         'http_method' => 'GET', // Affichage du tableau de bord des avis en attente
         'controller' => 'EmployeeController',
