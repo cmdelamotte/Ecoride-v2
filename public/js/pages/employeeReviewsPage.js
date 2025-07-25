@@ -118,6 +118,9 @@ const handleReviewAction = async (event) => {
             loadPendingReviews(currentReviewsPage); // Recharger la liste après l'action
         } else {
             displayFlashMessage(response.message || errorMessage, 'danger');
+            if (response.message && response.message.includes("déjà été traité")) {
+                loadPendingReviews(currentReviewsPage);
+            }
         }
     } catch (error) {
         console.error('Erreur API:', error);

@@ -74,4 +74,19 @@ class ReviewService
         $result = $this->db->fetchOne($sql, $params);
         return isset($result->review_count) && $result->review_count > 0;
     }
+
+    /**
+     * Trouve un avis par son ID.
+     *
+     * @param int $id L'ID de l'avis à rechercher.
+     * @return Review|null Retourne une instance de Review si trouvé, sinon null.
+     */
+    public function findById(int $id): ?Review
+    {
+        return $this->db->fetchOne(
+            "SELECT id, ride_id, author_id, driver_id, rating, comment, review_status, created_at, updated_at FROM reviews WHERE id = :id",
+            ['id' => $id],
+            Review::class
+        );
+    }
 }

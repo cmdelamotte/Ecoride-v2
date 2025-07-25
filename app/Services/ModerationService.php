@@ -21,6 +21,7 @@ class ModerationService
     private ReviewService $reviewService;
     private ReportService $reportService;
     private UserService $userService;
+    private RatingService $ratingService;
 
     public function __construct()
     {
@@ -28,6 +29,7 @@ class ModerationService
         $this->reviewService = new ReviewService();
         $this->reportService = new ReportService();
         $this->userService = new UserService();
+        $this->ratingService = new RatingService($this->userService);
     }
 
     /**
@@ -84,13 +86,17 @@ class ModerationService
      */
     public function approveReview(int $reviewId, int $moderatorId): bool
     {
+        $review = $this->reviewService->findById($reviewId);
+        if (!$review) {
+            return false;
+        }
+
         $sql = "UPDATE reviews SET review_status = 'approved' WHERE id = :id AND review_status = 'pending_approval'";
         $success = $this->db->execute($sql, ['id' => $reviewId]) > 0;
 
         if ($success) {
             Logger::info("Review #{$reviewId} approved by moderator #{$moderatorId}.");
-            // TODO: Mettre à jour le driver_rating dans la table Users
-            // Cela nécessitera de récupérer l'avis, puis le driver, puis de recalculer la moyenne.
+            $this->ratingService->calculateAndSaveDriverRating($review->getDriverId());
         }
         return $success;
     }
@@ -104,6 +110,11 @@ class ModerationService
      */
     public function rejectReview(int $reviewId, int $moderatorId): bool
     {
+        $review = $this->reviewService->findById($reviewId);
+        if (!$review) {
+            return false;
+        }
+
         $sql = "UPDATE reviews SET review_status = 'rejected' WHERE id = :id AND review_status = 'pending_approval'";
         $success = $this->db->execute($sql, ['id' => $reviewId]) > 0;
 

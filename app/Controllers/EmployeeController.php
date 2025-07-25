@@ -51,7 +51,7 @@ class EmployeeController extends Controller
             if ($success) {
                 $this->jsonResponse(['success' => true, 'message' => 'Avis validé avec succès.']);
             } else {
-                $this->jsonResponse(['success' => false, 'message' => "Impossible de valider l'avis."], 400);
+                $this->jsonResponse(['success' => false, 'message' => "Impossible de valider l'avis. L'avis a peut-être déjà été traité."], 404);
             }
         } catch (\Exception $e) {
             error_log("Error approving review #{$reviewId}: " . $e->getMessage());
@@ -79,7 +79,7 @@ class EmployeeController extends Controller
             if ($success) {
                 $this->jsonResponse(['success' => true, 'message' => 'Avis rejeté avec succès.']);
             } else {
-                $this->jsonResponse(['success' => false, 'message' => "Impossible de rejeter l'avis."], 400);
+                $this->jsonResponse(['success' => false, 'message' => "Impossible de rejeter l'avis. L'avis a peut-être déjà été traité."], 404);
             }
         } catch (\Exception $e) {
             error_log("Error rejecting review #{$reviewId}: " . $e->getMessage());

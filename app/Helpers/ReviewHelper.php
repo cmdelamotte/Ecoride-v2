@@ -75,4 +75,19 @@ class ReviewHelper
         }
         return $formattedReviews;
     }
+
+    public static function hydrateReviewFromDb(array $data): \App\Models\Review
+    {
+        $review = new \App\Models\Review();
+        $review->setId($data['id']);
+        $review->setRideId($data['ride_id']);
+        $review->setAuthorId($data['author_id']);
+        $review->setDriverId($data['driver_id']);
+        $review->setRating($data['rating']);
+        $review->setComment($data['comment']);
+        $review->setReviewStatus($data['review_status']);
+        $review->setCreatedAt($data['created_at']);
+        $review->setUpdatedAt($data['updated_at']);
+        return $review;
+    }
 }

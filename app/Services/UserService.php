@@ -213,4 +213,21 @@ class UserService
         error_log("UserService: getUserRolesArray Result: " . print_r($results, true));
         return $results;
     }
+
+    /**
+     * Met à jour la note moyenne d'un conducteur.
+     *
+     * @param int $driverId L'ID du conducteur.
+     * @param float $newRating La nouvelle note moyenne.
+     * @return bool True si la mise à jour a réussi, sinon false.
+     */
+    public function updateDriverRating(int $driverId, float $newRating): bool
+    {
+        $sql = "UPDATE users SET driver_rating = :driver_rating WHERE id = :id";
+        $params = [
+            ':driver_rating' => $newRating,
+            ':id' => $driverId
+        ];
+        return $this->db->execute($sql, $params) > 0;
+    }
 }

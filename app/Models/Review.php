@@ -18,6 +18,7 @@ class Review
     private ?string $comment = null;
     private ?string $review_status = null;
     private ?string $created_at = null;
+    private ?string $updated_at = null;
 
     // --- GETTERS ---
 
@@ -59,6 +60,11 @@ class Review
     public function getCreatedAt(): ?string
     {
         return $this->created_at;
+    }
+
+    public function getUpdatedAt(): ?string
+    {
+        return $this->updated_at;
     }
 
     // --- SETTERS ---
@@ -108,6 +114,12 @@ class Review
     public function setCreatedAt(?string $created_at): self
     {
         $this->created_at = $created_at;
+        return $this;
+    }
+
+    public function setUpdatedAt(?string $updated_at): self
+    {
+        $this->updated_at = $updated_at;
         return $this;
     }
 }
