@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Services\ReportService;
 use App\Services\BookingService;
 use App\Helpers\RequestHelper;
+use App\Helpers\ReportHelper; // Ajout
 use App\Exceptions\ValidationException;
 use \Exception;
 
@@ -95,7 +96,11 @@ class ReportController extends Controller
 
         try {
             $report = $this->reportService->createReport($data);
-            $this->jsonResponse(['success' => true, 'message' => 'Votre signalement a été enregistré. Nous allons l\'examiner attentivement.', 'report_id' => $report->getId()]);
+            $this->jsonResponse([
+                'success' => true,
+                'message' => 'Votre signalement a été enregistré. Nous allons l\'examiner attentivement.',
+                'report' => ReportHelper::formatReportForApi($report)
+            ]);
         } catch (ValidationException $e) {
             $this->jsonResponse(['success' => false, 'message' => $e->getMessage(), 'errors' => $e->getErrors()], $e->getCode());
         } catch (Exception $e) {

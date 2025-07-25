@@ -16,8 +16,8 @@ class ReportHelper
     {
         return [
             'id' => $report->getId(),
-            'reporter_user_id' => $report->getReporterUserId(),
-            'reported_user_id' => $report->getReportedUserId(),
+            'reporter_user_id' => $report->getReporterId(),
+            'reported_user_id' => $report->getReportedDriverId(),
             'ride_id' => $report->getRideId(),
             'reason' => $report->getReason(),
             'report_status' => $report->getReportStatus(),
