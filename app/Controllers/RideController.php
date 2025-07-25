@@ -186,6 +186,8 @@ class RideController extends Controller
             // Utiliser RideHelper pour formater les trajets
             $formattedRides = RideHelper::formatCollectionForSearchApi($rides, $userId);
 
+            error_log("getUserRidesApi - Formatted Rides: " . print_r($formattedRides, true));
+
             $this->jsonResponse([
                 'success' => true,
                 'rides' => $formattedRides,

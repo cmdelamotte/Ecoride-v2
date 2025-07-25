@@ -198,8 +198,8 @@ class RideService
         $driverPastQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         // Requêtes pour les trajets où l'utilisateur est passager
-        $passengerUpcomingQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing')";
-        $passengerPastQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR)))";
+        $passengerUpcomingQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing')";
+        $passengerPastQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         if ($type === 'all' || $type === 'upcoming') {
             $driverUpcomingCount = $this->db->fetchColumn($driverUpcomingQuery, ['user_id' => $userId]);
@@ -233,8 +233,8 @@ class RideService
         // Requêtes de base sans LIMIT/OFFSET pour le type 'all'
         $driverUpcomingQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
         $driverPastQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
-        $passengerUpcomingQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
-        $passengerPastQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status = 'confirmed' AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
+        $passengerUpcomingQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
+        $passengerPastQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
 
         if ($type === 'all') {
             // Pour 'all', récupérer tous les trajets sans pagination SQL, puis paginer en PHP

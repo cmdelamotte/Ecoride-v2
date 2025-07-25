@@ -268,6 +268,8 @@ const loadUserRides = async (type, page) => {
             // Mettre à jour la variable de page actuelle
             window[currentPageVar] = page;
 
+            console.log(`loadUserRides: API response for ${type} rides:`, response.rides);
+
             displayRides(container, response.rides);
             
             // Rendre la pagination
