@@ -137,6 +137,7 @@ class RideHelper
     'vehicle_brand_name' => ($vehicle && $vehicle->getBrand()) ? $vehicle->getBrand()->getName() : 'N/A',
 
     'seats_booked_by_user' => $seatsBookedByUser, // Ajout de la nouvelle propriété
+    'user_role_in_ride' => ($currentUserId !== null && $ride->getDriverId() === $currentUserId) ? 'driver' : 'passenger',
     ];
     }
     return $formattedRides;

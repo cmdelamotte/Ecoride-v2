@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\BookingService;
 use App\Services\RideService; // Ajout
+use App\Services\ReviewService; // Ajout
 use App\Helpers\RideHelper;
 use App\Helpers\RequestHelper;
 use App\Exceptions\ValidationException;
@@ -19,11 +20,13 @@ class RideController extends Controller
 {
     private BookingService $bookingService;
     private RideService $rideService; // Ajout
+    private ReviewService $reviewService; // Ajout
 
     public function __construct()
     {
         $this->bookingService = new BookingService();
         $this->rideService = new RideService(); // Ajout
+        $this->reviewService = new ReviewService(); // Ajout
     }
 
     /**
@@ -186,7 +189,15 @@ class RideController extends Controller
             // Utiliser RideHelper pour formater les trajets
             $formattedRides = RideHelper::formatCollectionForSearchApi($rides, $userId);
 
-            error_log("getUserRidesApi - Formatted Rides: " . print_r($formattedRides, true));
+            // Pour chaque trajet, vérifier si l'utilisateur a déjà laissé un avis
+            foreach ($formattedRides as &$ride) {
+                // Vérifier si le trajet est terminé et si l'utilisateur est un passager
+                if (($ride['ride_status'] === 'completed' || $ride['ride_status'] === 'completed_pending_confirmation') && $ride['user_role_in_ride'] === 'passenger') {
+                    $ride['has_reviewed'] = $this->reviewService->hasUserReviewedRide($userId, $ride['ride_id']);
+                } else {
+                    $ride['has_reviewed'] = false;
+                }
+            }
 
             $this->jsonResponse([
                 'success' => true,

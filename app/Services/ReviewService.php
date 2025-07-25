@@ -72,6 +72,6 @@ class ReviewService
             ':ride_id' => $rideId
         ];
         $result = $this->db->fetchOne($sql, $params);
-        return isset($result['review_count']) && $result['review_count'] > 0;
+        return isset($result->review_count) && $result->review_count > 0;
     }
 }
