@@ -17,8 +17,8 @@ class ReviewHelper
         return [
             'id' => $review->getId(),
             'ride_id' => $review->getRideId(),
-            'reviewer_id' => $review->getReviewerId(),
-            'reviewed_user_id' => $review->getReviewedUserId(),
+            'author_id' => $review->getAuthorId(),
+            'driver_user_id' => $review->getDriverId(),
             'rating' => $review->getRating(),
             'comment' => $review->getComment(),
             'review_status' => $review->getReviewStatus(),
