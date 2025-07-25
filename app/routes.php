@@ -419,13 +419,14 @@ return [
         'roles' => ['ROLE_EMPLOYEE']
     ],
     [
-        'path' => '/employee/reviews',
-        'http_method' => 'GET', // Gestion des avis par l'employé
+        'path' => '/employee-dashboard',
+        'http_method' => 'GET', // Affichage du tableau de bord des avis en attente
         'controller' => 'EmployeeController',
         'method' => 'manageReviews',
         'auth' => true,
-        'roles' => ['ROLE_EMPLOYEE']
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
+    
     [
         'path' => '/employee/reports',
         'http_method' => 'GET', // Gestion des signalements par l'employé
@@ -434,19 +435,8 @@ return [
         'auth' => true,
         'roles' => ['ROLE_EMPLOYEE']
     ],
-    // ---------------------------------------------------------------------
-    // Routes pour la modération des avis (EmployeeController)
-    // ---------------------------------------------------------------------
     [
-        'path' => '/employee/reviews',
-        'http_method' => 'GET', // Affichage du tableau de bord des avis en attente
-        'controller' => 'EmployeeController',
-        'method' => 'manageReviews',
-        'auth' => true,
-        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
-    ],
-    [
-        'path' => '/api/employee/reviews/pending',
+        'path' => '/api/employee-dashboard/reviews/pending',
         'http_method' => 'GET', // API pour récupérer les avis en attente
         'controller' => 'EmployeeController',
         'method' => 'getPendingReviewsApi',
@@ -454,7 +444,7 @@ return [
         'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
     [
-        'path' => '/api/employee/reviews/{id}/approve',
+        'path' => '/api/employee-dashboard/reviews/{id}/approve',
         'http_method' => 'POST', // API pour valider un avis
         'controller' => 'EmployeeController',
         'method' => 'approveReviewApi',
@@ -462,7 +452,7 @@ return [
         'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
     [
-        'path' => '/api/employee/reviews/{id}/reject',
+        'path' => '/api/employee-dashboard/reviews/{id}/reject',
         'http_method' => 'POST', // API pour rejeter un avis
         'controller' => 'EmployeeController',
         'method' => 'rejectReviewApi',

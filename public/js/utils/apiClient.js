@@ -69,9 +69,9 @@ export const apiClient = {
     submitReview: (data) => callApi('/api/reviews', 'POST', data),
 
     // Employee Reviews Moderation
-    getPendingReviews: (page = 1, limit = 10) => callApi(`/api/employee/reviews/pending?page=${page}&limit=${limit}`),
-    approveReview: (reviewId) => callApi(`/api/employee/reviews/${reviewId}/approve`, 'POST'),
-    rejectReview: (reviewId) => callApi(`/api/employee/reviews/${reviewId}/reject`, 'POST'),
+    getPendingReviews: (page = 1, limit = 10) => callApi(`/api/employee-dashboard/reviews/pending?page=${page}&limit=${limit}`),
+    approveReview: (reviewId) => callApi(`/api/employee-dashboard/reviews/${reviewId}/approve`, 'POST'),
+    rejectReview: (reviewId) => callApi(`/api/employee-dashboard/reviews/${reviewId}/reject`, 'POST'),
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };
