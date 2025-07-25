@@ -69,7 +69,7 @@ export const apiClient = {
     submitReview: (data) => callApi('/api/reviews', 'POST', data),
 
     // Employee Reviews Moderation
-    getPendingReviews: () => callApi('/api/employee/reviews'),
+    getPendingReviews: () => callApi('/api/employee/reviews/pending'),
     approveReview: (reviewId) => callApi(`/api/employee/reviews/${reviewId}/approve`, 'POST'),
     rejectReview: (reviewId) => callApi(`/api/employee/reviews/${reviewId}/reject`, 'POST'),
 

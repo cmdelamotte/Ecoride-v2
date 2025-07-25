@@ -88,11 +88,11 @@ const handleReviewAction = async (event) => {
     if (target.classList.contains('action-validate-review')) {
         apiCallPromise = apiClient.approveReview(reviewId); // Cette méthode doit être ajoutée à apiClient.js
         successMessage = 'Avis validé avec succès.';
-        errorMessage = 'Erreur lors de la validation de l'avis.';
+        errorMessage = "Erreur lors de la validation de l'avis.";
     } else if (target.classList.contains('action-reject-review')) {
         apiCallPromise = apiClient.rejectReview(reviewId); // Cette méthode doit être ajoutée à apiClient.js
         successMessage = 'Avis rejeté avec succès.';
-        errorMessage = 'Erreur lors du rejet de l'avis.';
+        errorMessage = "Erreur lors du rejet de l'avis.";
     }
 
     if (!apiCallPromise) return;
@@ -113,7 +113,7 @@ const handleReviewAction = async (event) => {
         displayFlashMessage('Erreur de communication avec le serveur.', 'danger');
     } finally {
         target.disabled = false;
-        target.textContent = target.classList.contains('action-validate-review') ? 'Valider l'avis' : 'Refuser l'avis';
+        target.textContent = target.classList.contains('action-validate-review') ? "Valider l'avis" : "Refuser l'avis";
     }
 };
 

@@ -446,6 +446,14 @@ return [
         'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
     [
+        'path' => '/api/employee/reviews/pending',
+        'http_method' => 'GET', // API pour récupérer les avis en attente
+        'controller' => 'EmployeeController',
+        'method' => 'getPendingReviewsApi',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
+    [
         'path' => '/api/employee/reviews/{id}/approve',
         'http_method' => 'POST', // API pour valider un avis
         'controller' => 'EmployeeController',

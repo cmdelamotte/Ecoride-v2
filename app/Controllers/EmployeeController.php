@@ -86,4 +86,45 @@ class EmployeeController extends Controller
             $this->jsonResponse(['success' => false, 'message' => "Une erreur est survenue lors du rejet de l'avis."], 500);
         }
     }
+
+    /**
+     * API pour récupérer les avis en attente de modération.
+     * Retourne les avis en JSON.
+     */
+    public function getPendingReviewsApi()
+    {
+        // Sécurité : Vérifier l'authentification et le rôle (ROLE_EMPLOYEE ou ROLE_ADMIN).
+        if (!isset($_SESSION['user_id']) || (!in_array('ROLE_EMPLOYEE', $_SESSION['user_roles']) && !in_array('ROLE_ADMIN', $_SESSION['user_roles']))) {
+            $this->jsonResponse(['success' => false, 'message' => 'Accès non autorisé.'], 403);
+            return;
+        }
+
+        try {
+            $pendingReviewsData = $this->moderationService->getPendingReviews();
+            
+            $pendingReviewObjects = [];
+            foreach ($pendingReviewsData as $reviewData) {
+                $review = new \App\Models\Review();
+                $review->setId($reviewData['review_id']);
+                $review->setRideId($reviewData['ride_id']);
+                $review->setAuthorId($reviewData['author_id']);
+                $review->setDriverId($reviewData['driver_id']);
+                $review->setRating($reviewData['rating']);
+                $review->setComment($reviewData['comment']);
+                $review->setReviewStatus($reviewData['review_status']);
+                $review->setCreatedAt($reviewData['review_created_at']);
+                
+                $pendingReviewObjects[] = $review;
+            }
+
+            $formattedReviews = ReviewHelper::formatCollectionForApi($pendingReviewObjects);
+            $this->jsonResponse([
+                'success' => true,
+                'reviews' => $formattedReviews
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error fetching pending reviews API: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Erreur lors de la récupération des avis en attente.'], 500);
+        }
+    }
 }

@@ -50,9 +50,9 @@ class ModerationService
                 WHERE r.review_status = 'pending_approval'
                 ORDER BY r.created_at DESC";
         
-        // Utilisation de fetchAll avec FETCH_ASSOC pour obtenir des tableaux associatifs
-        // car nous joignons plusieurs tables et ne voulons pas hydrater un seul objet Review.
-        return $this->db->fetchAll($sql, [], \PDO::FETCH_ASSOC);
+        $reviewsData = $this->db->fetchAll($sql, [], \PDO::FETCH_ASSOC);
+        Logger::info("ModerationService: getPendingReviews result: " . print_r($reviewsData, true));
+        return $reviewsData;
     }
 
     /**
