@@ -12,6 +12,10 @@
         <div class="review-list mb-5">
             </div>
 
+        <nav aria-label="Pagination des avis">
+            <ul class="pagination justify-content-center" id="reviews-pagination"></ul>
+        </nav>
+
         <div class="text-center py-3 text-muted d-none" id="no-pending-reviews">
             <p><i class="bi bi-check2-circle"></i> Aucun avis en attente de modération pour le moment.</p>
         </div>

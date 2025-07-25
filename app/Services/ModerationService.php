@@ -34,9 +34,11 @@ class ModerationService
      * Récupère tous les avis en attente de validation.
      * Joint les informations nécessaires pour l'affichage dans le tableau de bord de modération.
      *
+     * @param int $limit Le nombre maximum d'avis à retourner.
+     * @param int $offset Le décalage à partir duquel commencer à récupérer les avis.
      * @return array Un tableau d'avis avec les détails nécessaires.
      */
-    public function getPendingReviews(): array
+    public function getPendingReviews(int $limit = 5, int $offset = 0): array
     {
         $sql = "SELECT 
                     r.id as review_id, r.ride_id, r.rating, r.comment, r.review_status, r.created_at as review_created_at,
@@ -48,11 +50,29 @@ class ModerationService
                 JOIN Users ud ON r.driver_id = ud.id
                 JOIN Rides ri ON r.ride_id = ri.id
                 WHERE r.review_status = 'pending_approval'
-                ORDER BY r.created_at DESC";
+                ORDER BY r.created_at DESC
+                LIMIT :limit OFFSET :offset";
         
-        $reviewsData = $this->db->fetchAll($sql, [], \PDO::FETCH_ASSOC);
-        Logger::info("ModerationService: getPendingReviews result: " . print_r($reviewsData, true));
+        $params = [
+            ':limit' => $limit,
+            ':offset' => $offset
+        ];
+
+        error_log("ModerationService: getPendingReviews SQL: " . $sql . " Params: " . print_r($params, true));
+
+        $reviewsData = $this->db->fetchAll($sql, $params, \PDO::FETCH_ASSOC);
         return $reviewsData;
+    }
+
+    /**
+     * Compte le nombre total d'avis en attente de validation.
+     *
+     * @return int Le nombre total d'avis en attente.
+     */
+    public function countPendingReviews(): int
+    {
+        $sql = "SELECT COUNT(*) FROM reviews WHERE review_status = 'pending_approval'";
+        return $this->db->fetchColumn($sql);
     }
 
     /**

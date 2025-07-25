@@ -99,28 +99,25 @@ class EmployeeController extends Controller
             return;
         }
 
-        try {
-            $pendingReviewsData = $this->moderationService->getPendingReviews();
-            
-            $pendingReviewObjects = [];
-            foreach ($pendingReviewsData as $reviewData) {
-                $review = new \App\Models\Review();
-                $review->setId($reviewData['review_id']);
-                $review->setRideId($reviewData['ride_id']);
-                $review->setAuthorId($reviewData['author_id']);
-                $review->setDriverId($reviewData['driver_id']);
-                $review->setRating($reviewData['rating']);
-                $review->setComment($reviewData['comment']);
-                $review->setReviewStatus($reviewData['review_status']);
-                $review->setCreatedAt($reviewData['review_created_at']);
-                
-                $pendingReviewObjects[] = $review;
-            }
+        $page = $_GET['page'] ?? 1;
+        $limit = $_GET['limit'] ?? 5;
+        $offset = ($page - 1) * $limit;
 
-            $formattedReviews = ReviewHelper::formatCollectionForApi($pendingReviewObjects);
+        try {
+            $pendingReviewsData = $this->moderationService->getPendingReviews($limit, $offset);
+            $totalReviews = $this->moderationService->countPendingReviews();
+            $totalPages = ceil($totalReviews / $limit);
+            
+            $formattedReviews = ReviewHelper::formatCollectionForApi($pendingReviewsData);
             $this->jsonResponse([
                 'success' => true,
-                'reviews' => $formattedReviews
+                'reviews' => $formattedReviews,
+                'pagination' => [
+                    'current_page' => (int)$page,
+                    'total_pages' => (int)$totalPages,
+                    'total_reviews' => (int)$totalReviews,
+                    'limit' => (int)$limit
+                ]
             ]);
         } catch (\Exception $e) {
             error_log("Error fetching pending reviews API: " . $e->getMessage());
