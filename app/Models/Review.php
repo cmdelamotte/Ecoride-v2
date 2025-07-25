@@ -12,8 +12,8 @@ class Review
 {
     private ?int $id = null;
     private ?int $ride_id = null;
-    private ?int $reviewer_id = null;
-    private ?int $reviewed_user_id = null;
+    private ?int $author_id = null;
+    private ?int $driver_id = null;
     private ?int $rating = null;
     private ?string $comment = null;
     private ?string $review_status = null;
@@ -31,14 +31,14 @@ class Review
         return $this->ride_id;
     }
 
-    public function getReviewerId(): ?int
+    public function getAuthorId(): ?int
     {
-        return $this->reviewer_id;
+        return $this->author_id;
     }
 
-    public function getReviewedUserId(): ?int
+    public function getDriverId(): ?int
     {
-        return $this->reviewed_user_id;
+        return $this->driver_id;
     }
 
     public function getRating(): ?int
@@ -75,15 +75,15 @@ class Review
         return $this;
     }
 
-    public function setReviewerId(?int $reviewer_id): self
+    public function setAuthorId(?int $author_id): self
     {
-        $this->reviewer_id = $reviewer_id;
+        $this->author_id = $author_id;
         return $this;
     }
 
-    public function setReviewedUserId(?int $reviewed_user_id): self
+    public function setDriverId(?int $driver_id): self
     {
-        $this->reviewed_user_id = $reviewed_user_id;
+        $this->driver_id = $driver_id;
         return $this;
     }
 

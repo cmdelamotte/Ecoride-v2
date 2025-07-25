@@ -2,6 +2,7 @@ import { apiClient } from '../utils/apiClient.js';
 import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { Pagination } from '../components/Pagination.js';
+import { ReviewModalHandler } from '../components/reviewModalHandler.js';
 
 // Sélecteurs des conteneurs de trajets
 const upcomingRidesContainer = document.querySelector('#upcoming-rides .rides-list-container');
@@ -18,6 +19,8 @@ const allPaginationContainer = document.querySelector('#all-rides-pagination');
 let upcomingPagination;
 let pastPagination;
 let allPagination;
+let reviewModalHandler;
+let ridesCache = new Map();
 
 // Template pour les cartes de trajet
 const rideCardTemplate = document.getElementById('ride-card-template');
@@ -120,8 +123,15 @@ const createRideCard = (ride) => {
     } else if (ride.ride_status === 'ongoing' && ride.driver_id === currentUserId) { // Trajet en cours du conducteur
         const finishButton = createElement('button', ['btn', 'primary-btn', 'btn-sm', 'mb-1', 'w-100', 'action-finish-ride'], { 'data-ride-id': ride.ride_id }, 'Arrivée à destination');
         rideActionsContainer.appendChild(finishButton);
+    } else if ((ride.ride_status === 'completed' || ride.ride_status === 'completed_pending_confirmation') && ride.driver_id !== currentUserId) {
+        // Action pour un trajet terminé (uniquement pour les passagers) : laisser un avis.
+        const reviewButton = createElement('button', ['btn', 'secondary-btn', 'btn-sm', 'w-100', 'action-leave-review'], { 'data-ride-id': ride.ride_id }, 'Laisser un avis');
+        if (ride.has_reviewed) {
+            reviewButton.textContent = 'Avis soumis';
+            reviewButton.disabled = true;
+        }
+        rideActionsContainer.appendChild(reviewButton);
     }
-    // Pour les trajets terminés ou annulés, aucun bouton d'action n'est nécessaire ici.
 
     return card;
 };
@@ -154,6 +164,18 @@ const handleRideAction = async (event) => {
     const rideId = actionButton.getAttribute('data-ride-id');
     if (!rideId) {
         console.error("handleRideAction: rideId manquant sur le bouton d'action.");
+        return;
+    }
+
+    if (actionButton.classList.contains('action-leave-review')) {
+        event.preventDefault(); // Empêche l'action par défaut du bouton
+        const rideData = ridesCache.get(rideId);
+        if (rideData) {
+            reviewModalHandler.open(rideData);
+        } else {
+            console.error(`Impossible de trouver les données du trajet ${rideId} pour laisser un avis.`);
+            displayFlashMessage("Une erreur est survenue. Impossible d'ouvrir le formulaire d'avis.", 'danger');
+        }
         return;
     }
 
@@ -268,38 +290,43 @@ const loadUserRides = async (type, page) => {
             // Mettre à jour la variable de page actuelle
             window[currentPageVar] = page;
 
-            console.log(`loadUserRides: API response for ${type} rides:`, response.rides);
+            // Met en cache les données des trajets pour un accès rapide (utile pour la modale d'avis).
+            if (response.rides && response.rides.length > 0) {
+                response.rides.forEach(ride => ridesCache.set(ride.ride_id.toString(), ride));
+            }
 
-            displayRides(container, response.rides);
+            displayRides(container, response.rides); // Affiche les trajets récupérés.
             
-            // Rendre la pagination
+            // Met à jour la pagination si une instance est disponible.
             if (paginationInstance) {
                 paginationInstance.render(response.pagination.current_page, response.pagination.total_pages);
             }
 
-            // Gérer le message 'aucun trajet' globalement
-            // La logique pour afficher/cacher noRidesMessage est maintenant gérée par updateNoRidesMessage()
-
         } else {
+            // Affiche un message d'erreur si la récupération des trajets échoue.
             displayFlashMessage(response.message || `Erreur lors du chargement des trajets ${type}.`, 'danger');
             container.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Erreur lors du chargement des trajets.'));
         }
 
     } catch (error) {
+        // Gère les erreurs de communication réseau.
         console.error(`Erreur lors du chargement des trajets ${type}:`, error);
         displayFlashMessage('Une erreur de communication est survenue lors du chargement de vos trajets.', 'danger');
         container.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Erreur de communication.'));
     } finally {
-        updateNoRidesMessage(); // Toujours mettre à jour le message après un chargement
+        // Met à jour le message "aucun trajet" après le chargement, quelle que soit l'issue.
+        updateNoRidesMessage();
     }
 };
 
 /**
  * Met à jour l'affichage du message "Vous n'avez aucun trajet" en fonction du nombre total de trajets.
+ * Cette fonction est appelée après chaque chargement de trajets pour ajuster la visibilité du message.
  */
 const updateNoRidesMessage = async () => {
     try {
-        const response = await apiClient.getUserRides('all', 1, 1); // Juste pour obtenir le total_rides
+        // Récupère le nombre total de trajets pour déterminer si le message doit être affiché.
+        const response = await apiClient.getUserRides('all', 1, 1);
         if (response.success && response.pagination.total_rides === 0) {
             noRidesMessage.classList.remove('d-none');
         } else {
@@ -307,45 +334,47 @@ const updateNoRidesMessage = async () => {
         }
     } catch (error) {
         console.error("Erreur lors de la mise à jour du message 'aucun trajet':", error);
-        // Ne pas afficher de flash message ici pour éviter de spammer l'utilisateur
+        // Ne pas afficher de flash message ici pour éviter de spammer l'utilisateur en cas d'erreur répétée.
     }
 };
 
+// --- Initialisation au chargement du DOM --- //
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialiser les instances de pagination
+    // Initialise le gestionnaire de la modale d'avis en lui passant l'ID de l'utilisateur courant.
+    // `currentUserId` est une variable globale injectée par PHP dans la vue.
+    reviewModalHandler = new ReviewModalHandler(currentUserId);
+
+    // Initialise les instances de pagination pour chaque section de trajets.
     upcomingPagination = new Pagination('#upcoming-rides-pagination', (page) => loadUserRides('upcoming', page));
     pastPagination = new Pagination('#past-rides-pagination', (page) => loadUserRides('past', page));
     allPagination = new Pagination('#all-rides-pagination', (page) => loadUserRides('all', page));
 
-    // Charger les trajets à venir par défaut
+    // Charge les trajets à venir par défaut au premier chargement de la page.
     loadUserRides('upcoming', currentUpcomingPage);
 
-    // Mettre à jour le message 'aucun trajet' après le chargement initial
+    // Met à jour le message "aucun trajet" après le chargement initial.
     updateNoRidesMessage();
 
-    // Listeners pour les actions et les onglets 
+    // Attache un écouteur d'événements global pour gérer les actions sur les cartes de trajet.
+    // Utilise la délégation d'événements pour capturer les clics sur les boutons dynamiquement ajoutés.
     const ridesHistorySection = document.querySelector('.rides-history-section');
     if (ridesHistorySection) {
         ridesHistorySection.addEventListener('click', handleRideAction);
     }
 
+    // Attache des écouteurs d'événements aux onglets pour recharger les trajets
+    // correspondants lorsque l'onglet est changé.
     const rideTabs = document.querySelectorAll('#ridesTabs button[data-bs-toggle="tab"]');
     rideTabs.forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (event) {
-            const tabType = event.target.id.replace('-rides-tab', ''); // 'upcoming', 'past', 'all'
+            const tabType = event.target.id.replace('-rides-tab', '');
             let currentPage;
             switch (tabType) {
-                case 'upcoming':
-                    currentPage = currentUpcomingPage;
-                    break;
-                case 'past':
-                    currentPage = currentPastPage;
-                    break;
-                case 'all':
-                    currentPage = currentAllPage;
-                    break;
-                default:
-                    currentPage = 1;
+                case 'upcoming': currentPage = currentUpcomingPage; break;
+                case 'past': currentPage = currentPastPage; break;
+                case 'all': currentPage = currentAllPage; break;
+                default: currentPage = 1;
             }
             loadUserRides(tabType, currentPage);
         });
