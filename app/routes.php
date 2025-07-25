@@ -435,6 +435,33 @@ return [
         'roles' => ['ROLE_EMPLOYEE']
     ],
     // ---------------------------------------------------------------------
+    // Routes pour la modération des avis (EmployeeController)
+    // ---------------------------------------------------------------------
+    [
+        'path' => '/employee/reviews',
+        'http_method' => 'GET', // Affichage du tableau de bord des avis en attente
+        'controller' => 'EmployeeController',
+        'method' => 'manageReviews',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
+    [
+        'path' => '/api/employee/reviews/{id}/approve',
+        'http_method' => 'POST', // API pour valider un avis
+        'controller' => 'EmployeeController',
+        'method' => 'approveReviewApi',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
+    [
+        'path' => '/api/employee/reviews/{id}/reject',
+        'http_method' => 'POST', // API pour rejeter un avis
+        'controller' => 'EmployeeController',
+        'method' => 'rejectReviewApi',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
+    // ---------------------------------------------------------------------
     // Route Mentions Légales
     // ---------------------------------------------------------------------
     [

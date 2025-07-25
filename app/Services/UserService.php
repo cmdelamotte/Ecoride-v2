@@ -198,5 +198,19 @@ class UserService
         return $this->db->execute("DELETE FROM users WHERE id = :id", ['id' => $id]) > 0;
     }
 
-    
+    /**
+     * Récupère tous les rôles d'un utilisateur à partir des tables UserRoles et Roles.
+     *
+     * @param int $userId L'ID de l'utilisateur.
+     * @return array Un tableau de noms de rôles (ex: ['ROLE_USER', 'ROLE_EMPLOYEE']).
+     */
+    public function getUserRolesArray(int $userId): array
+    {
+        $sql = "SELECT r.name FROM Roles r JOIN UserRoles ur ON r.id = ur.role_id WHERE ur.user_id = :user_id";
+        $params = ['user_id' => $userId];
+        error_log("UserService: getUserRolesArray SQL: " . $sql . " Params: " . print_r($params, true));
+        $results = $this->db->fetchAll($sql, $params, \PDO::FETCH_COLUMN);
+        error_log("UserService: getUserRolesArray Result: " . print_r($results, true));
+        return $results;
+    }
 }

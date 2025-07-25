@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\AuthService;
 use App\Services\PasswordResetService;
+use App\Services\UserService; // Ajout de UserService
 
 /**
  * Classe AuthController
@@ -17,11 +18,13 @@ class AuthController extends Controller
 {
     private AuthService $authService;
     private PasswordResetService $passwordResetService;
+    private UserService $userService; // Nouvelle propriété pour UserService
 
     public function __construct()
     {
         $this->authService = new AuthService();
         $this->passwordResetService = new PasswordResetService();
+        $this->userService = new UserService(); // Initialisation de UserService
     }
 
     /**
@@ -46,10 +49,11 @@ class AuthController extends Controller
             $user = $result['user'];
             $_SESSION['user_id'] = $user->getId();
             $_SESSION['username'] = $user->getUsername();
-            // Je stocke le rôle système (ex: ROLE_USER) et le rôle fonctionnel (ex: ROLE_DRIVER).
-            // Le rôle fonctionnel est préfixé par 'ROLE_' et mis en majuscules pour correspondre aux attentes du routeur.
-            $functionalRole = 'ROLE_' . strtoupper($user->getFunctionalRole());
-            $_SESSION['user_roles'] = array_filter([$user->getSystemRole(), $functionalRole]);
+            
+            // Récupérer tous les rôles de l'utilisateur depuis la base de données
+            $userRoles = $this->userService->getUserRolesArray($user->getId());
+            $_SESSION['user_roles'] = $userRoles;
+            error_log("AuthController: User roles in session: " . print_r($_SESSION['user_roles'], true));
             
             header('Location: /account');
             exit();

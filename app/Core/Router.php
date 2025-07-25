@@ -105,9 +105,9 @@ class Router
 
             // Vérifie les rôles si spécifiés.
             if (isset($foundRoute['roles']) && !empty($foundRoute['roles'])) {
-                // Supposons que les rôles de l'utilisateur sont stockés en session.
-                // Exemple: $_SESSION['user_roles'] = ['ROLE_USER', 'ROLE_DRIVER'];
                 $userRoles = $_SESSION['user_roles'] ?? [];
+                error_log("Router: User Roles: " . print_r($userRoles, true));
+                error_log("Router: Required Roles: " . print_r($foundRoute['roles'], true));
                 $authorized = false;
                 foreach ($foundRoute['roles'] as $requiredRole) {
                     if (in_array($requiredRole, $userRoles)) {
@@ -117,8 +117,7 @@ class Router
                 }
 
                 if (!$authorized) {
-                    // Redirige vers une page d'accès refusé ou affiche une erreur 403.
-                    $this->handleError('accessDenied'); // Supposons une méthode pour gérer l'accès refusé
+                    $this->handleError('accessDenied');
                     return;
                 }
             }
