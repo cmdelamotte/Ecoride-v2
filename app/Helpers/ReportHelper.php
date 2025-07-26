@@ -39,4 +39,23 @@ class ReportHelper
         }
         return $formattedReports;
     }
+
+    /**
+     * Crée un objet Report à partir d'un tableau de données.
+     *
+     * @param array $reportData Le tableau de données du signalement.
+     * @return Report L'objet Report hydraté.
+     */
+    public static function createReportObjectFromArray(array $reportData): Report
+    {
+        $report = new Report();
+        $report->setId($reportData['id'] ?? null);
+        $report->setReporterId($reportData['reporter_id'] ?? null);
+        $report->setReportedDriverId($reportData['reported_driver_id'] ?? null);
+        $report->setRideId($reportData['ride_id'] ?? null);
+        $report->setReason($reportData['reason'] ?? null);
+        $report->setReportStatus($reportData['report_status'] ?? null);
+        $report->setCreatedAt($reportData['created_at'] ?? null);
+        return $report;
+    }
 }
