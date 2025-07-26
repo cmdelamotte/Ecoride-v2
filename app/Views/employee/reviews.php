@@ -91,3 +91,4 @@
 </template>
 
 <script type="module" src="/js/pages/employeeReviewsPage.js"></script>
+<script type="module" src="/js/pages/employeeReportsPage.js"></script>

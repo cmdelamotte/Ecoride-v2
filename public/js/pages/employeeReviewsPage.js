@@ -2,6 +2,7 @@ import { apiClient } from '../utils/apiClient.js';
 import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { Pagination } from '../components/Pagination.js';
+import { loadPendingReports } from './employeeReportsPage.js'; // Importation de la fonction pour les signalements
 
 // Éléments DOM pour les avis
 const reviewListContainer = document.querySelector('.review-list');
@@ -9,19 +10,9 @@ const noPendingReviewsMessage = document.getElementById('no-pending-reviews');
 const pendingReviewCardTemplate = document.getElementById('pending-review-card-template');
 const reviewsPaginationContainer = document.getElementById('reviews-pagination');
 
-// Éléments DOM pour les signalements
-const reportListContainer = document.querySelector('.reported-rides-list');
-const noPendingReportsMessage = document.getElementById('no-reported-rides');
-const pendingReportCardTemplate = document.getElementById('reported-ride-card-template');
-const reportsPaginationContainer = document.getElementById('reports-pagination'); // Nouvelle constante
-
 let reviewsPagination;
 let currentReviewsPage = 1;
 const REVIEWS_PER_PAGE = 5;
-
-let reportsPagination; // Nouvelle variable pour l'instance de pagination des signalements
-let currentReportsPage = 1; // Nouvelle variable pour la page actuelle des signalements
-const REPORTS_PER_PAGE = 5; // Nouvelle constante pour la limite par page des signalements
 
 /**
  * Crée et retourne un élément de carte d'avis en attente.
@@ -62,31 +53,6 @@ const createPendingReviewCard = (reviewData) => {
 };
 
 /**
- * Crée et retourne un élément de carte de signalement en attente.
- * @param {object} reportData Les données du signalement.
- * @returns {HTMLElement} L'élément HTML de la carte.
- */
-const createPendingReportCard = (reportData) => {
-    const card = pendingReportCardTemplate.content.cloneNode(true);
-
-    card.querySelector('.card').dataset.reportId = reportData.id;
-    card.querySelector('.report-ride-id').textContent = reportData.ride_id;
-    card.querySelector('.report-submission-date').textContent = `Date signalement: ${new Date(reportData.created_at).toLocaleDateString('fr-FR')}`;
-    card.querySelector('.report-ride-departure').textContent = reportData.departure_city;
-    card.querySelector('.report-ride-arrival').textContent = reportData.arrival_city;
-    card.querySelector('.report-ride-date').textContent = new Date(reportData.departure_time).toLocaleDateString('fr-FR');
-    card.querySelector('.report-passenger-name').textContent = reportData.reporter_username;
-    card.querySelector('.report-passenger-email').textContent = reportData.reporter_email;
-    card.querySelector('.report-passenger-email').href = `mailto:${reportData.reporter_email}`;
-    card.querySelector('.report-driver-name').textContent = reportData.reported_driver_username;
-    card.querySelector('.report-driver-email').textContent = reportData.reported_driver_email;
-    card.querySelector('.report-driver-email').href = `mailto:${reportData.reported_driver_email}`;
-    card.querySelector('.report-reason-content').textContent = reportData.reason || 'Aucun motif spécifié.';
-
-    return card;
-};
-
-/**
  * Charge et affiche les avis en attente de modération.
  * @param {number} page Le numéro de page à charger.
  */
@@ -116,38 +82,6 @@ const loadPendingReviews = async (page = 1) => {
         displayFlashMessage('Erreur lors du chargement des avis en attente.', 'danger');
         clearChildren(reviewListContainer);
         reviewListContainer.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Impossible de charger les avis.'));
-    }
-};
-
-/**
- * Charge et affiche les signalements en attente de modération.
- * @param {number} page Le numéro de page à charger.
- */
-const loadPendingReports = async (page = 1) => {
-    currentReportsPage = page; // Mettre à jour la page actuelle des signalements
-    clearChildren(reportListContainer);
-    noPendingReportsMessage.classList.add('d-none');
-    reportsPaginationContainer.classList.add('d-none'); // Cacher la pagination pendant le chargement
-    reportListContainer.appendChild(createElement('p', ['text-center', 'text-muted'], {}, 'Chargement des signalements...'));
-
-    try {
-        const response = await apiClient.getPendingReports(page, REPORTS_PER_PAGE); // Utiliser les paramètres de pagination
-        clearChildren(reportListContainer);
-
-        if (response.success && response.reports.length > 0) {
-            response.reports.forEach(report => {
-                reportListContainer.appendChild(createPendingReportCard(report));
-            });
-            reportsPaginationContainer.classList.remove('d-none');
-            reportsPagination.render(response.pagination.current_page, response.pagination.total_pages);
-        } else {
-            noPendingReportsMessage.classList.remove('d-none');
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des signalements en attente:', error);
-        displayFlashMessage('Erreur lors du chargement des signalements en attente.', 'danger');
-        clearChildren(reportListContainer);
-        reportListContainer.appendChild(createElement('p', ['text-center', 'text-danger'], {}, 'Impossible de charger les signalements.'));
     }
 };
 
@@ -190,7 +124,8 @@ const handleReviewAction = async (event) => {
                 loadPendingReviews(currentReviewsPage);
             }
         }
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Erreur API:', error);
         displayFlashMessage('Erreur de communication avec le serveur.', 'danger');
     } finally {
@@ -204,18 +139,16 @@ const handleReviewAction = async (event) => {
  */
 const loadDashboardData = () => {
     loadPendingReviews();
-    loadPendingReports();
+    loadPendingReports(); // Appel de la fonction importée
 };
 
 
 document.addEventListener('DOMContentLoaded', () => {
     reviewsPagination = new Pagination('#reviews-pagination', (page) => loadPendingReviews(page));
-    reportsPagination = new Pagination('#reports-pagination', (page) => loadPendingReports(page)); // Initialisation de la pagination des signalements
-    loadDashboardData(); // Appel de la nouvelle fonction principale
+    loadDashboardData();
 
-    // Attacher l'écouteur d'événements pour les actions de modération
+    // Attacher l'écouteur d'événements pour les actions de modération des avis
     if (reviewListContainer) {
         reviewListContainer.addEventListener('click', handleReviewAction);
     }
-    // TODO: Ajouter les écouteurs d'événements pour les actions de signalement si nécessaire
 });
