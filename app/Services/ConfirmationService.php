@@ -78,41 +78,10 @@ class ConfirmationService
                 throw new Exception("Données associées au trajet ou aux utilisateurs introuvables.");
             }
 
-            // Calculer le montant net à transférer (prix par place - commission par passager)
-            $netAmount = $ride->getPricePerSeat() - 2.00; // 2 crédits de commission par passager
-            if ($netAmount < 0) {
-                $netAmount = 0; // S'assurer que le montant n'est pas négatif
-            }
-
-            // Transférer les crédits au conducteur
-            $newDriverCredits = $driver->getCredits() + $netAmount;
-            $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
-                'credits' => $newDriverCredits,
-                'id' => $driver->getId()
-            ]);
-
-            // Mettre à jour le total des crédits nets gagnés pour le trajet
-            $newTotalNetCreditsEarned = $ride->getTotalNetCreditsEarned() + $netAmount;
-            $this->db->execute("UPDATE Rides SET total_net_credits_earned = :total_net_credits_earned WHERE id = :id", [
-                'total_net_credits_earned' => $newTotalNetCreditsEarned,
-                'id' => $ride->getId()
-            ]);
-
-            // Mettre à jour le statut de la réservation
-            $this->db->execute("UPDATE Bookings SET booking_status = :booking_status, passenger_confirmed_at = :confirmed_at, credits_transferred_for_this_booking = TRUE WHERE id = :id", [
-                'booking_status' => 'confirmed_and_credited',
-                'confirmed_at' => $now->format('Y-m-d H:i:s'),
-                'id' => $booking->getId()
-            ]);
-
-            // Enregistrer le transfert de crédits dans MongoDB
-            $this->mongoLogService->logCreditsTransferred($ride->getId(), $passenger->getId(), $driver->getId(), $netAmount);
-
-            // Enregistrer la commission dans MongoDB
-            $this->mongoLogService->logCommission($ride->getId(), $passenger->getId(), 2.00); // 2 crédits de commission par passager
+            // Appel de la nouvelle méthode privée pour le transfert de crédits
+            $this->_processCreditTransfer($booking, $ride, $driver, $passenger, $now);
 
             $pdo->commit();
-            Logger::info("Booking #{$booking->getId()} confirmed by passenger #{$passenger->getId()}. Driver #{$driver->getId()} credited with {$netAmount} credits.");
             return true;
 
         } catch (Exception $e) {
@@ -120,5 +89,54 @@ class ConfirmationService
             Logger::error("Error confirming ride with token {$token}: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Traite le transfert de crédits du passager vers le conducteur et met à jour les statuts.
+     * Cette méthode est privée car elle doit être appelée dans le cadre d'une transaction.
+     *
+     * @param Booking $booking L'objet Booking concerné.
+     * @param Ride $ride L'objet Ride concerné.
+     * @param User $driver L'objet User du conducteur.
+     * @param User $passenger L'objet User du passager.
+     * @param DateTime $now L'objet DateTime actuel pour les timestamps.
+     * @throws Exception Si une erreur survient pendant le processus.
+     */
+    private function _processCreditTransfer(Booking $booking, Ride $ride, User $driver, User $passenger, DateTime $now): void
+    {
+        // Calculer le montant net à transférer (prix par place - commission par passager)
+        $netAmount = $ride->getPricePerSeat() - 2.00; // 2 crédits de commission par passager
+        if ($netAmount < 0) {
+            $netAmount = 0; // S'assurer que le montant n'est pas négatif
+        }
+
+        // Transférer les crédits au conducteur
+        $newDriverCredits = $driver->getCredits() + $netAmount;
+        $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
+            'credits' => $newDriverCredits,
+            'id' => $driver->getId()
+        ]);
+
+        // Mettre à jour le total des crédits nets gagnés pour le trajet
+        $newTotalNetCreditsEarned = $ride->getTotalNetCreditsEarned() + $netAmount;
+        $this->db->execute("UPDATE Rides SET total_net_credits_earned = :total_net_credits_earned WHERE id = :id", [
+            'total_net_credits_earned' => $newTotalNetCreditsEarned,
+            'id' => $ride->getId()
+        ]);
+
+        // Mettre à jour le statut de la réservation
+        $this->db->execute("UPDATE Bookings SET booking_status = :booking_status, passenger_confirmed_at = :confirmed_at, credits_transferred_for_this_booking = TRUE WHERE id = :id", [
+            'booking_status' => 'confirmed_and_credited',
+            'confirmed_at' => $now->format('Y-m-d H:i:s'),
+            'id' => $booking->getId()
+        ]);
+
+        // Enregistrer le transfert de crédits dans MongoDB
+        $this->mongoLogService->logCreditsTransferred($ride->getId(), $passenger->getId(), $driver->getId(), $netAmount);
+
+        // Enregistrer la commission dans MongoDB
+        $this->mongoLogService->logCommission($ride->getId(), $passenger->getId(), 2.00);
+
+        Logger::info("Booking #{$booking->getId()} confirmed by passenger #{$passenger->getId()}. Driver #{$driver->getId()} credited with {$netAmount} credits.");
     }
 }
