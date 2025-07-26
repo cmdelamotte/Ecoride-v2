@@ -43,7 +43,10 @@ class ConfirmationService
     {
         $pdo = $this->db->getConnection();
         try {
-            $pdo->beginTransaction();
+            // La transaction est gérée ici car c'est le point d'entrée principal pour cette opération
+            if (!$pdo->inTransaction()) {
+                $pdo->beginTransaction();
+            }
 
             /** @var Booking $booking */
             $booking = $this->bookingService->getBookingByToken($token);
@@ -81,11 +84,17 @@ class ConfirmationService
             // Appel de la nouvelle méthode privée pour le transfert de crédits
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, $now);
 
-            $pdo->commit();
+            // Commit la transaction seulement si elle a été démarrée par cette méthode
+            if ($pdo->inTransaction()) {
+                $pdo->commit();
+            }
             return true;
 
         } catch (Exception $e) {
-            $pdo->rollBack();
+            // Rollback la transaction seulement si elle a été démarrée par cette méthode
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             Logger::error("Error confirming ride with token {$token}: " . $e->getMessage());
             throw $e;
         }
@@ -103,7 +112,10 @@ class ConfirmationService
     {
         $pdo = $this->db->getConnection();
         try {
-            $pdo->beginTransaction();
+            // PAS de gestion de transaction ici, elle est gérée par l'appelant
+            // if (!$pdo->inTransaction()) {
+            //     $pdo->beginTransaction();
+            // }
 
             /** @var Booking $booking */
             $booking = $this->db->fetchOne("SELECT * FROM Bookings WHERE id = :id FOR UPDATE", ['id' => $bookingId], Booking::class);
@@ -124,10 +136,16 @@ class ConfirmationService
 
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
 
-            $pdo->commit();
+            // PAS de gestion de transaction ici
+            // if ($pdo->inTransaction()) {
+            //     $pdo->commit();
+            // }
             return true;
         } catch (Exception $e) {
-            $pdo->rollBack();
+            // PAS de gestion de transaction ici
+            // if ($pdo->inTransaction()) {
+            //     $pdo->rollBack();
+            // }
             Logger::error("Error processing credit transfer for booking #{$bookingId}: " . $e->getMessage());
             throw $e;
         }

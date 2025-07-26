@@ -225,7 +225,7 @@ class ModerationService
 
             // Mettre à jour le statut du signalement
             $this->db->execute("UPDATE reports SET report_status = :report_status WHERE id = :id", [
-                ':report_status' => 'resolved_credited',
+                ':report_status' => 'closed',
                 ':id' => $reportId
             ]);
 
