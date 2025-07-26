@@ -139,7 +139,7 @@
                     </div>
             </div>
         </div>
-        <div class="card-footer text-muted ride-status-footer">
+        <div class="card-footer text-muted ride-status-footer d-none"> <!-- Ajout de d-none ici -->
             Statut : <span class="ride-status-text"></span>
         </div>
     </div>
