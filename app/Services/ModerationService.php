@@ -26,7 +26,8 @@ class ModerationService
     private ReportService $reportService;
     private UserService $userService;
     private RatingService $ratingService;
-    private ConfirmationService $confirmationService; // Nouvelle dépendance
+    private ConfirmationService $confirmationService;
+    private EmailService $emailService; // Nouvelle dépendance
 
     public function __construct()
     {
@@ -35,7 +36,8 @@ class ModerationService
         $this->reportService = new ReportService();
         $this->userService = new UserService();
         $this->ratingService = new RatingService($this->userService);
-        $this->confirmationService = new ConfirmationService(); // Initialisation
+        $this->confirmationService = new ConfirmationService();
+        $this->emailService = new EmailService(); // Initialisation
     }
 
     /**
@@ -236,6 +238,52 @@ class ModerationService
         } catch (Exception $e) {
             $pdo->rollBack();
             Logger::error("Error crediting driver for report #{$reportId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Contacte le chauffeur suite à un signalement.
+     *
+     * @param int $reportId L'ID du signalement.
+     * @param int $moderatorId L'ID de l'employé/admin qui contacte le chauffeur.
+     * @return bool True si l'opération est réussie, false sinon.
+     * @throws Exception Si le signalement ou les utilisateurs associés sont introuvables.
+     */
+    public function contactDriverFromReport(int $reportId, int $moderatorId): bool
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            /** @var Report $report */
+            $report = $this->reportService->findById($reportId);
+            if (!$report) {
+                throw new Exception("Signalement #{$reportId} introuvable.");
+            }
+
+            /** @var User $driver */
+            $driver = $this->userService->findById($report->getReportedDriverId());
+            if (!$driver) {
+                throw new Exception("Chauffeur signalé introuvable pour le signalement #{$reportId}.");
+            }
+
+            // Envoyer un e-mail au chauffeur via la méthode dédiée
+            $this->emailService->sendEmailFromReportModeration($driver, $reportId);
+
+            // Mettre à jour le statut du signalement
+            $this->db->execute("UPDATE reports SET report_status = :report_status WHERE id = :id", [
+                ':report_status' => 'under_investigation',
+                ':id' => $reportId
+            ]);
+
+            $pdo->commit();
+            Logger::info("Report #{$reportId} set to 'under_investigation' by moderator #{$moderatorId}. Driver #{$driver->getId()} contacted.");
+            return true;
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Error contacting driver for report #{$reportId}: " . $e->getMessage());
             throw $e;
         }
     }

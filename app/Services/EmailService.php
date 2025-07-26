@@ -137,4 +137,37 @@ class EmailService
             throw $e; // Re-lancer l'exception pour que le service appelant puisse la gérer
         }
     }
+
+    /**
+     * Envoie un email au chauffeur suite à un signalement.
+     *
+     * @param User $driver L'objet User du chauffeur.
+     * @param int $reportId L'ID du signalement.
+     * @throws PHPMailerException Si l'envoi de l'email échoue.
+     */
+    public function sendEmailFromReportModeration(User $driver, int $reportId): void
+    {
+        try {
+            $this->mailer->clearAllRecipients();
+            $this->mailer->addAddress($driver->getEmail(), $driver->getFirstName() . ' ' . $driver->getLastName());
+            $this->mailer->Subject = 'Mise à jour concernant un signalement sur votre trajet EcoRide';
+            $this->mailer->isHTML(true);
+
+            $body = "<p>Bonjour {$driver->getFirstName()},</p>";
+            $body .= "<p>Nous vous informons qu'un signalement a été déposé concernant l'un de vos trajets. "
+                  . "Notre équipe de modération est en train d'examiner la situation. "
+                  . "Nous vous contacterons si des informations supplémentaires sont nécessaires.</p>";
+            $body .= "<p>Pour toute question, veuillez contacter notre support.</p>";
+            $body .= "<p>Cordialement,<br>L'équipe EcoRide</p>";
+
+            $this->mailer->Body = $body;
+            $this->mailer->AltBody = strip_tags($body);
+
+            $this->mailer->send();
+            Logger::info("Email de modération de signalement envoyé au chauffeur #{$driver->getId()} pour le signalement #{$reportId}.");
+        } catch (PHPMailerException $e) {
+            Logger::error("Erreur lors de l'envoi de l'email de modération de signalement au chauffeur #{$driver->getId()} pour le signalement #{$reportId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
