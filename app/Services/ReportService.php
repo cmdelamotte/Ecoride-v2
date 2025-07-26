@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\RideService;
 use App\Services\UserService;
 use App\Exceptions\ValidationException;
+use App\Helpers\ReportHelper; // Ajout de cette ligne
 use \Exception;
 
 /**
@@ -86,6 +87,27 @@ class ReportService
         Logger::info("New report created: #{$report->getId()} by user #{$report->getReporterId()} against user #{$report->getReportedDriverId()} for ride #{$report->getRideId()}.");
 
         return $report;
+    }
+
+    /**
+     * Récupère un signalement par son ID.
+     *
+     * @param int $id L'ID du signalement.
+     * @return Report|null L'objet Report hydraté, ou null si non trouvé.
+     */
+    public function findById(int $id): ?Report
+    {
+        $sql = "SELECT id, reporter_id, reported_driver_id, ride_id, reason, report_status, created_at FROM reports WHERE id = :id";
+        $stmt = $this->db->getConnection()->prepare($sql);
+        $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+        $stmt->execute();
+        $reportData = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$reportData) {
+            return null;
+        }
+
+        return ReportHelper::createReportObjectFromArray($reportData);
     }
 
     /**
