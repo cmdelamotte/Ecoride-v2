@@ -16,6 +16,16 @@
                 <?php endif; ?>
                 <a class="nav-link" id="nav-rides-search" href="/rides-search">Rechercher un trajet</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
+                <?php 
+                    $userRoles = $_SESSION['user_roles'] ?? [];
+                    if (in_array('ROLE_EMPLOYEE', $userRoles) || in_array('ROLE_ADMIN', $userRoles)):
+                ?>
+                <a class="nav-link" id="nav-employee-dashboard" href="/employee-dashboard">Dashboard Employé</a>
+                <?php endif; ?>
+                <?php if (in_array('ROLE_ADMIN', $userRoles)):
+                ?>
+                <a class="nav-link" id="nav-admin-dashboard" href="/admin/dashboard">Dashboard Admin</a>
+                <?php endif; ?>
                 <a class="nav-link" id="nav-your-rides" href="/your-rides">Covoiturages</a>
                 <?php 
                     $userRoles = $_SESSION['user_roles'] ?? [];
