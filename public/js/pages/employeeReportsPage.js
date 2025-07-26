@@ -9,7 +9,7 @@ const noPendingReportsMessage = document.getElementById('no-reported-rides');
 const pendingReportCardTemplate = document.getElementById('reported-ride-card-template');
 const reportsPaginationContainer = document.getElementById('reports-pagination');
 
-let reportsPagination;
+// Ces variables ne sont plus exportées, elles sont gérées par l'orchestrateur (employeeDashboardPage.js)
 let currentReportsPage = 1;
 const REPORTS_PER_PAGE = 5;
 
@@ -18,7 +18,7 @@ const REPORTS_PER_PAGE = 5;
  * @param {object} reportData Les données du signalement.
  * @returns {HTMLElement} L'élément HTML de la carte.
  */
-const createPendingReportCard = (reportData) => {
+export const createPendingReportCard = (reportData) => {
     const card = pendingReportCardTemplate.content.cloneNode(true);
 
     card.querySelector('.card').dataset.reportId = reportData.id;
@@ -47,8 +47,9 @@ const createPendingReportCard = (reportData) => {
 /**
  * Charge et affiche les signalements en attente de modération.
  * @param {number} page Le numéro de page à charger.
+ * @param {object} reportsPaginationInstance L'instance de Pagination pour les signalements.
  */
-export const loadPendingReports = async (page = 1) => {
+export const loadPendingReports = async (page = 1, reportsPaginationInstance) => {
     currentReportsPage = page;
     clearChildren(reportListContainer);
     noPendingReportsMessage.classList.add('d-none');
@@ -64,7 +65,7 @@ export const loadPendingReports = async (page = 1) => {
                 reportListContainer.appendChild(createPendingReportCard(report));
             });
             reportsPaginationContainer.classList.remove('d-none');
-            reportsPagination.render(response.pagination.current_page, response.pagination.total_pages);
+            reportsPaginationInstance.render(response.pagination.current_page, response.pagination.total_pages);
         } else {
             noPendingReportsMessage.classList.remove('d-none');
         }
@@ -79,8 +80,9 @@ export const loadPendingReports = async (page = 1) => {
 /**
  * Gère les actions de modération des signalements (créditer, contacter).
  * @param {Event} event L'événement de clic.
+ * @param {object} reportsPaginationInstance L'instance de Pagination pour les signalements.
  */
-const handleReportAction = async (event) => {
+export const handleReportAction = async (event, reportsPaginationInstance) => {
     const target = event.target;
     const reportId = target.dataset.reportId;
     if (!reportId) return;
@@ -108,12 +110,12 @@ const handleReportAction = async (event) => {
         const response = await apiCallPromise;
         if (response.success) {
             displayFlashMessage(successMessage, 'success');
-            loadPendingReports(currentReportsPage); // Recharger la liste après l'action
+            loadPendingReports(currentReportsPage, reportsPaginationInstance); // Recharger la liste après l'action
         } else {
             displayFlashMessage(response.message || errorMessage, 'danger');
             // Si le signalement a déjà été traité, recharger la liste pour le retirer
             if (response.message && response.message.includes("déjà été traité")) {
-                loadPendingReports(currentReportsPage);
+                loadPendingReports(currentReportsPage, reportsPaginationInstance);
             }
         }
     } catch (error) {
@@ -123,17 +125,9 @@ const handleReportAction = async (event) => {
         target.disabled = false;
         if (target.classList.contains('action-credit-driver')) {
             target.textContent = "Créditer le chauffeur";
-        } else if (target.classList.contains('action-contact-driver')) {
+        }
+        else if (target.classList.contains('action-contact-driver')) {
             target.textContent = "Contacter le chauffeur";
         }
     }
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-    reportsPagination = new Pagination('#reports-pagination', (page) => loadPendingReports(page));
-    loadPendingReports();
-
-    if (reportListContainer) {
-        reportListContainer.addEventListener('click', handleReportAction);
-    }
-});

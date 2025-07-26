@@ -2,7 +2,6 @@ import { apiClient } from '../utils/apiClient.js';
 import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { Pagination } from '../components/Pagination.js';
-import { loadPendingReports } from './employeeReportsPage.js'; // Importation de la fonction pour les signalements
 
 // Éléments DOM pour les avis
 const reviewListContainer = document.querySelector('.review-list');
@@ -10,7 +9,7 @@ const noPendingReviewsMessage = document.getElementById('no-pending-reviews');
 const pendingReviewCardTemplate = document.getElementById('pending-review-card-template');
 const reviewsPaginationContainer = document.getElementById('reviews-pagination');
 
-let reviewsPagination;
+// Ces variables ne sont plus exportées, elles sont gérées par l'orchestrateur (employeeDashboardPage.js)
 let currentReviewsPage = 1;
 const REVIEWS_PER_PAGE = 5;
 
@@ -19,7 +18,7 @@ const REVIEWS_PER_PAGE = 5;
  * @param {object} reviewData Les données de l'avis.
  * @returns {HTMLElement} L'élément HTML de la carte.
  */
-const createPendingReviewCard = (reviewData) => {
+export const createPendingReviewCard = (reviewData) => {
     const card = pendingReviewCardTemplate.content.cloneNode(true);
 
     card.querySelector('.review-id').textContent = `ID Avis: #${reviewData.id}`;
@@ -55,8 +54,9 @@ const createPendingReviewCard = (reviewData) => {
 /**
  * Charge et affiche les avis en attente de modération.
  * @param {number} page Le numéro de page à charger.
+ * @param {object} reviewsPaginationInstance L'instance de Pagination pour les avis.
  */
-const loadPendingReviews = async (page = 1) => {
+export const loadPendingReviews = async (page = 1, reviewsPaginationInstance) => {
     currentReviewsPage = page;
     clearChildren(reviewListContainer);
     noPendingReviewsMessage.classList.add('d-none');
@@ -73,7 +73,7 @@ const loadPendingReviews = async (page = 1) => {
                 reviewListContainer.appendChild(createPendingReviewCard(review));
             });
             reviewsPaginationContainer.classList.remove('d-none');
-            reviewsPagination.render(response.pagination.current_page, response.pagination.total_pages);
+            reviewsPaginationInstance.render(response.pagination.current_page, response.pagination.total_pages);
         } else {
             noPendingReviewsMessage.classList.remove('d-none');
         }
@@ -88,8 +88,9 @@ const loadPendingReviews = async (page = 1) => {
 /**
  * Gère les actions de validation/rejet d'avis.
  * @param {Event} event L'événement de clic.
+ * @param {object} reviewsPaginationInstance L'instance de Pagination pour les avis.
  */
-const handleReviewAction = async (event) => {
+export const handleReviewAction = async (event, reviewsPaginationInstance) => {
     const target = event.target;
     const reviewId = target.dataset.reviewId;
     if (!reviewId) return;
@@ -117,38 +118,23 @@ const handleReviewAction = async (event) => {
         const response = await apiCallPromise;
         if (response.success) {
             displayFlashMessage(successMessage, 'success');
-            loadPendingReviews(currentReviewsPage); // Recharger la liste après l'action
+            loadPendingReviews(currentReviewsPage, reviewsPaginationInstance); // Recharger la liste après l'action
         } else {
             displayFlashMessage(response.message || errorMessage, 'danger');
             if (response.message && response.message.includes("déjà été traité")) {
-                loadPendingReviews(currentReviewsPage);
+                loadPendingReviews(currentReviewsPage, reviewsPaginationInstance);
             }
         }
-    }
-    catch (error) {
+    } catch (error) {
         console.error('Erreur API:', error);
         displayFlashMessage('Erreur de communication avec le serveur.', 'danger');
     } finally {
         target.disabled = false;
-        target.textContent = target.classList.contains('action-validate-review') ? "Valider l'avis" : "Refuser l'avis";
+        if (target.classList.contains('action-validate-review')) {
+            target.textContent = "Valider l'avis";
+        }
+        else if (target.classList.contains('action-reject-review')) {
+            target.textContent = "Refuser l'avis";
+        }
     }
 };
-
-/**
- * Fonction principale pour charger toutes les données du tableau de bord.
- */
-const loadDashboardData = () => {
-    loadPendingReviews();
-    loadPendingReports(); // Appel de la fonction importée
-};
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    reviewsPagination = new Pagination('#reviews-pagination', (page) => loadPendingReviews(page));
-    loadDashboardData();
-
-    // Attacher l'écouteur d'événements pour les actions de modération des avis
-    if (reviewListContainer) {
-        reviewListContainer.addEventListener('click', handleReviewAction);
-    }
-});
