@@ -75,6 +75,7 @@ export const apiClient = {
 
     getPendingReports: (page = 1, limit = 5) => callApi(`/api/employee-dashboard/reports/pending?page=${page}&limit=${limit}`),
     creditDriver: (reportId) => callApi(`/api/employee-dashboard/reports/${reportId}/credit-driver`, 'POST'),
+    contactDriver: (reportId) => callApi(`/api/employee-dashboard/reports/${reportId}/contact-driver`, 'POST'), // Nouvelle méthode
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };

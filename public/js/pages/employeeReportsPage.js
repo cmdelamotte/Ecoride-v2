@@ -96,9 +96,9 @@ export const handleReportAction = async (event, reportsPaginationInstance) => {
         successMessage = 'Chauffeur crédité avec succès.';
         errorMessage = "Erreur lors du crédit du chauffeur.";
     } else if (target.classList.contains('action-contact-driver')) {
-        // TODO: Implémenter la logique pour contacter le chauffeur (ex: ouvrir une modale)
-        displayFlashMessage('Fonctionnalité "Contacter le chauffeur" non implémentée.', 'info');
-        return;
+        apiCallPromise = apiClient.contactDriver(reportId); // Appel de la nouvelle méthode
+        successMessage = 'Chauffeur contacté avec succès.';
+        errorMessage = "Erreur lors de la prise de contact avec le chauffeur.";
     }
 
     if (!apiCallPromise) return;
