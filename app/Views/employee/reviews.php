@@ -69,7 +69,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-9">
                     <p class="card-text mb-1"><span class="fw-bold">Trajet :</span> <span class="report-ride-departure"></span> <i class="bi bi-arrow-right-short"></i> <span class="report-ride-arrival"></span> (<span class="report-ride-date"></span>)</p>
                     <p class="card-text mb-1"><span class="fw-bold">Passager :</span> <span class="report-passenger-name"></span> (<a href="" class="link report-passenger-email"></a>)</p>
                     <p class="card-text mb-1"><span class="fw-bold">Chauffeur :</span> <span class="report-driver-name"></span> (<a href="" class="link report-driver-email"></a>)</p>
@@ -77,6 +77,10 @@
                     <p class="card-text mb-1"><span class="fw-bold">Motif / Commentaire du passager :</span></p>
                     <p class="card-text bg-light p-2 rounded report-reason-comment">
                         <span class="fst-italic report-reason-content"></span> </p>
+                </div>
+                <div class="col-md-3 text-md-end mt-2 mt-md-0 align-self-center report-actions">
+                    <button class="btn btn-success btn-sm mb-1 w-100 action-credit-driver">Créditer le chauffeur</button>
+                    <button class="btn btn-outline-info btn-sm w-100 action-contact-driver">Contacter le chauffeur</button>
                 </div>
             </div>
         </div>

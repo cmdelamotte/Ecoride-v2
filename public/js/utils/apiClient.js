@@ -74,6 +74,7 @@ export const apiClient = {
     rejectReview: (reviewId) => callApi(`/api/employee-dashboard/reviews/${reviewId}/reject`, 'POST'),
 
     getPendingReports: (page = 1, limit = 5) => callApi(`/api/employee-dashboard/reports/pending?page=${page}&limit=${limit}`),
+    creditDriver: (reportId) => callApi(`/api/employee-dashboard/reports/${reportId}/credit-driver`, 'POST'),
 
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };
