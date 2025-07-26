@@ -444,6 +444,15 @@ return [
         'auth' => true,
         'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
+    // Nouvelle route pour créditer le chauffeur
+    [
+        'path' => '/api/employee-dashboard/reports/{id}/credit-driver',
+        'http_method' => 'POST',
+        'controller' => 'EmployeeController',
+        'method' => 'creditDriverApi',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
     [
         'path' => '/api/employee-dashboard/reviews/{id}/approve',
         'http_method' => 'POST', // API pour valider un avis
