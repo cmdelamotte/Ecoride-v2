@@ -107,7 +107,7 @@ class EmployeeController extends Controller
             $pendingReviewsData = $this->moderationService->getPendingReviews($limit, $offset);
             $totalReviews = $this->moderationService->countPendingReviews();
             $totalPages = ceil($totalReviews / $limit);
-            
+
             $formattedReviews = ReviewHelper::formatCollectionForApi($pendingReviewsData);
             $this->jsonResponse([
                 'success' => true,
@@ -122,6 +122,45 @@ class EmployeeController extends Controller
         } catch (\Exception $e) {
             error_log("Error fetching pending reviews API: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => 'Erreur lors de la récupération des avis en attente.'], 500);
+        }
+    }
+
+    /**
+     * API pour récupérer les signalements en attente de modération.
+     * Retourne les signalements en JSON.
+     */
+    public function getPendingReportsApi()
+    {
+        // Sécurité : Vérifier l'authentification et le rôle (ROLE_EMPLOYEE ou ROLE_ADMIN).
+        if (!isset($_SESSION['user_id']) || (!in_array('ROLE_EMPLOYEE', $_SESSION['user_roles']) && !in_array('ROLE_ADMIN', $_SESSION['user_roles']))) {
+            $this->jsonResponse(['success' => false, 'message' => 'Accès non autorisé.'], 403);
+            return;
+        }
+
+        $page = $_GET['page'] ?? 1; // La pagination n'est pas encore implémentée pour les signalements, mais on garde la structure
+        $limit = $_GET['limit'] ?? 5;
+        $offset = ($page - 1) * $limit;
+
+        try {
+            $pendingReportsData = $this->moderationService->getPendingReports($limit, $offset);
+            $totalReports = $this->moderationService->countPendingReports();
+            $totalPages = ceil($totalReports / $limit);
+
+            // ReportHelper::formatCollectionForApi est déjà adapté pour les tableaux associatifs
+            $formattedReports = ReportHelper::formatCollectionForApi($pendingReportsData);
+            $this->jsonResponse([
+                'success' => true,
+                'reports' => $formattedReports,
+                'pagination' => [
+                    'current_page' => (int)$page,
+                    'total_pages' => (int)$totalPages,
+                    'total_reports' => (int)$totalReports,
+                    'limit' => (int)$limit
+                ]
+            ]);
+        } catch (\Exception $e) {
+            error_log("Error fetching pending reports API: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => 'Erreur lors de la récupération des signalements en attente.'], 500);
         }
     }
 }
