@@ -192,4 +192,32 @@ class EmployeeController extends Controller
             $this->jsonResponse(['success' => false, 'message' => "Une erreur est survenue lors du crédit du chauffeur."], 500);
         }
     }
+
+    /**
+     * API pour contacter le chauffeur suite à un signalement.
+     *
+     * @param int $reportId L'ID du signalement.
+     */
+    public function contactDriverApi(int $reportId)
+    {
+        // Sécurité : Vérifier l'authentification et le rôle (ROLE_EMPLOYEE ou ROLE_ADMIN).
+        if (!isset($_SESSION['user_id']) || (!in_array('ROLE_EMPLOYEE', $_SESSION['user_roles']) && !in_array('ROLE_ADMIN', $_SESSION['user_roles']))) {
+            $this->jsonResponse(['success' => false, 'message' => 'Accès non autorisé.'], 403);
+            return;
+        }
+
+        $moderatorId = $_SESSION['user_id'];
+
+        try {
+            $success = $this->moderationService->contactDriverFromReport($reportId, $moderatorId);
+            if ($success) {
+                $this->jsonResponse(['success' => true, 'message' => 'Chauffeur contacté avec succès.']);
+            } else {
+                $this->jsonResponse(['success' => false, 'message' => "Impossible de contacter le chauffeur. Le signalement a peut-être déjà été traité ou une erreur est survenue."], 404);
+            }
+        } catch (\Exception $e) {
+            error_log("Error contacting driver for report #{$reportId}: " . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'message' => "Une erreur est survenue lors de la prise de contact avec le chauffeur."], 500);
+        }
+    }
 }
