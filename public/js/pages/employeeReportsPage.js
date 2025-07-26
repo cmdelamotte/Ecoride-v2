@@ -21,7 +21,9 @@ const REPORTS_PER_PAGE = 5;
 export const createPendingReportCard = (reportData) => {
     const card = pendingReportCardTemplate.content.cloneNode(true);
 
-    card.querySelector('.card').dataset.reportId = reportData.id;
+    const cardElement = card.querySelector('.card'); // Récupérer l'élément racine de la carte
+    cardElement.dataset.reportId = reportData.id;
+
     card.querySelector('.report-ride-id').textContent = reportData.ride_id;
     card.querySelector('.report-submission-date').textContent = `Date signalement: ${new Date(reportData.created_at).toLocaleDateString('fr-FR')}`;
     card.querySelector('.report-ride-departure').textContent = reportData.departure_city;
@@ -40,6 +42,39 @@ export const createPendingReportCard = (reportData) => {
     const contactButton = card.querySelector('.action-contact-driver');
     if (creditButton) creditButton.dataset.reportId = reportData.id;
     if (contactButton) contactButton.dataset.reportId = reportData.id;
+
+    // Logique pour gérer l'état des boutons en fonction du statut du signalement
+    if (reportData.report_status === 'under_investigation') {
+        if (contactButton) {
+            contactButton.textContent = 'Chauffeur contacté';
+            contactButton.disabled = true; // Désactiver le bouton après contact
+        }
+        if (creditButton) {
+            creditButton.disabled = true; // Désactiver le bouton de crédit si déjà en investigation
+        }
+        // Mettre à jour le texte du footer si nécessaire
+        const cardFooter = card.querySelector('.card-footer');
+        if (cardFooter) {
+            cardFooter.textContent = 'Statut : En investigation';
+            cardFooter.classList.remove('text-danger');
+            cardFooter.classList.add('text-warning');
+        }
+    } else if (reportData.report_status === 'closed') {
+        if (contactButton) {
+            contactButton.textContent = 'Signalement clos';
+            contactButton.disabled = true;
+        }
+        if (creditButton) {
+            creditButton.textContent = 'Chauffeur crédité';
+            creditButton.disabled = true;
+        }
+        const cardFooter = card.querySelector('.card-footer');
+        if (cardFooter) {
+            cardFooter.textContent = 'Statut : Clos';
+            cardFooter.classList.remove('text-danger', 'text-warning');
+            cardFooter.classList.add('text-success');
+        }
+    }
 
     return card;
 };
@@ -90,15 +125,18 @@ export const handleReportAction = async (event, reportsPaginationInstance) => {
     let apiCallPromise = null;
     let successMessage = '';
     let errorMessage = '';
+    let updateCardOnly = false; // Indicateur pour savoir si on met à jour la carte ou on recharge la liste
 
     if (target.classList.contains('action-credit-driver')) {
         apiCallPromise = apiClient.creditDriver(reportId);
         successMessage = 'Chauffeur crédité avec succès.';
         errorMessage = "Erreur lors du crédit du chauffeur.";
+        // Après crédit, le report doit disparaître de la liste "new"
     } else if (target.classList.contains('action-contact-driver')) {
-        apiCallPromise = apiClient.contactDriver(reportId); // Appel de la nouvelle méthode
+        apiCallPromise = apiClient.contactDriver(reportId);
         successMessage = 'Chauffeur contacté avec succès.';
         errorMessage = "Erreur lors de la prise de contact avec le chauffeur.";
+        updateCardOnly = true; // On met à jour la carte au lieu de recharger la liste
     }
 
     if (!apiCallPromise) return;
@@ -110,7 +148,33 @@ export const handleReportAction = async (event, reportsPaginationInstance) => {
         const response = await apiCallPromise;
         if (response.success) {
             displayFlashMessage(successMessage, 'success');
-            loadPendingReports(currentReportsPage, reportsPaginationInstance); // Recharger la liste après l'action
+            if (updateCardOnly) {
+                // Trouver la carte parente et mettre à jour son état
+                const cardElement = target.closest('.card');
+                if (cardElement) {
+                    // Mettre à jour le statut dans les données de la carte (si on les avait)
+                    // Pour l'instant, on va juste modifier les boutons et le footer
+                    const creditButton = cardElement.querySelector('.action-credit-driver');
+                    const contactButton = cardElement.querySelector('.action-contact-driver');
+                    const cardFooter = cardElement.querySelector('.card-footer');
+
+                    if (contactButton) {
+                        contactButton.textContent = 'Chauffeur contacté';
+                        contactButton.disabled = true;
+                    }
+                    if (creditButton) {
+                        creditButton.disabled = true;
+                    }
+                    if (cardFooter) {
+                        cardFooter.textContent = 'Statut : En investigation';
+                        cardFooter.classList.remove('text-danger');
+                        cardFooter.classList.add('text-warning');
+                    }
+                }
+            } else {
+                // Pour les actions qui retirent le report de la liste "new"
+                loadPendingReports(currentReportsPage, reportsPaginationInstance);
+            }
         } else {
             displayFlashMessage(response.message || errorMessage, 'danger');
             // Si le signalement a déjà été traité, recharger la liste pour le retirer
@@ -123,11 +187,12 @@ export const handleReportAction = async (event, reportsPaginationInstance) => {
         displayFlashMessage('Erreur de communication avec le serveur.', 'danger');
     } finally {
         target.disabled = false;
-        if (target.classList.contains('action-credit-driver')) {
-            target.textContent = "Créditer le chauffeur";
-        }
-        else if (target.classList.contains('action-contact-driver')) {
-            target.textContent = "Contacter le chauffeur";
+        if (!updateCardOnly) { // Si on n'a pas mis à jour la carte, restaurer le texte du bouton
+            if (target.classList.contains('action-credit-driver')) {
+                target.textContent = "Créditer le chauffeur";
+            } else if (target.classList.contains('action-contact-driver')) {
+                target.textContent = "Contacter le chauffeur";
+            }
         }
     }
 };

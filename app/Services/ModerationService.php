@@ -104,7 +104,7 @@ class ModerationService
                 JOIN Users r ON rep.reporter_id = r.id
                 JOIN Users rd ON rep.reported_driver_id = rd.id
                 JOIN Rides ri ON rep.ride_id = ri.id
-                WHERE rep.report_status = 'new'
+                WHERE rep.report_status IN ('new', 'under_investigation')
                 ORDER BY rep.created_at DESC
                 LIMIT :limit OFFSET :offset";
 
@@ -126,7 +126,7 @@ class ModerationService
      */
     public function countPendingReports(): int
     {
-        $sql = "SELECT COUNT(*) FROM reports WHERE report_status = 'new'";
+        $sql = "SELECT COUNT(*) FROM reports WHERE report_status IN ('new', 'under_investigation')";
         return $this->db->fetchColumn($sql);
     }
 
