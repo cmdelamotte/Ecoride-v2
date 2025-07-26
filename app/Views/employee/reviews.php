@@ -24,6 +24,10 @@
         <div class="reported-rides-list">
             </div>
 
+        <nav aria-label="Pagination des signalements">
+            <ul class="pagination justify-content-center" id="reports-pagination"></ul>
+        </nav>
+
         <div class="text-center py-3 text-muted d-none" id="no-reported-rides">
             <p><i class="bi bi-check2-circle"></i> Aucun covoiturage signalé actuellement.</p>
         </div>

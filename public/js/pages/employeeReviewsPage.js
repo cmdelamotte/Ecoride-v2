@@ -13,12 +13,15 @@ const reviewsPaginationContainer = document.getElementById('reviews-pagination')
 const reportListContainer = document.querySelector('.reported-rides-list');
 const noPendingReportsMessage = document.getElementById('no-reported-rides');
 const pendingReportCardTemplate = document.getElementById('reported-ride-card-template');
+const reportsPaginationContainer = document.getElementById('reports-pagination'); // Nouvelle constante
 
 let reviewsPagination;
 let currentReviewsPage = 1;
 const REVIEWS_PER_PAGE = 5;
 
-// Pour les signalements, nous ne gérons pas la pagination pour l'instant, donc pas de variables de page/limite spécifiques ici.
+let reportsPagination; // Nouvelle variable pour l'instance de pagination des signalements
+let currentReportsPage = 1; // Nouvelle variable pour la page actuelle des signalements
+const REPORTS_PER_PAGE = 5; // Nouvelle constante pour la limite par page des signalements
 
 /**
  * Crée et retourne un élément de carte d'avis en attente.
@@ -118,20 +121,25 @@ const loadPendingReviews = async (page = 1) => {
 
 /**
  * Charge et affiche les signalements en attente de modération.
+ * @param {number} page Le numéro de page à charger.
  */
-const loadPendingReports = async () => {
+const loadPendingReports = async (page = 1) => {
+    currentReportsPage = page; // Mettre à jour la page actuelle des signalements
     clearChildren(reportListContainer);
     noPendingReportsMessage.classList.add('d-none');
+    reportsPaginationContainer.classList.add('d-none'); // Cacher la pagination pendant le chargement
     reportListContainer.appendChild(createElement('p', ['text-center', 'text-muted'], {}, 'Chargement des signalements...'));
 
     try {
-        const response = await apiClient.getPendingReports(); // Pas de pagination pour l'instant
+        const response = await apiClient.getPendingReports(page, REPORTS_PER_PAGE); // Utiliser les paramètres de pagination
         clearChildren(reportListContainer);
 
         if (response.success && response.reports.length > 0) {
             response.reports.forEach(report => {
                 reportListContainer.appendChild(createPendingReportCard(report));
             });
+            reportsPaginationContainer.classList.remove('d-none');
+            reportsPagination.render(response.pagination.current_page, response.pagination.total_pages);
         } else {
             noPendingReportsMessage.classList.remove('d-none');
         }
@@ -202,6 +210,7 @@ const loadDashboardData = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     reviewsPagination = new Pagination('#reviews-pagination', (page) => loadPendingReviews(page));
+    reportsPagination = new Pagination('#reports-pagination', (page) => loadPendingReports(page)); // Initialisation de la pagination des signalements
     loadDashboardData(); // Appel de la nouvelle fonction principale
 
     // Attacher l'écouteur d'événements pour les actions de modération
