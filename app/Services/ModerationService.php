@@ -6,8 +6,11 @@ use App\Core\Database;
 use App\Models\Review;
 use App\Models\Report;
 use App\Models\User;
+use App\Models\Ride;
 use App\Core\Logger;
 use App\Helpers\ReportHelper;
+use App\Models\Booking; // Ajout de cette ligne
+use \Exception; // Ajout de cette ligne pour les exceptions
 
 /**
  * ModerationService
@@ -23,6 +26,7 @@ class ModerationService
     private ReportService $reportService;
     private UserService $userService;
     private RatingService $ratingService;
+    private ConfirmationService $confirmationService; // Nouvelle dépendance
 
     public function __construct()
     {
@@ -31,6 +35,7 @@ class ModerationService
         $this->reportService = new ReportService();
         $this->userService = new UserService();
         $this->ratingService = new RatingService($this->userService);
+        $this->confirmationService = new ConfirmationService(); // Initialisation
     }
 
     /**
@@ -168,5 +173,74 @@ class ModerationService
             Logger::info("Review #{$reviewId} rejected by moderator #{$moderatorId}.");
         }
         return $success;
+    }
+
+    /**
+     * Crédite le chauffeur suite à un signalement.
+     *
+     * @param int $reportId L'ID du signalement.
+     * @param int $moderatorId L'ID de l'employé/admin qui crédite le chauffeur.
+     * @return bool True si l'opération est réussie, false sinon.
+     * @throws Exception Si le signalement, la réservation ou les utilisateurs associés sont introuvables.
+     */
+    public function creditDriverFromReport(int $reportId, int $moderatorId): bool
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            /** @var Report $report */
+            $report = $this->reportService->findById($reportId);
+            if (!$report) {
+                throw new Exception("Signalement #{$reportId} introuvable.");
+            }
+
+            // Trouver la réservation associée au signalement
+            // Un signalement est lié à un ride_id et un reporter_id (qui est le passager)
+            $bookingData = $this->db->fetchOne(
+                "SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id FOR UPDATE",
+                [
+                    ':ride_id' => $report->getRideId(),
+                    ':user_id' => $report->getReporterId()
+                ],
+                Booking::class
+            );
+
+            if (!$bookingData) {
+                throw new Exception("Réservation associée au signalement #{$reportId} introuvable.");
+            }
+
+            /** @var Booking $booking */
+            $booking = $bookingData; // $bookingData est déjà un objet Booking grâce à fetchOne avec Booking::class
+
+            /** @var Ride $ride */
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
+            /** @var User $driver */
+            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
+            /** @var User $passenger */
+            $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
+
+            if (!$ride || !$driver || !$passenger) {
+                throw new Exception("Données associées au trajet ou aux utilisateurs introuvables pour le signalement #{$reportId}.");
+            }
+
+            // Appeler la logique de transfert de crédits du ConfirmationService
+            $this->confirmationService->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
+
+            // Mettre à jour le statut du signalement
+            $this->db->execute("UPDATE reports SET report_status = :report_status WHERE id = :id", [
+                ':report_status' => 'resolved_credited',
+                ':id' => $reportId
+            ]);
+
+            $pdo->commit();
+            Logger::info("Report #{$reportId} resolved by moderator #{$moderatorId}. Driver #{$driver->getId()} credited.");
+            return true;
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Error crediting driver for report #{$reportId}: " . $e->getMessage());
+            throw $e;
+        }
     }
 }
