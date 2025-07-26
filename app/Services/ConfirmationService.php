@@ -92,6 +92,48 @@ class ConfirmationService
     }
 
     /**
+     * Traite le transfert de crédits pour une réservation spécifique.
+     * Cette méthode est publique et peut être appelée par d'autres services.
+     *
+     * @param int $bookingId L'ID de la réservation à créditer.
+     * @return bool True si le transfert est réussi, false sinon.
+     * @throws Exception Si la réservation ou les données associées sont introuvables.
+     */
+    public function processCreditTransferForBooking(int $bookingId): bool
+    {
+        $pdo = $this->db->getConnection();
+        try {
+            $pdo->beginTransaction();
+
+            /** @var Booking $booking */
+            $booking = $this->db->fetchOne("SELECT * FROM Bookings WHERE id = :id FOR UPDATE", ['id' => $bookingId], Booking::class);
+            if (!$booking) {
+                throw new Exception("Réservation #{$bookingId} introuvable.");
+            }
+
+            /** @var Ride $ride */
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
+            /** @var User $driver */
+            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
+            /** @var User $passenger */
+            $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
+
+            if (!$ride || !$driver || !$passenger) {
+                throw new Exception("Données associées au trajet ou aux utilisateurs introuvables pour la réservation #{$bookingId}.");
+            }
+
+            $this->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            Logger::error("Error processing credit transfer for booking #{$bookingId}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
      * Traite le transfert de crédits du passager vers le conducteur et met à jour les statuts.
      * Cette méthode est privée car elle doit être appelée dans le cadre d'une transaction.
      *

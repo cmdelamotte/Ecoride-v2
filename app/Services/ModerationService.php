@@ -213,19 +213,15 @@ class ModerationService
             /** @var Booking $booking */
             $booking = $bookingData; // $bookingData est déjà un objet Booking grâce à fetchOne avec Booking::class
 
+            // Récupérer l'objet Ride pour obtenir le driver_id pour le log
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
-            /** @var User $driver */
-            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
-            /** @var User $passenger */
-            $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
-
-            if (!$ride || !$driver || !$passenger) {
-                throw new Exception("Données associées au trajet ou aux utilisateurs introuvables pour le signalement #{$reportId}.");
+            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id", ['id' => $booking->getRideId()], Ride::class);
+            if (!$ride) {
+                throw new Exception("Trajet associé à la réservation #{$booking->getId()} introuvable.");
             }
 
             // Appeler la logique de transfert de crédits du ConfirmationService
-            $this->confirmationService->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
+            $this->confirmationService->processCreditTransferForBooking($booking->getId());
 
             // Mettre à jour le statut du signalement
             $this->db->execute("UPDATE reports SET report_status = :report_status WHERE id = :id", [
@@ -234,7 +230,7 @@ class ModerationService
             ]);
 
             $pdo->commit();
-            Logger::info("Report #{$reportId} resolved by moderator #{$moderatorId}. Driver #{$driver->getId()} credited.");
+            Logger::info("Report #{$reportId} resolved by moderator #{$moderatorId}. Driver #{$ride->getDriverId()} credited.");
             return true;
 
         } catch (Exception $e) {
