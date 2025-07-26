@@ -34,14 +34,8 @@ export class RoleForm {
 
             if (result.success) {
                 displayFlashMessage(result.message, 'success');
-                // Mettre à jour la visibilité de la section chauffeur dynamiquement
-                if (this.driverInfoSection) {
-                    if (result.new_functional_role === 'driver' || result.new_functional_role === 'passenger_driver') {
-                        this.driverInfoSection.classList.remove('d-none');
-                    } else {
-                        this.driverInfoSection.classList.add('d-none');
-                    }
-                }
+                // Recharger la page pour que la navbar reflète les nouveaux rôles de session
+                window.location.reload();
             } else {
                 displayFlashMessage(result.error, 'danger');
             }

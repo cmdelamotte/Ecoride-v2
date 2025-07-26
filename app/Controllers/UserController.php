@@ -73,9 +73,17 @@ class UserController extends Controller
         $result = $this->userRoleService->updateFunctionalRole($user, $data['role'] ?? null);
 
         if ($result['success']) {
-            // Je mets à jour le rôle en session pour qu'il soit immédiatement pris en compte.
-            $_SESSION['user_roles'] = array_filter([$user->getSystemRole(), 'ROLE_' . strtoupper($result['new_functional_role'])]);
-            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'new_functional_role' => $result['new_functional_role']]);
+            // Récupérer tous les rôles système de l'utilisateur
+            $systemRoles = $this->userService->getUserRolesArray($user->getId());
+            // Ajouter le rôle fonctionnel actuel de l'utilisateur (mis à jour par le service)
+            $functionalRole = $user->getFunctionalRole(); // L'objet $user est mis à jour par updateFunctionalRole
+            $allUserRoles = $systemRoles;
+            if ($functionalRole) {
+                $allUserRoles[] = 'ROLE_' . strtoupper($functionalRole);
+            }
+            $_SESSION['user_roles'] = array_unique($allUserRoles); // Supprimer les doublons
+
+            $this->jsonResponse(['success' => true, 'message' => $result['message'], 'new_functional_role' => $functionalRole]);
         } else {
             $this->jsonResponse(['success' => false, 'error' => $result['error']], $result['status'] ?? 500);
         }
