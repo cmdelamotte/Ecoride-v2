@@ -76,18 +76,24 @@ class ReviewHelper
         return $formattedReviews;
     }
 
-    public static function hydrateReviewFromDb(array $data): \App\Models\Review
+    /**
+     * Crée un objet Review à partir d'un tableau de données.
+     *
+     * @param array $reviewData Le tableau de données de l'avis.
+     * @return Review L'objet Review hydraté.
+     */
+    public static function createReviewObjectFromArray(array $reviewData): Review
     {
-        $review = new \App\Models\Review();
-        $review->setId($data['id']);
-        $review->setRideId($data['ride_id']);
-        $review->setAuthorId($data['author_id']);
-        $review->setDriverId($data['driver_id']);
-        $review->setRating($data['rating']);
-        $review->setComment($data['comment']);
-        $review->setReviewStatus($data['review_status']);
-        $review->setCreatedAt($data['created_at']);
-        $review->setUpdatedAt($data['updated_at']);
+        $review = new Review();
+        $review->setId($reviewData['id'] ?? null);
+        $review->setRideId($reviewData['ride_id'] ?? null);
+        $review->setAuthorId($reviewData['author_id'] ?? null);
+        $review->setDriverId($reviewData['driver_id'] ?? null);
+        $review->setRating($reviewData['rating'] ?? null);
+        $review->setComment($reviewData['comment'] ?? null);
+        $review->setReviewStatus($reviewData['review_status'] ?? null);
+        $review->setCreatedAt($reviewData['created_at'] ?? null);
+        $review->setUpdatedAt($reviewData['updated_at'] ?? null);
         return $review;
     }
 }

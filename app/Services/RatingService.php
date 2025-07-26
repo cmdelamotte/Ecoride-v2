@@ -43,7 +43,7 @@ class RatingService
 
         $reviews = [];
         foreach ($reviewsData as $data) {
-            $reviews[] = ReviewHelper::hydrateReviewFromDb($data);
+            $reviews[] = \App\Helpers\ReviewHelper::createReviewObjectFromArray($data);
         }
 
         return $reviews;
