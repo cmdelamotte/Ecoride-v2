@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Models\Report;
 use App\Models\User;
 use App\Core\Logger;
+use App\Helpers\ReportHelper;
 
 /**
  * ModerationService
@@ -74,6 +75,51 @@ class ModerationService
     public function countPendingReviews(): int
     {
         $sql = "SELECT COUNT(*) FROM reviews WHERE review_status = 'pending_approval'";
+        return $this->db->fetchColumn($sql);
+    }
+
+    /**
+     * Récupère tous les signalements en attente de validation.
+     * Joint les informations nécessaires pour l'affichage dans le tableau de bord de modération.
+     *
+     * @param int $limit Le nombre maximum de signalements à retourner.
+     * @param int $offset Le décalage à partir duquel commencer à récupérer les signalements.
+     * @return array Un tableau de tableaux associatifs avec les détails nécessaires.
+     */
+    public function getPendingReports(int $limit = 5, int $offset = 0): array
+    {
+        $sql = "SELECT
+                    rep.id as id, rep.reporter_id, rep.reported_driver_id, rep.ride_id, rep.reason, rep.report_status, rep.created_at,
+                    r.username as reporter_username, r.email as reporter_email,
+                    rd.username as reported_driver_username, rd.email as reported_driver_email,
+                    ri.departure_city, ri.arrival_city, ri.departure_time
+                FROM reports rep
+                JOIN Users r ON rep.reporter_id = r.id
+                JOIN Users rd ON rep.reported_driver_id = rd.id
+                JOIN Rides ri ON rep.ride_id = ri.id
+                WHERE rep.report_status = 'pending_approval'
+                ORDER BY rep.created_at DESC
+                LIMIT :limit OFFSET :offset";
+
+        $params = [
+            ':limit' => $limit,
+            ':offset' => $offset
+        ];
+
+        $reportsData = $this->db->fetchAll($sql, $params, \PDO::FETCH_ASSOC);
+
+        // Utiliser ReportHelper pour formater les données pour la vue, comme pour les avis
+        return ReportHelper::formatCollectionForApi($reportsData);
+    }
+
+    /**
+     * Compte le nombre total de signalements en attente de validation.
+     *
+     * @return int Le nombre total de signalements en attente.
+     */
+    public function countPendingReports(): int
+    {
+        $sql = "SELECT COUNT(*) FROM reports WHERE report_status = 'pending_approval'";
         return $this->db->fetchColumn($sql);
     }
 
