@@ -51,8 +51,12 @@ class AuthController extends Controller
             $_SESSION['username'] = $user->getUsername();
             
             // Récupérer tous les rôles de l'utilisateur depuis la base de données
-            $userRoles = $this->userService->getUserRolesArray($user->getId());
-            $_SESSION['user_roles'] = $userRoles;
+            $allUserRoles = $this->userService->getUserRolesArray($user->getId());
+            // Ajouter le rôle fonctionnel si défini
+            if ($user->getFunctionalRole()) {
+                $allUserRoles[] = 'ROLE_' . strtoupper($user->getFunctionalRole());
+            }
+            $_SESSION['user_roles'] = array_unique($allUserRoles); // Supprimer les doublons
             error_log("AuthController: User roles in session: " . print_r($_SESSION['user_roles'], true));
             
             header('Location: /account');
@@ -88,7 +92,15 @@ class AuthController extends Controller
             $user = $result['user'];
             $_SESSION['user_id'] = $user->getId();
             $_SESSION['username'] = $user->getUsername();
-            $_SESSION['user_roles'] = [$user->getSystemRole()]; // Utiliser le rôle du modèle
+
+            // Récupérer tous les rôles de l'utilisateur (système et fonctionnel)
+            $allUserRoles = $this->userService->getUserRolesArray($user->getId());
+            // Ajouter le rôle fonctionnel si défini
+            if ($user->getFunctionalRole()) {
+                $allUserRoles[] = 'ROLE_' . strtoupper($user->getFunctionalRole());
+            }
+            $_SESSION['user_roles'] = array_unique($allUserRoles); // Supprimer les doublons
+            error_log("AuthController: User roles in session after registration: " . print_r($_SESSION['user_roles'], true));
             header('Location: /account'); // Rediriger vers la page de compte
             exit();
         } else {
