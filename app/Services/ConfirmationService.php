@@ -84,6 +84,22 @@ class ConfirmationService
             // Appel de la nouvelle méthode privée pour le transfert de crédits
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, $now);
 
+            // Vérifier si toutes les réservations pour ce trajet sont finalisées
+            $pendingBookingsCount = $this->db->fetchColumn(
+                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
+                [':ride_id' => $ride->getId()]
+            );
+
+            if ($pendingBookingsCount === 0) {
+                // Si toutes les réservations sont finalisées, marquer le trajet comme 'completed'
+                $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                    ':ride_status' => 'completed',
+                    ':id' => $ride->getId()
+                ]);
+                Logger::info("Ride #{$ride->getId()} status updated to 'completed' as all bookings are finalized.");
+            }
+
+
             // Commit la transaction seulement si elle a été démarrée par cette méthode
             if ($pdo->inTransaction()) {
                 $pdo->commit();
@@ -135,6 +151,21 @@ class ConfirmationService
             }
 
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
+
+            // Vérifier si toutes les réservations pour ce trajet sont finalisées
+            $pendingBookingsCount = $this->db->fetchColumn(
+                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
+                [':ride_id' => $ride->getId()]
+            );
+
+            if ($pendingBookingsCount === 0) {
+                // Si toutes les réservations sont finalisées, marquer le trajet comme 'completed'
+                $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                    ':ride_status' => 'completed',
+                    ':id' => $ride->getId()
+                ]);
+                Logger::info("Ride #{$ride->getId()} status updated to 'completed' as all bookings are finalized.");
+            }
 
             // PAS de gestion de transaction ici
             // if ($pdo->inTransaction()) {
