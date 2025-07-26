@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\ModerationService;
 use App\Helpers\ReviewHelper;
+use App\Helpers\ReportHelper;
 
 class EmployeeController extends Controller
 {

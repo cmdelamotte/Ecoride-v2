@@ -435,6 +435,15 @@ return [
         'auth' => true,
         'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
     ],
+    // Nouvelle route pour les signalements en attente
+    [
+        'path' => '/api/employee-dashboard/reports/pending',
+        'http_method' => 'GET', // API pour récupérer les signalements en attente
+        'controller' => 'EmployeeController',
+        'method' => 'getPendingReportsApi',
+        'auth' => true,
+        'roles' => ['ROLE_EMPLOYEE', 'ROLE_ADMIN']
+    ],
     [
         'path' => '/api/employee-dashboard/reviews/{id}/approve',
         'http_method' => 'POST', // API pour valider un avis
