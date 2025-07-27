@@ -119,6 +119,12 @@ $pageScripts = ['/js/pages/accountPage.js'];
                         <h2 class="h5 mb-0">Informations Chauffeur</h2>
                     </div>
                     <div class="card-body">
+                        <?php if (($functionalRole === 'driver' || $functionalRole === 'passenger_driver') && $user->getDriverRating() !== null && $user->getDriverRating() > 0): ?>
+                            <p class="mb-3">
+                                <span class="form-label">Note moyenne conducteur :</span>
+                                <span class="fw-bold"><?= htmlspecialchars(number_format($user->getDriverRating(), 1)) ?> <i class="bi bi-star-fill text-warning"></i></span>
+                            </p>
+                        <?php endif; ?>
                         <!-- La gestion des véhicules (liste, ajout, etc.) sera implémentée ici dans une future étape -->
                         <h3 class="h6 form-label">Mes Véhicules</h3>
                         <div id="vehicles-list">
