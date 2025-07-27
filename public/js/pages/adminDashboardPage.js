@@ -1,5 +1,5 @@
 import { apiClient } from '../utils/apiClient.js';
-import { displayFlashMessage } from '../components/flashMessages.js';
+import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const totalCreditsEl = document.getElementById('admin-total-credits');
