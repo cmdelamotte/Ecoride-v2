@@ -126,6 +126,8 @@ class RideHelper
     'driver_pref_smoker' => $driver ? $driver->getDriverPrefSmoker() : null,
     'driver_pref_animals' => $driver ? $driver->getDriverPrefAnimals() : null,
     'driver_pref_custom' => $driver ? $driver->getDriverPrefCustom() : null,
+    'driver_phone' => $driver ? $driver->getPhoneNumber() : null,
+    'driver_email' => $driver ? $driver->getEmail() : null,
 
     'vehicle_model' => $vehicle ? $vehicle->getModelName() : 'N/A',
     'vehicle_color' => $vehicle ? $vehicle->getColor() : 'N/A',
@@ -138,6 +140,16 @@ class RideHelper
 
     'seats_booked_by_user' => $seatsBookedByUser, // Ajout de la nouvelle propriété
     'user_role_in_ride' => ($currentUserId !== null && $ride->getDriverId() === $currentUserId) ? 'driver' : 'passenger',
+    'passengers_details' => array_map(function($booking) {
+        $passenger = $booking->getPassenger();
+        return [
+            'id' => $passenger ? $passenger->getId() : null,
+            'username' => $passenger ? $passenger->getUsername() : 'N/A',
+            'email' => $passenger ? $passenger->getEmail() : null,
+            'phone_number' => $passenger ? $passenger->getPhoneNumber() : null,
+            'seats_booked' => $booking->getSeatsBooked()
+        ];
+    }, $ride->getBookings())
     ];
     }
     return $formattedRides;

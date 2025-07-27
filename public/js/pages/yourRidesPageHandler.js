@@ -149,6 +149,46 @@ const createRideCard = (ride) => {
         }
     }
 
+    // Gérer l'affichage des informations de contact
+    const contactInfoSection = card.querySelector('.contact-info-section');
+    const contactDriverInfo = card.querySelector('.contact-driver-info');
+    const driverPhoneLink = contactDriverInfo.querySelector('.driver-phone-link');
+    const driverEmailText = contactDriverInfo.querySelector('.driver-email-text');
+
+    const contactPassengersInfo = card.querySelector('.contact-passengers-info');
+    const passengersContactList = contactPassengersInfo.querySelector('.passengers-contact-list');
+
+    if (ride.driver_id === currentUserId) { // L'utilisateur est le chauffeur
+        // Afficher les contacts des passagers
+        if (ride.passengers_details && ride.passengers_details.length > 0) {
+            contactPassengersInfo.classList.remove('d-none');
+            ride.passengers_details.forEach(passenger => {
+                const li = createElement('li', [], {}, '');
+                li.innerHTML = `
+                    <strong>${passenger.username}</strong> (${passenger.seats_booked} place(s))<br>
+                    <i class="bi bi-telephone-fill me-2"></i> <a href="tel:${passenger.phone_number}">${passenger.phone_number}</a><br>
+                    <i class="bi bi-envelope-fill me-2"></i> <a href="mailto:${passenger.email}">Envoyer un email</a>
+                `;
+                passengersContactList.appendChild(li);
+            });
+        }
+    } else { // L'utilisateur est un passager
+        // Afficher le contact du chauffeur
+        if (ride.driver_phone && ride.driver_email) {
+            contactDriverInfo.classList.remove('d-none');
+            driverPhoneLink.href = `tel:${ride.driver_phone}`;
+            driverPhoneLink.textContent = ride.driver_phone;
+            driverEmailText.innerHTML = `<a href="mailto:${ride.driver_email}">Envoyer un email</a>`;
+        }
+    }
+
+    // Afficher la section contact si des informations sont présentes
+    if (!contactDriverInfo.classList.contains('d-none') || !contactPassengersInfo.classList.contains('d-none')) {
+        contactInfoSection.classList.remove('d-none');
+    } else {
+        contactInfoSection.classList.add('d-none');
+    }
+
     return card;
 };
 

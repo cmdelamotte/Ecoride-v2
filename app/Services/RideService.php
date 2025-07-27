@@ -144,6 +144,11 @@ class RideService
 
         foreach ($bookings as $booking) {
             $totalSeatsBooked += $booking->getSeatsBooked();
+            // J'hydrate l'objet Booking avec les détails du passager
+            $passenger = $this->userService->findById($booking->getUserId());
+            if ($passenger) {
+                $booking->setPassenger($passenger);
+            }
         }
         $ride->setBookings($bookings);
 

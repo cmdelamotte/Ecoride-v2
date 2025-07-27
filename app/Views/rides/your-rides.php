@@ -133,6 +133,25 @@
                         <p class="card-text mb-1 ride-price-info">
                             <span class="form-label price-label"></span><span class="ride-price-amount"></span>
                         </p>
+                        
+                        <!-- Section Contact -->
+                        <div class="contact-info-section mt-3">
+                            <h6 class="card-text mb-2 form-label">Contact :</h6>
+                            <div class="contact-driver-info d-none">
+                                <p class="mb-1">
+                                    <i class="bi bi-telephone-fill me-2"></i> <a href="#" class="driver-phone-link"></a>
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-envelope-fill me-2"></i> <span class="driver-email-text"></span>
+                                </p>
+                            </div>
+                            <div class="contact-passengers-info d-none">
+                                <ul class="list-unstyled passengers-contact-list">
+                                    <!-- Les détails des passagers seront injectés ici par JS -->
+                                </ul>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="col-md-4 text-md-end mt-2 mt-md-0 align-self-center ride-actions">

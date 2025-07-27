@@ -22,6 +22,9 @@ class Booking
     private ?string $created_at = null;
     private ?string $updated_at = null;
 
+    // Propriété pour la relation (objet User du passager)
+    private ?User $passenger = null;
+
     // --- GETTERS ---
 
     public function getId(): ?int
@@ -82,6 +85,11 @@ class Booking
     public function getUpdatedAt(): ?string
     {
         return $this->updated_at;
+    }
+
+    public function getPassenger(): ?User
+    {
+        return $this->passenger;
     }
 
     // --- SETTERS ---
@@ -156,6 +164,12 @@ class Booking
     public function setUpdatedAt(?string $updated_at): self
     {
         $this->updated_at = $updated_at;
+        return $this;
+    }
+
+    public function setPassenger(?User $passenger): self
+    {
+        $this->passenger = $passenger;
         return $this;
     }
 }
