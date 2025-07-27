@@ -152,16 +152,92 @@ class MongoLogService
         return false;
     }
 
-    // Les méthodes getTotalCommissions et getCommissionsByDay seront adaptées plus tard
-    // pour interroger la nouvelle structure de logs.
-
+    /**
+     * Calcule le total des commissions enregistrées dans MongoDB.
+     *
+     * @return float Le total des commissions.
+     */
     public function getTotalCommissions(): float
     {
-        return 0.0;
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => null,
+                    'total' => ['$sum' => '$amount']
+                ]
+            ]
+        ];
+
+        try {
+            $cursor = $this->commissionsCollection->aggregate($pipeline);
+            $result = $cursor->toArray();
+            return $result[0]['total'] ?? 0.0;
+        } catch (\Exception $e) {
+            Logger::error("Failed to get total commissions from MongoDB: " . $e->getMessage());
+            return 0.0;
+        }
     }
 
+    /**
+     * Récupère les commissions agrégées par jour depuis MongoDB.
+     *
+     * @return array Un tableau avec les labels (dates) et les données (montants).
+     */
     public function getCommissionsByDay(): array
     {
-        return [];
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => ['$dateToString' => ['format' => '%Y-%m-%d', 'date' => '$timestamp']],
+                    'daily_earnings' => ['$sum' => '$amount']
+                ]
+            ],
+            ['$sort' => ['_id' => 1]]
+        ];
+
+        try {
+            $cursor = $this->commissionsCollection->aggregate($pipeline);
+            $results = $cursor->toArray();
+
+            $labels = array_map(fn($item) => $item['_id'], $results);
+            $data = array_map(fn($item) => $item['daily_earnings'], $results);
+
+            return ['labels' => $labels, 'data' => $data];
+        } catch (\Exception $e) {
+            Logger::error("Failed to get commissions by day from MongoDB: " . $e->getMessage());
+            return ['labels' => [], 'data' => []];
+        }
+    }
+
+    /**
+     * Récupère le nombre de trajets complétés par jour depuis MongoDB.
+     *
+     * @return array Un tableau avec les labels (dates) et les données (nombre de trajets).
+     */
+    public function getCompletedRidesByDay(): array
+    {
+        $pipeline = [
+            ['$match' => ['event_type' => 'ride_completed']],
+            [
+                '$group' => [
+                    '_id' => ['$dateToString' => ['format' => '%Y-%m-%d', 'date' => '$timestamp']],
+                    'ride_count' => ['$sum' => 1]
+                ]
+            ],
+            ['$sort' => ['_id' => 1]]
+        ];
+
+        try {
+            $cursor = $this->rideAnalyticsCollection->aggregate($pipeline);
+            $results = $cursor->toArray();
+
+            $labels = array_map(fn($item) => $item['_id'], $results);
+            $data = array_map(fn($item) => $item['ride_count'], $results);
+
+            return ['labels' => $labels, 'data' => $data];
+        } catch (\Exception $e) {
+            Logger::error("Failed to get completed rides by day from MongoDB: " . $e->getMessage());
+            return ['labels' => [], 'data' => []];
+        }
     }
 }
