@@ -104,7 +104,7 @@ class UserRoleService
         $sql = "SELECT id FROM Roles WHERE name = :name";
         $params = [':name' => $roleName];
         $result = $this->db->fetchOne($sql, $params);
-        return $result ? (int)$result['id'] : null;
+        return $result ? (int)$result->id : null;
     }
 
     /**

@@ -62,9 +62,9 @@ class AdminService
         $user->setEmail($data['email']);
         $user->setUsername($data['email']); // J'utilise l'email comme pseudo par défaut.
         $user->setPasswordHash(password_hash($data['password'], PASSWORD_DEFAULT));
+        $user->setPhoneNumber('0000000000'); // Numéro par défaut pour les employés
+        $user->setBirthDate('1900-01-01'); // Date de naissance par défaut pour les employés
         $user->setAccountStatus('active');
-        $user->setSystemRole('ROLE_USER'); // Rôle système de base
-        $user->setFunctionalRole('passenger'); // Rôle fonctionnel par défaut
         $user->setCreatedAt(date('Y-m-d H:i:s'));
         $user->setUpdatedAt(date('Y-m-d H:i:s'));
 
