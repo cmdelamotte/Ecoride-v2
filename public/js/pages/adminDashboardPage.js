@@ -128,9 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const reactivateBtn = clone.querySelector('.action-reactivate');
 
             if (employee.account_status === 'active') {
+                suspendBtn.classList.remove('d-none');
                 reactivateBtn.classList.add('d-none');
             } else {
                 suspendBtn.classList.add('d-none');
+                reactivateBtn.classList.remove('d-none');
             }
 
             suspendBtn.addEventListener('click', () => handleUpdateStatus(employee.id, 'suspended'));
@@ -166,9 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const reactivateBtn = clone.querySelector('.user-action-reactivate');
 
             if (user.account_status === 'active') {
+                suspendBtn.classList.remove('d-none');
                 reactivateBtn.classList.add('d-none');
             } else {
                 suspendBtn.classList.add('d-none');
+                reactivateBtn.classList.remove('d-none');
             }
 
             suspendBtn.addEventListener('click', () => handleUpdateStatus(user.id, 'suspended'));
