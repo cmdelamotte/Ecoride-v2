@@ -35,18 +35,53 @@ class AdminService
 
     /**
      * Je crée un nouvel employé.
+     * La méthode orchestre la validation, la création de l'utilisateur via UserService,
+     * et l'assignation du rôle via UserRoleService.
      *
-     * @param array $data Les données de l'employé (nom, prénom, email, mot de passe).
+     * @param array $data Les données de l'employé (first_name, last_name, email, password).
      * @return User L'objet User de l'employé créé.
-     * @throws Exception Si la création échoue.
+     * @throws Exception Si une validation échoue ou si la création en base de données échoue.
      */
     public function createEmployee(array $data): User
     {
-        // TODO: Implémenter la logique de validation et de création.
-        // 1. Valider les données.
-        // 2. Appeler UserService pour créer l'utilisateur.
-        // 3. Appeler UserRoleService pour assigner le rôle 'ROLE_EMPLOYEE'.
-        return new User(); // Placeholder
+        // 1. Je valide les données d'entrée.
+        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || empty($data['password'])) {
+            throw new Exception("Tous les champs sont requis pour créer un employé.");
+        }
+
+        // Je vérifie si un utilisateur avec cet email n'existe pas déjà.
+        if ($this->userService->findByEmailOrUsername($data['email'])) {
+            throw new Exception("Un utilisateur avec cet email existe déjà.");
+        }
+
+        // 2. Je crée et configure l'objet User.
+        $user = new User();
+        $user->setFirstName($data['first_name']);
+        $user->setLastName($data['last_name']);
+        $user->setEmail($data['email']);
+        $user->setUsername($data['email']); // J'utilise l'email comme pseudo par défaut.
+        $user->setPasswordHash(password_hash($data['password'], PASSWORD_DEFAULT));
+        $user->setAccountStatus('active');
+        $user->setSystemRole('ROLE_USER'); // Rôle système de base
+        $user->setFunctionalRole('passenger'); // Rôle fonctionnel par défaut
+        $user->setCreatedAt(date('Y-m-d H:i:s'));
+        $user->setUpdatedAt(date('Y-m-d H:i:s'));
+
+        // 3. J'appelle UserService pour créer l'utilisateur en BDD.
+        $userId = $this->userService->create($user);
+        if (!$userId) {
+            throw new Exception("La création de l'employé a échoué.");
+        }
+        $user->setId($userId);
+
+        // 4. J'assigne le rôle 'ROLE_EMPLOYEE' via UserRoleService.
+        $roleAssigned = $this->userRoleService->assignRoleToUser($userId, 'ROLE_EMPLOYEE');
+        if (!$roleAssigned) {
+            // Idéalement, il faudrait une logique pour annuler la création de l'utilisateur si l'assignation du rôle échoue.
+            throw new Exception("L'assignation du rôle d'employé a échoué.");
+        }
+
+        return $user;
     }
 
     /**
