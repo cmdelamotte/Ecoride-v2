@@ -9,6 +9,7 @@ const upcomingRidesContainer = document.querySelector('#upcoming-rides .rides-li
 const pastRidesContainer = document.querySelector('#past-rides .rides-list-container');
 const allRidesContainer = document.querySelector('#all-rides .rides-list-container');
 const noRidesMessage = document.getElementById('no-rides-message');
+const currentRideHighlightContainer = document.getElementById('current-ride-highlight'); // Nouvelle constante
 
 // Sélecteurs des conteneurs de pagination
 const upcomingPaginationContainer = document.querySelector('#upcoming-rides-pagination');
@@ -295,7 +296,25 @@ const loadUserRides = async (type, page) => {
                 response.rides.forEach(ride => ridesCache.set(ride.ride_id.toString(), ride));
             }
 
-            displayRides(container, response.rides); // Affiche les trajets récupérés.
+            // Filtrer le trajet "ongoing" pour l'afficher séparément
+            let ongoingRide = null;
+            const filteredRides = response.rides.filter(ride => {
+                if (ride.ride_status === 'ongoing' && (ride.driver_id === currentUserId || ride.user_role_in_ride === 'passenger')) {
+                    ongoingRide = ride;
+                    return false; // Exclure le trajet ongoing de la liste principale
+                }
+                return true;
+            });
+            // Afficher le trajet ongoing si trouvé
+            if (ongoingRide) {
+                clearChildren(currentRideHighlightContainer);
+                currentRideHighlightContainer.appendChild(createRideCard(ongoingRide));
+                currentRideHighlightContainer.classList.remove('d-none');
+            } else {
+                currentRideHighlightContainer.classList.add('d-none');
+            }
+
+            displayRides(container, filteredRides); // Affiche les trajets filtrés.
             
             // Met à jour la pagination si une instance est disponible.
             if (paginationInstance) {
