@@ -24,7 +24,7 @@
                 <?php endif; ?>
                 <?php if (in_array('ROLE_ADMIN', $userRoles)):
                 ?>
-                <a class="nav-link" id="nav-admin-dashboard" href="/admin/dashboard">Dashboard Admin</a>
+                <a class="nav-link" id="nav-admin-dashboard" href="/admin-dashboard">Dashboard Admin</a>
                 <?php endif; ?>
                 <a class="nav-link" id="nav-your-rides" href="/your-rides">Covoiturages</a>
                 <?php 
