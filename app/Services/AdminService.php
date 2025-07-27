@@ -143,15 +143,17 @@ class AdminService
 
     /**
      * Je récupère la liste de tous les utilisateurs (sauf les administrateurs).
+     * J'utilise une sous-requête NOT EXISTS pour exclure les utilisateurs ayant le rôle 'ROLE_ADMIN',
+     * ce qui me permet d'inclure les utilisateurs sans rôle spécifique assigné dans UserRoles.
      *
      * @return array La liste des utilisateurs.
      */
     public function getAllUsers(): array
     {
-        // Je sélectionne tous les utilisateurs qui n'ont pas le rôle 'ROLE_ADMIN'.
-        // C'est une mesure de sécurité pour éviter qu'un admin ne se bloque lui-même.
-        $sql = "SELECT u.* FROM users u JOIN UserRoles ur ON u.id = ur.user_id JOIN Roles r ON ur.role_id = r.id WHERE r.name != 'ROLE_ADMIN' ORDER BY u.created_at DESC";
-        return $this->db->fetchAll($sql, [], User::class);
+        $sql = "SELECT u.* FROM users u WHERE NOT EXISTS (SELECT 1 FROM UserRoles ur JOIN Roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name IN ('ROLE_ADMIN', 'ROLE_EMPLOYEE')) ORDER BY u.created_at DESC";
+        $users = $this->db->fetchAll($sql, [], User::class);
+        Logger::info("AdminService::getAllUsers - Fetched users: " . print_r($users, true));
+        return $users;
     }
 
     /**
