@@ -77,5 +77,14 @@ export const apiClient = {
     creditDriver: (reportId) => callApi(`/api/employee-dashboard/reports/${reportId}/credit-driver`, 'POST'),
     contactDriver: (reportId) => callApi(`/api/employee-dashboard/reports/${reportId}/contact-driver`, 'POST'), // Nouvelle méthode
 
+    // Admin Dashboard
+    createEmployee: (data) => callApi('/api/admin/employees', 'POST', data),
+    updateUserStatus: (userId, status) => callApi('/api/admin/users/status', 'POST', { userId, status }),
+    getRideStats: () => callApi('/api/admin/stats/rides'),
+    getCreditStats: () => callApi('/api/admin/stats/credits_daily'),
+    getTotalCreditsEarned: () => callApi('/api/admin/stats/credits_total'),
+    getAllUsers: () => callApi('/api/admin/users'),
+    getAllEmployees: () => callApi('/api/admin/employees'),
+
     // Ajouter d'autres méthodes API ici au fur et à mesure du refactoring
 };
