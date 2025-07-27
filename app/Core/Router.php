@@ -106,8 +106,6 @@ class Router
             // Vérifie les rôles si spécifiés.
             if (isset($foundRoute['roles']) && !empty($foundRoute['roles'])) {
                 $userRoles = $_SESSION['user_roles'] ?? [];
-                error_log("Router: User Roles: " . print_r($userRoles, true));
-                error_log("Router: Required Roles: " . print_r($foundRoute['roles'], true));
                 $authorized = false;
                 foreach ($foundRoute['roles'] as $requiredRole) {
                     if (in_array($requiredRole, $userRoles)) {

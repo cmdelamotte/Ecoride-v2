@@ -97,6 +97,8 @@ class ConfirmationService
                     ':id' => $ride->getId()
                 ]);
                 Logger::info("Ride #{$ride->getId()} status updated to 'completed' as all bookings are finalized.");
+                // J'ajoute le log MongoDB pour le trajet complété
+                $this->mongoLogService->logRideCompletion($ride->getId(), $ride->getDriverId());
             }
 
 
@@ -165,6 +167,8 @@ class ConfirmationService
                     ':id' => $ride->getId()
                 ]);
                 Logger::info("Ride #{$ride->getId()} status updated to 'completed' as all bookings are finalized.");
+                // J'ajoute le log MongoDB pour le trajet complété
+                $this->mongoLogService->logRideCompletion($ride->getId(), $ride->getDriverId());
             }
 
             // PAS de gestion de transaction ici

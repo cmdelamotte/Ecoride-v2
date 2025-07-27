@@ -233,7 +233,7 @@ class MongoLogService
 
             $labels = array_map(fn($item) => $item['_id'], $results);
             $data = array_map(fn($item) => $item['ride_count'], $results);
-
+            
             return ['labels' => $labels, 'data' => $data];
         } catch (\Exception $e) {
             Logger::error("Failed to get completed rides by day from MongoDB: " . $e->getMessage());
