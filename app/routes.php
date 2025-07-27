@@ -359,50 +359,66 @@ return [
     // Routes pour l'administration (AdminController)
     // ---------------------------------------------------------------------
     [
-        'path' => '/admin/dashboard',
-        'http_method' => 'GET', // Affichage du tableau de bord administrateur
+        'path' => '/admin-dashboard',
+        'http_method' => 'GET', // Affichage de la vue du tableau de bord
         'controller' => 'AdminController',
         'method' => 'dashboard',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
     [
-        'path' => '/admin/users',
-        'http_method' => 'GET', // Gestion des utilisateurs par l'administrateur
+        'path' => '/api/admin/employees',
+        'http_method' => 'POST', // API pour créer un employé
         'controller' => 'AdminController',
-        'method' => 'manageUsers',
+        'method' => 'createEmployeeApi',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
     [
-        'path' => '/admin/employees',
-        'http_method' => 'GET', // Gestion des employés par l'administrateur
+        'path' => '/api/admin/users/status',
+        'http_method' => 'POST', // API pour mettre à jour le statut d'un utilisateur
         'controller' => 'AdminController',
-        'method' => 'manageEmployees',
+        'method' => 'updateUserStatusApi',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
     [
-        'path' => '/admin/create-employee',
-        'http_method' => 'GET', // Affichage du formulaire de création d'employé
+        'path' => '/api/admin/stats/rides',
+        'http_method' => 'GET', // API pour les statistiques des trajets
         'controller' => 'AdminController',
-        'method' => 'createEmployeeForm', // Renommé pour clarté
+        'method' => 'getRideStatsApi',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
     [
-        'path' => '/admin/create-employee',
-        'http_method' => 'POST', // Soumission du formulaire de création d'employé
+        'path' => '/api/admin/stats/credits_daily',
+        'http_method' => 'GET', // API pour les statistiques des crédits par jour
         'controller' => 'AdminController',
-        'method' => 'createEmployee',
+        'method' => 'getCreditStatsApi',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
     [
-        'path' => '/admin/update-user-status',
-        'http_method' => 'POST', // Mise à jour du statut d'un utilisateur par l'administrateur
+        'path' => '/api/admin/stats/credits_total',
+        'http_method' => 'GET', // API pour le total des crédits
         'controller' => 'AdminController',
-        'method' => 'updateUserStatus',
+        'method' => 'getTotalCreditsEarnedApi',
+        'auth' => true,
+        'roles' => ['ROLE_ADMIN']
+    ],
+    [
+        'path' => '/api/admin/users',
+        'http_method' => 'GET', // API pour lister tous les utilisateurs
+        'controller' => 'AdminController',
+        'method' => 'getAllUsersApi',
+        'auth' => true,
+        'roles' => ['ROLE_ADMIN']
+    ],
+    [
+        'path' => '/api/admin/employees',
+        'http_method' => 'GET', // API pour lister tous les employés
+        'controller' => 'AdminController',
+        'method' => 'getAllEmployeesApi',
         'auth' => true,
         'roles' => ['ROLE_ADMIN']
     ],
