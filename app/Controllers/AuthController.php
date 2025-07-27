@@ -146,9 +146,6 @@ class AuthController extends Controller
         $data = ['pageTitle' => 'Mot de passe oublié'];
         if ($result['success']) {
             $data['success'] = $result['message'];
-            if (isset($result['debugLink'])) {
-                $data['debugLink'] = $result['debugLink']; // Pour le débogage
-            }
         } else {
             $data['error'] = $result['error'];
         }

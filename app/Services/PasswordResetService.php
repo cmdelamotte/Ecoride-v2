@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Models\User;
 use App\Services\UserService;
+use App\Services\EmailService; // J'ajoute l'import pour EmailService
 
 /**
  * Classe PasswordResetService
@@ -16,6 +17,7 @@ class PasswordResetService
 {
     private UserService $userService;
     private Database $db;
+    private EmailService $emailService; // J'ajoute la propriété pour EmailService
 
     /**
      * Constructeur de la classe PasswordResetService.
@@ -25,6 +27,7 @@ class PasswordResetService
     {
         $this->userService = new UserService();
         $this->db = Database::getInstance();
+        $this->emailService = new EmailService(); // J'initialise EmailService
     }
 
     /**
@@ -59,9 +62,10 @@ class PasswordResetService
             // Construit le lien de réinitialisation qui sera envoyé à l'utilisateur.
             $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/reset-password?token=' . $token;
 
-            // TODO: Implémenter l'envoi réel de l'email ici.
-            // Pour l'instant, le lien est retourné pour faciliter le débogage et les tests.
-            return ['success' => true, 'message' => 'Si votre adresse email est enregistrée, un lien de réinitialisation a été envoyé.', 'debugLink' => $resetLink];
+            // J'envoie l'email de réinitialisation de mot de passe.
+            $this->emailService->sendPasswordResetEmail($user, $resetLink);
+
+            return ['success' => true, 'message' => 'Si votre adresse email est enregistrée, un lien de réinitialisation a été envoyé.'];
         }
 
         // Retourne un message générique pour ne pas donner d'informations sur l'existence de l'email.

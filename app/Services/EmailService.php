@@ -170,4 +170,38 @@ class EmailService
             throw $e;
         }
     }
+
+    /**
+     * Envoie un email de réinitialisation de mot de passe à un utilisateur.
+     *
+     * @param User $user L'objet User de l'utilisateur.
+     * @param string $resetLink Le lien de réinitialisation du mot de passe.
+     * @throws PHPMailerException Si l'envoi de l'email échoue.
+     */
+    public function sendPasswordResetEmail(User $user, string $resetLink): void
+    {
+        try {
+            $this->mailer->clearAllRecipients();
+            $this->mailer->addAddress($user->getEmail(), $user->getFirstName() . ' ' . $user->getLastName());
+            $this->mailer->Subject = 'Réinitialisation de votre mot de passe EcoRide';
+            $this->mailer->isHTML(true);
+
+            $body = "<p>Bonjour {$user->getFirstName()},</p>";
+            $body .= "<p>Vous avez demandé à réinitialiser votre mot de passe pour votre compte EcoRide.</p>";
+            $body .= "<p>Veuillez cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>";
+            $body .= "<p><a href=\"{$resetLink}\" style=\"background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Réinitialiser mon mot de passe</a></p>";
+            $body .= "<p>Ce lien expirera dans 3 heures.</p>";
+            $body .= "<p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>";
+            $body .= "<p>L'équipe EcoRide</p>";
+
+            $this->mailer->Body = $body;
+            $this->mailer->AltBody = strip_tags($body); // Version texte
+
+            $this->mailer->send();
+            Logger::info("Email de réinitialisation de mot de passe envoyé à l'utilisateur #{$user->getId()}.");
+        } catch (PHPMailerException $e) {
+            Logger::error("Erreur lors de l'envoi de l'email de réinitialisation de mot de passe à l'utilisateur #{$user->getId()}: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
