@@ -133,6 +133,21 @@ const createRideCard = (ride) => {
         }
         rideActionsContainer.appendChild(reviewButton);
     }
+    // Ajouter le pseudo du chauffeur en haut de la carte
+    const cardHeader = card.querySelector('.card-header');
+    const rideIdSpan = card.querySelector('.ride-id');
+    if (cardHeader && rideIdSpan) {
+        let driverInfoText = '';
+        if (ride.driver_id === currentUserId) {
+            driverInfoText = 'Vous êtes le chauffeur';
+        } else {
+            driverInfoText = `Chauffeur: ${ride.driver_username}`;
+        }
+       if (driverInfoText) { // N'ajoute le span que si il y a du texte à afficher
+            const driverInfoSpan = createElement('span', ['form-label'], {}, driverInfoText);
+            cardHeader.insertBefore(driverInfoSpan, rideIdSpan);
+        }
+    }
 
     return card;
 };
