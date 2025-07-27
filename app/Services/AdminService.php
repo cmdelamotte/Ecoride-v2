@@ -6,7 +6,8 @@ use App\Core\Database;
 use App\Models\User;
 use App\Services\UserService;
 use App\Services\UserRoleService;
-use App\Services\MongoLogService; // J'ajoute la dépendance
+use App\Services\MongoLogService;
+use App\Core\Logger;
 use Exception;
 
 /**
@@ -162,6 +163,8 @@ class AdminService
     {
         // Je sélectionne les utilisateurs ayant spécifiquement le rôle 'ROLE_EMPLOYEE'.
         $sql = "SELECT u.* FROM users u JOIN UserRoles ur ON u.id = ur.user_id JOIN Roles r ON ur.role_id = r.id WHERE r.name = 'ROLE_EMPLOYEE' ORDER BY u.created_at DESC";
-        return $this->db->fetchAll($sql, [], User::class);
+        $employees = $this->db->fetchAll($sql, [], User::class);
+        Logger::info("AdminService::getAllEmployees - Fetched employees: " . print_r($employees, true));
+        return $employees;
     }
 }

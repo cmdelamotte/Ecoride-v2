@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\AdminService;
+use App\Helpers\UserHelper; // J'ajoute l'import du UserHelper
 use Exception;
 
 /**
@@ -39,7 +40,8 @@ class AdminController extends Controller
         try {
             $data = json_decode(file_get_contents('php://input'), true);
             $employee = $this->adminService->createEmployee($data);
-            $this->jsonResponse($employee, 201); // 201 Created
+            // Je formate l'objet User avant de l'envoyer en JSON.
+            $this->jsonResponse(UserHelper::formatUserForDisplay($employee), 201); // 201 Created
         } catch (Exception $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 400); // 400 Bad Request
         }
@@ -96,7 +98,8 @@ class AdminController extends Controller
     public function getAllUsersApi()
     {
         $users = $this->adminService->getAllUsers();
-        $this->jsonResponse($users);
+        // Je formate la collection d'objets User avant de l'envoyer en JSON.
+        $this->jsonResponse(UserHelper::formatCollectionForDisplay($users));
     }
 
     /**
@@ -105,6 +108,7 @@ class AdminController extends Controller
     public function getAllEmployeesApi()
     {
         $employees = $this->adminService->getAllEmployees();
-        $this->jsonResponse($employees);
+        // Je formate la collection d'objets User avant de l'envoyer en JSON.
+        $this->jsonResponse(UserHelper::formatCollectionForDisplay($employees));
     }
 }

@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clone.querySelector('[data-label="ID_Utilisateur"]').textContent = user.id;
             clone.querySelector('[data-label="Pseudo"]').textContent = user.username;
             clone.querySelector('[data-label="Email"]').textContent = user.email;
-            clone.querySelector('[data-label="Crédits"]').textContent = user.credits.toFixed(2);
+            clone.querySelector('[data-label="Crédits"]').textContent = (user.credits ?? 0).toFixed(2);
 
             const statusBadge = clone.querySelector('[data-label="Statut"] > span');
             statusBadge.textContent = user.account_status;
