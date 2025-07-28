@@ -1,13 +1,13 @@
 -- Données pour `Roles` table
 -- On spécifie les ID pour pouvoir facilement y faire référence pour les tests
 -- AUTO_INCREMENT commencera après ces valeurs en cas d'ajout d'autres rôles.
-INSERT INTO `Roles` (`id`, `name`) VALUES
+INSERT INTO `roles` (`id`, `name`) VALUES
 (1, 'ROLE_USER'),    -- Pour les clients (passagers/chauffeurs)
 (2, 'ROLE_EMPLOYEE'), -- Pour les employés de la plateforme
 (3, 'ROLE_ADMIN');    -- Pour les administrateurs
 
 -- Données pour `Brands` table
-INSERT INTO `Brands` (`id`, `name`) VALUES
+INSERT INTO `brands` (`id`, `name`) VALUES
 (1, 'Peugeot'),
 (2, 'Renault'),
 (3, 'Citroën'),
@@ -26,31 +26,31 @@ INSERT INTO `Brands` (`id`, `name`) VALUES
 
 -- Données pour `Users` table
 -- User 1: Admin
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('Admin', 'EcoRide', 'admin_ecoride', 'admin@ecoride.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0102030401', '1980-01-01', NULL, '1 Admin Street, Rennes', 100.00, 'active', FALSE, FALSE, NULL, 'passenger');
 
 -- User 2: Employee
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('Employee', 'EcoRide', 'employee_ecoride', 'employee@ecoride.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0102030402', '1990-02-15', NULL, '2 Staff Avenue, Rennes', 50.00, 'active', FALSE, FALSE, NULL, 'passenger');
 
 -- User 3: Client - Chauffeur-Passager (mot de passe 'password123')
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('Alice', 'Martin', 'alice_driver_passenger', 'alice.martin@email.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0611223344', '1992-07-20', NULL , '10 Rue du Covoiturage, Lyon', 75.50, 'active', FALSE, TRUE, 'Musique pop bienvenue, discussions moderees.', 'passenger_driver');
 
 -- User 4: Client - Passager uniquement (mot de passe 'password123')
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('Bob', 'Dupont', 'bob_passenger', 'bob.dupont@email.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0655667788', '1988-11-05', NULL, '25 Boulevard des Voyageurs, Paris', 20.00, 'active', FALSE, FALSE, NULL, 'passenger');
 
 -- User 5: Client - Chauffeur uniquement (mot de passe 'password123')
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('Carole', 'Petit', 'carole_driver', 'carole.petit@email.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0712345678', '1995-04-30', NULL, '5 Avenue de la Route, Marseille', 150.00, 'active', TRUE, FALSE, 'Animaux non admis. Prefere le silence ou musique classique.', 'driver');
@@ -58,40 +58,40 @@ VALUES
 -- Données pour `UserRoles` table
 -- Assignation des rôles aux users créés au dessus.
 -- User 1 (admin_ecoride) gets ONLY ROLE_ADMIN
-INSERT INTO `UserRoles` (`user_id`, `role_id`) VALUES
+INSERT INTO `userroles` (`user_id`, `role_id`) VALUES
 (1, 3); -- admin_ecoride is ROLE_ADMIN
 
 -- User 2 (employee_ecoride) gets ONLY ROLE_EMPLOYEE
-INSERT INTO `UserRoles` (`user_id`, `role_id`) VALUES
+INSERT INTO `userroles` (`user_id`, `role_id`) VALUES
 (2, 2); -- employee_ecoride is ROLE_EMPLOYEE
 
 -- User 3 (alice_driver_passenger) is a client -> ROLE_USER
-INSERT INTO `UserRoles` (`user_id`, `role_id`) VALUES
+INSERT INTO `userroles` (`user_id`, `role_id`) VALUES
 (3, 1);
 
 -- User 4 (bob_passenger) is a client -> ROLE_USER
-INSERT INTO `UserRoles` (`user_id`, `role_id`) VALUES
+INSERT INTO `userroles` (`user_id`, `role_id`) VALUES
 (4, 1);
 
 -- User 5 (carole_driver) is a client -> ROLE_USER
-INSERT INTO `UserRoles` (`user_id`, `role_id`) VALUES
+INSERT INTO `userroles` (`user_id`, `role_id`) VALUES
 (5, 1);
 
 -- Données pour `Vehicles` table
 -- Véhicule pour Alice (user_id 3), Peugeot 208, not electric
-INSERT INTO `Vehicles` 
+INSERT INTO `vehicles` 
 (`user_id`, `brand_id`, `model_name`, `color`, `license_plate`, `registration_date`, `passenger_capacity`, `is_electric`, `energy_type`) 
 VALUES
 (3, 1, '208', 'Blue', 'AA-123-BB', '2019-03-15', 4, FALSE, 'Gasoline');
 
 -- Véhicule pour Carole (user_id 5), Tesla Model 3, electric
-INSERT INTO `Vehicles` 
+INSERT INTO `vehicles` 
 (`user_id`, `brand_id`, `model_name`, `color`, `license_plate`, `registration_date`, `passenger_capacity`, `is_electric`, `energy_type`) 
 VALUES
 (5, 5, 'Model 3', 'Red', 'CC-789-DD', '2021-07-01', 4, TRUE, 'Electric');
 
 -- Second véhicule pour Alice, Renault Clio
-INSERT INTO `Vehicles` 
+INSERT INTO `vehicles` 
 (`user_id`, `brand_id`, `model_name`, `color`, `license_plate`, `registration_date`, `passenger_capacity`, `is_electric`, `energy_type`) 
 VALUES
 (3, 2, 'Clio V', 'White', 'EE-456-FF', '2020-11-01', 4, FALSE, 'Gasoline');
@@ -99,7 +99,7 @@ VALUES
 -- Données pour `Rides` table
 
 -- Ride 1: Proposé par Alice (user_id 3) avec sa Peugeot 208
-INSERT INTO `Rides` 
+INSERT INTO `rides` 
 (`driver_id`, `vehicle_id`, `departure_city`, `arrival_city`, `departure_address`, `arrival_address`, `departure_time`, `estimated_arrival_time`, `price_per_seat`, `seats_offered`, `ride_status`, `driver_message`, `is_eco_ride`)
 VALUES
 (
@@ -122,7 +122,7 @@ VALUES
 );
 
 -- Ride 2: Proposé par Carole (user_id 5) avec sa Tesla Model 3
-INSERT INTO `Rides` 
+INSERT INTO `rides` 
 (`driver_id`, `vehicle_id`, `departure_city`, `arrival_city`, `departure_address`, `arrival_address`, `departure_time`, `estimated_arrival_time`, `price_per_seat`, `seats_offered`, `ride_status`, `driver_message`, `is_eco_ride`)
 VALUES
 (
@@ -142,7 +142,7 @@ VALUES
 );
 
 -- Ride 3: Proposé par Alice (user_id 3) with avec sa Renault Clio
-INSERT INTO `Rides` 
+INSERT INTO `rides` 
 (`driver_id`, `vehicle_id`, `departure_city`, `arrival_city`, `departure_address`, `arrival_address`, `departure_time`, `estimated_arrival_time`, `price_per_seat`, `seats_offered`, `ride_status`, `driver_message`, `is_eco_ride`)
 VALUES
 (
@@ -162,7 +162,7 @@ VALUES
 );
 
 -- Ride 4: Trajet terminé proposé par Carole (user_id 5) pour test d'historique/avis
-INSERT INTO `Rides`
+INSERT INTO `rides`
 (`driver_id`, `vehicle_id`, `departure_city`, `arrival_city`, `departure_address`, `arrival_address`, `departure_time`, `estimated_arrival_time`, `price_per_seat`, `seats_offered`, `ride_status`, `driver_message`, `is_eco_ride`)
 VALUES
 (
@@ -183,7 +183,7 @@ VALUES
 
 -- Données pour `Bookings` table
 -- Booking 1: Bob (user_id 4) books Alice's ride (ride_id 1, Lyon -> Paris)
-INSERT INTO `Bookings` 
+INSERT INTO `bookings` 
 (`user_id`, `ride_id`, `seats_booked`, `booking_status`, `booking_date`)
 VALUES
 (
@@ -196,7 +196,7 @@ VALUES
 
 -- Booking 2: Alice (user_id 3) books Carole's ride (ride_id 2, Marseille -> Nice)
 -- (Alice est passenger_driver, donc elle peut aussi réserver des trajets)
-INSERT INTO `Bookings` 
+INSERT INTO `bookings` 
 (`user_id`, `ride_id`, `seats_booked`, `booking_status`, `booking_date`)
 VALUES
 (
@@ -209,7 +209,7 @@ VALUES
 
 -- Booking 3: Bob (user_id 4) booked Carole's past ride (ride_id 4, Bordeaux -> Toulouse)
 -- Pour tester le dépôt d'avis.
-INSERT INTO `Bookings`
+INSERT INTO `bookings`
 (`user_id`, `ride_id`, `seats_booked`, `booking_status`, `booking_date`)
 VALUES
 (
@@ -225,7 +225,7 @@ VALUES
 -- Ce trajet est nécessaire pour les exemples d'avis et de signalements ci-dessous.
 -- Assurez-vous que l'ID de ce trajet (qui sera probablement 5) est utilisé correctement ensuite.
 -- -----------------------------------------------------
-INSERT INTO `Rides` 
+INSERT INTO `rides` 
 (`driver_id`, `vehicle_id`, `departure_city`, `arrival_city`, `departure_address`, `arrival_address`, `departure_time`, `estimated_arrival_time`, `price_per_seat`, `seats_offered`, `ride_status`, `driver_message`, `is_eco_ride`)
 VALUES
 (
@@ -248,7 +248,7 @@ VALUES
 -- Données pour la table `Bookings` (ajout d'une réservation pour le trajet ci-dessus)
 -- Bob réserve le trajet Lyon-Grenoble d'Alice.
 -- -----------------------------------------------------
-INSERT INTO `Bookings` 
+INSERT INTO `bookings` 
 (`user_id`, `ride_id`, `seats_booked`, `booking_status`, `booking_date`)
 VALUES
 (
@@ -265,7 +265,7 @@ VALUES
 
 -- Avis 1: Bob (ID 4) évalue Carole (ID 5) pour le trajet Bordeaux-Toulouse (ID 4)
 -- Statut: en attente de validation
-INSERT INTO `Reviews` 
+INSERT INTO `reviews` 
 (`ride_id`, `author_id`, `driver_id`, `rating`, `comment`, `review_status`, `submission_date`)
 VALUES
 (
@@ -281,9 +281,9 @@ VALUES
 -- Avis 2: Alice (ID 3) évalue Carole (ID 5) pour le trajet Bordeaux-Toulouse (ID 4)
 -- Statut: approuvé
 -- (Nécessite une réservation d'Alice pour ce trajet. Si non faite, ajoutez :
--- INSERT INTO `Bookings` (`user_id`, `ride_id`, `booking_date`) VALUES (3, 4, TIMESTAMPADD(DAY, -11, CURDATE()));
+-- INSERT INTO `bookings` (`user_id`, `ride_id`, `booking_date`) VALUES (3, 4, TIMESTAMPADD(DAY, -11, CURDATE()));
 -- )
-INSERT INTO `Reviews` 
+INSERT INTO `reviews` 
 (`ride_id`, `author_id`, `driver_id`, `rating`, `comment`, `review_status`, `submission_date`)
 VALUES
 (
@@ -298,7 +298,7 @@ VALUES
 
 -- Avis 3: Bob (ID 4) évalue Alice (ID 3) pour le trajet Lyon-Grenoble (ID 5)
 -- Statut: rejeté
-INSERT INTO `Reviews` 
+INSERT INTO `reviews` 
 (`ride_id`, `author_id`, `driver_id`, `rating`, `comment`, `review_status`, `submission_date`)
 VALUES
 (
@@ -316,7 +316,7 @@ VALUES
 -- -----------------------------------------------------
 
 -- Signalement 1: Bob (ID 4) signale Alice (ID 3) pour le trajet Lyon-Grenoble (ID 5)
-INSERT INTO `Reports`
+INSERT INTO `reports`
 (`ride_id`, `reporter_id`, `reported_driver_id`, `reason`, `report_status`, `submission_date`)
 VALUES
 (
@@ -332,7 +332,7 @@ VALUES
 -- Création de User pour tester la suppression
 -- -----------------------------------------------------
 
-INSERT INTO `Users` 
+INSERT INTO `users` 
 (`first_name`, `last_name`, `username`, `email`, `password_hash`, `phone_number`, `birth_date`, `profile_picture_path`, `address`, `credits`, `account_status`, `driver_pref_smoker`, `driver_pref_animals`, `driver_pref_custom`, `functional_role`) 
 VALUES
 ('ToDelete', 'UserOne', 'todelete_user1', 'todelete1@example.com', '$2y$10$6BFo8Wiveqnj9iMG/GzNP.MxSw2PHy9Y/17cjxqYJm4ohhg2Q1TnO', '0600000015', '2000-01-01', NULL, NULL, 0.00, 'active', FALSE, FALSE, NULL, 'passenger');
