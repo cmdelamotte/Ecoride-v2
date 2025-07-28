@@ -1,7 +1,7 @@
 -- -----------------------------------------------------
 -- Table `Roles`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Roles` (
+CREATE TABLE IF NOT EXISTS `roles` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(50) NOT NULL UNIQUE -- Ex: 'ROLE_USER', 'ROLE_EMPLOYEE', 'ROLE_ADMIN'
 ) ENGINE = InnoDB;
