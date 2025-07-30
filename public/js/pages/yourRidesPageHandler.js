@@ -164,6 +164,7 @@ const createRideCard = (ride) => {
             contactPassengersInfo.classList.remove('d-none');
             ride.passengers_details.forEach(passenger => {
                 const li = createElement('li', [], {}, '');
+                // Utilisation de innerHTML temporaire, à modifier pour la mise en prod
                 li.innerHTML = `
                     <strong>${passenger.username}</strong> (${passenger.seats_booked} place(s))<br>
                     <i class="bi bi-telephone-fill me-2"></i> <a href="tel:${passenger.phone_number}">${passenger.phone_number}</a><br>
@@ -178,6 +179,7 @@ const createRideCard = (ride) => {
             contactDriverInfo.classList.remove('d-none');
             driverPhoneLink.href = `tel:${ride.driver_phone}`;
             driverPhoneLink.textContent = ride.driver_phone;
+            // Utilisation de innerHTML temporaire, à modifier pour la mise en prod
             driverEmailText.innerHTML = `<a href="mailto:${ride.driver_email}">Envoyer un email</a>`;
         }
     }
