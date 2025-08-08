@@ -56,8 +56,8 @@ class ModerationService
                     ud.id as driver_id, ud.username as driver_username, ud.email as driver_email,
                     ri.departure_city, ri.arrival_city, ri.departure_time
                 FROM reviews r
-                JOIN Users ua ON r.author_id = ua.id
-                JOIN Users ud ON r.driver_id = ud.id
+                JOIN users ua ON r.author_id = ua.id
+                JOIN users ud ON r.driver_id = ud.id
                 JOIN rides ri ON r.ride_id = ri.id
                 WHERE r.review_status = 'pending_approval'
                 ORDER BY r.created_at DESC
@@ -101,8 +101,8 @@ class ModerationService
                     rd.username as reported_driver_username, rd.email as reported_driver_email,
                     ri.departure_city, ri.arrival_city, ri.departure_time
                 FROM reports rep
-                JOIN Users r ON rep.reporter_id = r.id
-                JOIN Users rd ON rep.reported_driver_id = rd.id
+                JOIN users r ON rep.reporter_id = r.id
+                JOIN users rd ON rep.reported_driver_id = rd.id
                 JOIN rides ri ON rep.ride_id = ri.id
                 WHERE rep.report_status IN ('new', 'under_investigation')
                 ORDER BY rep.created_at DESC
