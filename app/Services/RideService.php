@@ -88,7 +88,7 @@ class RideService
             ->setRideStatus('planned'); // Statut par défaut
 
         // 4. Insérer en base de données
-        $sql = "INSERT INTO Rides (driver_id, vehicle_id, departure_city, arrival_city, departure_address, arrival_address, departure_time, estimated_arrival_time, price_per_seat, seats_offered, driver_message, ride_status) VALUES (:driver_id, :vehicle_id, :departure_city, :arrival_city, :departure_address, :arrival_address, :departure_time, :estimated_arrival_time, :price_per_seat, :seats_offered, :driver_message, :ride_status)";
+        $sql = "INSERT INTO rides (driver_id, vehicle_id, departure_city, arrival_city, departure_address, arrival_address, departure_time, estimated_arrival_time, price_per_seat, seats_offered, driver_message, ride_status) VALUES (:driver_id, :vehicle_id, :departure_city, :arrival_city, :departure_address, :arrival_address, :departure_time, :estimated_arrival_time, :price_per_seat, :seats_offered, :driver_message, :ride_status)";
         
         $params = [
             ':driver_id' => $ride->getDriverId(),
@@ -126,7 +126,7 @@ class RideService
         // J'utilise notre nouvelle méthode fetchOne pour obtenir un objet Ride directement.
         /** @var Ride|null $ride */
         $ride = $this->db->fetchOne(
-            "SELECT * FROM Rides WHERE id = :id",
+            "SELECT * FROM rides WHERE id = :id",
             ['id' => $rideId],
             Ride::class
         );
@@ -138,7 +138,7 @@ class RideService
         // Calculer le nombre total de sièges réservés pour ce trajet
         $totalSeatsBooked = 0;
         $bookings = $this->db->fetchAll(
-            "SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status IN ('confirmed', 'cancelled_by_passenger', 'confirmed_and_credited', 'reported_by_passenger')",['ride_id' => $rideId],
+            "SELECT * FROM bookings WHERE ride_id = :ride_id AND booking_status IN ('confirmed', 'cancelled_by_passenger', 'confirmed_and_credited', 'reported_by_passenger')",['ride_id' => $rideId],
             \App\Models\Booking::class
 );
 
@@ -199,12 +199,12 @@ class RideService
         $count = 0;
 
         // Requêtes pour les trajets où l'utilisateur est conducteur
-        $driverUpcomingQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing')";
-        $driverPastQuery = "SELECT COUNT(id) FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR)))";
+        $driverUpcomingQuery = "SELECT COUNT(id) FROM rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing')";
+        $driverPastQuery = "SELECT COUNT(id) FROM rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         // Requêtes pour les trajets où l'utilisateur est passager
-        $passengerUpcomingQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing')";
-        $passengerPastQuery = "SELECT COUNT(r.id) FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR)))";
+        $passengerUpcomingQuery = "SELECT COUNT(r.id) FROM rides r JOIN bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing')";
+        $passengerPastQuery = "SELECT COUNT(r.id) FROM rides r JOIN bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR)))";
 
         if ($type === 'all' || $type === 'upcoming') {
             $driverUpcomingCount = $this->db->fetchColumn($driverUpcomingQuery, ['user_id' => $userId]);
@@ -236,10 +236,10 @@ class RideService
         $params = [':user_id' => $userId];
 
         // Requêtes de base sans LIMIT/OFFSET pour le type 'all'
-        $driverUpcomingQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
-        $driverPastQueryBase = "SELECT * FROM Rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
-        $passengerUpcomingQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
-        $passengerPastQueryBase = "SELECT r.* FROM Rides r JOIN Bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
+        $driverUpcomingQueryBase = "SELECT * FROM rides WHERE driver_id = :user_id AND ((ride_status = 'planned' AND departure_time >= (NOW() - INTERVAL 24 HOUR)) OR ride_status = 'ongoing') ORDER BY departure_time ASC";
+        $driverPastQueryBase = "SELECT * FROM rides WHERE driver_id = :user_id AND (ride_status = 'completed' OR ride_status = 'cancelled_driver' OR ride_status = 'completed_pending_confirmation' OR (ride_status = 'planned' AND departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY departure_time DESC";
+        $passengerUpcomingQueryBase = "SELECT r.* FROM rides r JOIN bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND ((r.ride_status = 'planned' AND r.departure_time >= (NOW() - INTERVAL 24 HOUR)) OR r.ride_status = 'ongoing') ORDER BY r.departure_time ASC";
+        $passengerPastQueryBase = "SELECT r.* FROM rides r JOIN bookings b ON r.id = b.ride_id WHERE b.user_id = :user_id AND b.booking_status IN ('confirmed', 'confirmed_pending_passenger_confirmation', 'confirmed_and_credited') AND (r.ride_status = 'completed' OR r.ride_status = 'cancelled_driver' OR r.ride_status = 'completed_pending_confirmation' OR (r.ride_status = 'planned' AND r.departure_time < (NOW() - INTERVAL 24 HOUR))) ORDER BY r.departure_time DESC";
 
         if ($type === 'all') {
             // Pour 'all', récupérer tous les trajets sans pagination SQL, puis paginer en PHP

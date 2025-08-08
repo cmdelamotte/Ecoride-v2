@@ -34,7 +34,7 @@ class VehicleService
     public function findById(int $vehicleId): ?Vehicle
     {
         return $this->db->fetchOne(
-            "SELECT * FROM Vehicles WHERE id = :id",
+            "SELECT * FROM vehicles WHERE id = :id",
             ['id' => $vehicleId],
             Vehicle::class
         );
@@ -73,7 +73,7 @@ class VehicleService
     {
         // D'abord, je récupère tous les objets Vehicle de base pour cet utilisateur.
         $vehicles = $this->db->fetchAll(
-            "SELECT * FROM Vehicles WHERE user_id = :user_id ORDER BY updated_at DESC",
+            "SELECT * FROM vehicles WHERE user_id = :user_id ORDER BY updated_at DESC",
             ['user_id' => $userId],
             Vehicle::class
         );
