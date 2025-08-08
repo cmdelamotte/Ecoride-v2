@@ -58,7 +58,7 @@ class ModerationService
                 FROM reviews r
                 JOIN Users ua ON r.author_id = ua.id
                 JOIN Users ud ON r.driver_id = ud.id
-                JOIN Rides ri ON r.ride_id = ri.id
+                JOIN rides ri ON r.ride_id = ri.id
                 WHERE r.review_status = 'pending_approval'
                 ORDER BY r.created_at DESC
                 LIMIT :limit OFFSET :offset";
@@ -103,7 +103,7 @@ class ModerationService
                 FROM reports rep
                 JOIN Users r ON rep.reporter_id = r.id
                 JOIN Users rd ON rep.reported_driver_id = rd.id
-                JOIN Rides ri ON rep.ride_id = ri.id
+                JOIN rides ri ON rep.ride_id = ri.id
                 WHERE rep.report_status IN ('new', 'under_investigation')
                 ORDER BY rep.created_at DESC
                 LIMIT :limit OFFSET :offset";
@@ -200,7 +200,7 @@ class ModerationService
             // Trouver la réservation associée au signalement
             // Un signalement est lié à un ride_id et un reporter_id (qui est le passager)
             $bookingData = $this->db->fetchOne(
-                "SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id FOR UPDATE",
+                "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id FOR UPDATE",
                 [
                     ':ride_id' => $report->getRideId(),
                     ':user_id' => $report->getReporterId()
@@ -217,7 +217,7 @@ class ModerationService
 
             // Récupérer l'objet Ride pour obtenir le driver_id pour le log
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id", ['id' => $booking->getRideId()], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id", ['id' => $booking->getRideId()], Ride::class);
             if (!$ride) {
                 throw new Exception("Trajet associé à la réservation #{$booking->getId()} introuvable.");
             }

@@ -123,7 +123,7 @@ class SearchFilterService
 
         try {
             // 3. Compter le nombre total de résultats pour la pagination
-            $countSql = "SELECT COUNT(DISTINCT r.id) FROM Rides r
+            $countSql = "SELECT COUNT(DISTINCT r.id) FROM rides r
                 JOIN users u ON r.driver_id = u.id
                 JOIN vehicles v ON r.vehicle_id = v.id
                 LEFT JOIN bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
