@@ -49,7 +49,7 @@ class ReportService
 
         // 2. Vérifier si un signalement similaire existe déjà
         $existingReport = $this->db->fetchOne(
-            "SELECT id FROM Reports WHERE reporter_id = :reporter_id AND ride_id = :ride_id AND reported_driver_id = :reported_driver_id AND report_status IN ('new', 'under_investigation')",
+            "SELECT id FROM reports WHERE reporter_id = :reporter_id AND ride_id = :ride_id AND reported_driver_id = :reported_driver_id AND report_status IN ('new', 'under_investigation')",
             [
                 ':reporter_id' => $data['reporter_id'],
                 ':ride_id' => $data['ride_id'],
@@ -70,7 +70,7 @@ class ReportService
                ->setReportStatus('new'); // Statut par défaut: 'new'
 
         // 4. Insérer en base de données
-        $sql = "INSERT INTO Reports (reporter_id, reported_driver_id, ride_id, reason, report_status) VALUES (:reporter_id, :reported_driver_id, :ride_id, :reason, :report_status)";
+        $sql = "INSERT INTO reports (reporter_id, reported_driver_id, ride_id, reason, report_status) VALUES (:reporter_id, :reported_driver_id, :ride_id, :reason, :report_status)";
         
         $params = [
             ':reporter_id' => $report->getReporterId(),

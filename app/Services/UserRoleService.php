@@ -76,8 +76,8 @@ class UserRoleService
             return true; // Je considère que c'est un succès si le rôle est déjà assigné.
         }
 
-        // J'insère l'association dans la table UserRoles.
-        $sql = "INSERT INTO UserRoles (user_id, role_id) VALUES (:user_id, :role_id)";
+        // J'insère l'association dans la table Userroles.
+        $sql = "INSERT INTO userroles (user_id, role_id) VALUES (:user_id, :role_id)";
         $params = [
             ':user_id' => $userId,
             ':role_id' => $roleId
@@ -101,7 +101,7 @@ class UserRoleService
      */
     private function getRoleIdByName(string $roleName): ?int
     {
-        $sql = "SELECT id FROM Roles WHERE name = :name";
+        $sql = "SELECT id FROM roles WHERE name = :name";
         $params = [':name' => $roleName];
         $result = $this->db->fetchOne($sql, $params);
         return $result ? (int)$result->id : null;
@@ -116,7 +116,7 @@ class UserRoleService
      */
     private function userHasRole(int $userId, int $roleId): bool
     {
-        $sql = "SELECT COUNT(*) FROM UserRoles WHERE user_id = :user_id AND role_id = :role_id";
+        $sql = "SELECT COUNT(*) FROM userroles WHERE user_id = :user_id AND role_id = :role_id";
         $params = [':user_id' => $userId, ':role_id' => $roleId];
         return $this->db->fetchColumn($sql, $params) > 0;
     }

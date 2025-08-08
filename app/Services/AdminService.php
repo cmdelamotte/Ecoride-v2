@@ -144,13 +144,13 @@ class AdminService
     /**
      * Je récupère la liste de tous les utilisateurs (sauf les administrateurs).
      * J'utilise une sous-requête NOT EXISTS pour exclure les utilisateurs ayant le rôle 'ROLE_ADMIN',
-     * ce qui me permet d'inclure les utilisateurs sans rôle spécifique assigné dans UserRoles.
+     * ce qui me permet d'inclure les utilisateurs sans rôle spécifique assigné dans Userroles.
      *
      * @return array La liste des utilisateurs.
      */
     public function getAllUsers(): array
     {
-        $sql = "SELECT u.* FROM users u WHERE NOT EXISTS (SELECT 1 FROM UserRoles ur JOIN Roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name IN ('ROLE_ADMIN', 'ROLE_EMPLOYEE')) ORDER BY u.created_at DESC";
+        $sql = "SELECT u.* FROM users u WHERE NOT EXISTS (SELECT 1 FROM userroles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name IN ('ROLE_ADMIN', 'ROLE_EMPLOYEE')) ORDER BY u.created_at DESC";
         $users = $this->db->fetchAll($sql, [], User::class);
         return $users;
     }
@@ -163,7 +163,7 @@ class AdminService
     public function getAllEmployees(): array
     {
         // Je sélectionne les utilisateurs ayant spécifiquement le rôle 'ROLE_EMPLOYEE'.
-        $sql = "SELECT u.* FROM users u JOIN UserRoles ur ON u.id = ur.user_id JOIN Roles r ON ur.role_id = r.id WHERE r.name = 'ROLE_EMPLOYEE' ORDER BY u.created_at DESC";
+        $sql = "SELECT u.* FROM users u JOIN userroles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id WHERE r.name = 'ROLE_EMPLOYEE' ORDER BY u.created_at DESC";
         $employees = $this->db->fetchAll($sql, [], User::class);
         return $employees;
     }

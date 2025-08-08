@@ -71,11 +71,11 @@ class ConfirmationService
             }
 
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
             /** @var User $driver */
-            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
+            $driver = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
             /** @var User $passenger */
-            $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
+            $passenger = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
 
             if (!$ride || !$driver || !$passenger) {
                 throw new Exception("Données associées au trajet ou aux utilisateurs introuvables.");
@@ -85,14 +85,14 @@ class ConfirmationService
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, $now);
 
             // Vérifier si toutes les réservations pour ce trajet sont finalisées
-            $pendingBookingsCount = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
+            $pendingbookingsCount = $this->db->fetchColumn(
+                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
                 [':ride_id' => $ride->getId()]
             );
 
-            if ($pendingBookingsCount === 0) {
+            if ($pendingbookingsCount === 0) {
                 // Si toutes les réservations sont finalisées, marquer le trajet comme 'completed'
-                $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                $this->db->execute("UPDATE rides SET ride_status = :ride_status WHERE id = :id", [
                     ':ride_status' => 'completed',
                     ':id' => $ride->getId()
                 ]);
@@ -136,17 +136,17 @@ class ConfirmationService
             // }
 
             /** @var Booking $booking */
-            $booking = $this->db->fetchOne("SELECT * FROM Bookings WHERE id = :id FOR UPDATE", ['id' => $bookingId], Booking::class);
+            $booking = $this->db->fetchOne("SELECT * FROM bookings WHERE id = :id FOR UPDATE", ['id' => $bookingId], Booking::class);
             if (!$booking) {
                 throw new Exception("Réservation #{$bookingId} introuvable.");
             }
 
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $booking->getRideId()], Ride::class);
             /** @var User $driver */
-            $driver = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
+            $driver = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $ride->getDriverId()], User::class);
             /** @var User $passenger */
-            $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
+            $passenger = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
 
             if (!$ride || !$driver || !$passenger) {
                 throw new Exception("Données associées au trajet ou aux utilisateurs introuvables pour la réservation #{$bookingId}.");
@@ -155,14 +155,14 @@ class ConfirmationService
             $this->_processCreditTransfer($booking, $ride, $driver, $passenger, new \DateTime());
 
             // Vérifier si toutes les réservations pour ce trajet sont finalisées
-            $pendingBookingsCount = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
+            $pendingbookingsCount = $this->db->fetchColumn(
+                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND booking_status NOT IN ('confirmed_and_credited', 'cancelled_by_passenger', 'reported_by_passenger')",
                 [':ride_id' => $ride->getId()]
             );
 
-            if ($pendingBookingsCount === 0) {
+            if ($pendingbookingsCount === 0) {
                 // Si toutes les réservations sont finalisées, marquer le trajet comme 'completed'
-                $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+                $this->db->execute("UPDATE rides SET ride_status = :ride_status WHERE id = :id", [
                     ':ride_status' => 'completed',
                     ':id' => $ride->getId()
                 ]);
@@ -207,20 +207,20 @@ class ConfirmationService
 
         // Transférer les crédits au conducteur
         $newDriverCredits = $driver->getCredits() + $netAmount;
-        $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", [
+        $this->db->execute("UPDATE users SET credits = :credits WHERE id = :id", [
             'credits' => $newDriverCredits,
             'id' => $driver->getId()
         ]);
 
         // Mettre à jour le total des crédits nets gagnés pour le trajet
         $newTotalNetCreditsEarned = $ride->getTotalNetCreditsEarned() + $netAmount;
-        $this->db->execute("UPDATE Rides SET total_net_credits_earned = :total_net_credits_earned WHERE id = :id", [
+        $this->db->execute("UPDATE rides SET total_net_credits_earned = :total_net_credits_earned WHERE id = :id", [
             'total_net_credits_earned' => $newTotalNetCreditsEarned,
             'id' => $ride->getId()
         ]);
 
         // Mettre à jour le statut de la réservation
-        $this->db->execute("UPDATE Bookings SET booking_status = :booking_status, passenger_confirmed_at = :confirmed_at, credits_transferred_for_this_booking = TRUE WHERE id = :id", [
+        $this->db->execute("UPDATE bookings SET booking_status = :booking_status, passenger_confirmed_at = :confirmed_at, credits_transferred_for_this_booking = TRUE WHERE id = :id", [
             'booking_status' => 'confirmed_and_credited',
             'confirmed_at' => $now->format('Y-m-d H:i:s'),
             'id' => $booking->getId()

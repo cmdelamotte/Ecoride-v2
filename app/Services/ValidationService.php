@@ -149,7 +149,7 @@ class ValidationService
         } else {
             // Validation de l'unicité de la plaque d'immatriculation
             $db = Database::getInstance();
-            $sql = "SELECT id FROM Vehicles WHERE license_plate = :license_plate";
+            $sql = "SELECT id FROM vehicles WHERE license_plate = :license_plate";
             $params = [':license_plate' => $data['license_plate']];
             if ($vehicleId) {
                 $sql .= " AND id != :id";

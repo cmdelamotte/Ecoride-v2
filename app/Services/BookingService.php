@@ -51,9 +51,9 @@ class BookingService
             // Étape 1: Utiliser les services pour récupérer les objets Ride et User.
             // Le verrouillage FOR UPDATE est toujours nécessaire pour la concurrence.
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
             /** @var User $user */
-            $user = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $userId], User::class);
+            $user = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $userId], User::class);
 
             // Étape 2: Valider les conditions métier en utilisant les objets.
             if (!$ride) {
@@ -71,7 +71,7 @@ class BookingService
 
             // Étape 3: Vérifier les places disponibles.
             $bookedSeats = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",
+                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",
                 ['ride_id' => $rideId]
             );
 
@@ -81,7 +81,7 @@ class BookingService
             
             // Étape 4: Vérifier si l'utilisateur a déjà réservé.
             $existingBooking = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id",
+                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id",
                 ['ride_id' => $rideId, 'user_id' => $userId]
             );
 
@@ -98,7 +98,7 @@ class BookingService
                        ->setBookingStatus('confirmed');
 
             $this->db->execute(
-                "INSERT INTO Bookings (user_id, ride_id, seats_booked, booking_status) VALUES (:user_id, :ride_id, :seats_booked, :booking_status)",
+                "INSERT INTO bookings (user_id, ride_id, seats_booked, booking_status) VALUES (:user_id, :ride_id, :seats_booked, :booking_status)",
                 [
                     'user_id' => $newBooking->getUserId(),
                     'ride_id' => $newBooking->getRideId(),
@@ -110,7 +110,7 @@ class BookingService
             // 5b. Débiter les crédits du passager.
             $newCredits = $user->getCredits() - $ride->getPricePerSeat();
             $this->db->execute(
-                "UPDATE Users SET credits = :credits WHERE id = :id",
+                "UPDATE users SET credits = :credits WHERE id = :id",
                 ['credits' => $newCredits, 'id' => $userId]
             );
 
@@ -144,9 +144,9 @@ class BookingService
 
             // Verrouiller le trajet et l'utilisateur pour éviter les problèmes de concurrence
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
             /** @var User $user */
-            $user = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $userId], User::class);
+            $user = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $userId], User::class);
 
             if (!$ride) {
                 throw new Exception("Le trajet n'existe pas.");
@@ -164,17 +164,17 @@ class BookingService
             if ($ride->getDriverId() === $userId) {
                 // Annuler le trajet pour tous les passagers
                 /** @var Booking[] $bookings */
-                $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], Booking::class);
+                $bookings = $this->db->fetchAll("SELECT * FROM bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], Booking::class);
 
                 foreach ($bookings as $booking) {
                     /** @var User $passenger */
-                    $passenger = $this->db->fetchOne("SELECT * FROM Users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
+                    $passenger = $this->db->fetchOne("SELECT * FROM users WHERE id = :id FOR UPDATE", ['id' => $booking->getUserId()], User::class);
                     if ($passenger) {
                         $oldPassengerCredits = $passenger->getCredits();
                         $refundAmount = $ride->getPricePerSeat() * $booking->getSeatsBooked();
                         $newPassengerCredits = $oldPassengerCredits + $refundAmount;
                         Logger::info("Driver cancellation: Refunding {$refundAmount} credits to passenger #{$passenger->getId()}. Old credits: {$oldPassengerCredits}, New credits: {$newPassengerCredits}");
-                        $updateUserCount = $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", ['credits' => $newPassengerCredits, 'id' => $passenger->getId()]);
+                        $updateUserCount = $this->db->execute("UPDATE users SET credits = :credits WHERE id = :id", ['credits' => $newPassengerCredits, 'id' => $passenger->getId()]);
                         Logger::info("Driver cancellation: User #{$passenger->getId()} credits update rowCount: {$updateUserCount}");
 
                         // Envoyer l'email de notification d'annulation au passager
@@ -182,19 +182,19 @@ class BookingService
                     }
                     // Mettre à jour le statut de la réservation
                     $booking->setBookingStatus('cancelled_by_driver');
-                    $updateBookingCount = $this->db->execute("UPDATE Bookings SET booking_status = :booking_status WHERE id = :id", ['booking_status' => $booking->getBookingStatus(), 'id' => $booking->getId()]);
+                    $updateBookingCount = $this->db->execute("UPDATE bookings SET booking_status = :booking_status WHERE id = :id", ['booking_status' => $booking->getBookingStatus(), 'id' => $booking->getId()]);
                     Logger::info("Driver cancellation: Booking #{$booking->getId()} status update rowCount: {$updateBookingCount}");
                 }
 
                 // Mettre à jour le statut du trajet
                 $ride->setRideStatus('cancelled_driver');
-                $updateRideCount = $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", ['ride_status' => $ride->getRideStatus(), 'id' => $ride->getId()]);
+                $updateRideCount = $this->db->execute("UPDATE rides SET ride_status = :ride_status WHERE id = :id", ['ride_status' => $ride->getRideStatus(), 'id' => $ride->getId()]);
                 Logger::info("Driver cancellation: Ride #{$rideId} status update rowCount: {$updateRideCount}");
                 Logger::info("Ride #{$rideId} cancelled by driver #{$userId}. All passengers refunded.");
 
             } else { // Cas 2 : L'utilisateur est un passager
                 /** @var Booking $booking */
-                $booking = $this->db->fetchOne("SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId, 'user_id' => $userId], Booking::class);
+                $booking = $this->db->fetchOne("SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId, 'user_id' => $userId], Booking::class);
 
                 if (!$booking) {
                     throw new Exception("Vous n'avez pas de réservation active pour ce trajet.");
@@ -204,11 +204,11 @@ class BookingService
                 $oldUserCredits = $user->getCredits();
                 $refundAmount = $ride->getPricePerSeat() * $booking->getSeatsBooked();
                 $newUserCredits = $oldUserCredits + $refundAmount;
-                $updateUserCount = $this->db->execute("UPDATE Users SET credits = :credits WHERE id = :id", ['credits' => $newUserCredits, 'id' => $userId]);
+                $updateUserCount = $this->db->execute("UPDATE users SET credits = :credits WHERE id = :id", ['credits' => $newUserCredits, 'id' => $userId]);
                 
                 // Mettre à jour le statut de la réservation
                 $booking->setBookingStatus('cancelled_by_passenger');
-                $updateBookingCount = $this->db->execute("UPDATE Bookings SET booking_status = :booking_status WHERE id = :id", ['booking_status' => $booking->getBookingStatus(), 'id' => $booking->getId()]);
+                $updateBookingCount = $this->db->execute("UPDATE bookings SET booking_status = :booking_status WHERE id = :id", ['booking_status' => $booking->getBookingStatus(), 'id' => $booking->getId()]);
                 }
 
             $pdo->commit();
@@ -229,7 +229,7 @@ class BookingService
     public function getBookingByRideAndUser(int $rideId, int $userId): ?Booking
     {
         return $this->db->fetchOne(
-            "SELECT * FROM Bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
+            "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
             ['ride_id' => $rideId, 'user_id' => $userId],
             Booking::class
         );
@@ -244,7 +244,7 @@ class BookingService
     public function getBookingByToken(string $token): ?Booking
     {
         return $this->db->fetchOne(
-            "SELECT * FROM Bookings WHERE confirmation_token = :token",
+            "SELECT * FROM bookings WHERE confirmation_token = :token",
             ['token' => $token],
             Booking::class
         );

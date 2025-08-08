@@ -124,9 +124,9 @@ class SearchFilterService
         try {
             // 3. Compter le nombre total de résultats pour la pagination
             $countSql = "SELECT COUNT(DISTINCT r.id) FROM Rides r
-                JOIN Users u ON r.driver_id = u.id
-                JOIN Vehicles v ON r.vehicle_id = v.id
-                LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                JOIN users u ON r.driver_id = u.id
+                JOIN vehicles v ON r.vehicle_id = v.id
+                LEFT JOIN bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                 {$baseWhereSql}
                 GROUP BY r.id, r.seats_offered
                 HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed";
@@ -148,11 +148,11 @@ class SearchFilterService
                                 v.id as vehicle_id_v, v.model_name as vehicle_model, v.color as vehicle_color, v.license_plate as vehicle_license_plate, v.registration_date as vehicle_registration_date, v.passenger_capacity as vehicle_capacity, v.is_electric as vehicle_is_electric, v.energy_type as vehicle_energy_type, v.brand_id as vehicle_brand_id,
                                 br.id as brand_id_b, br.name as vehicle_brand_name,
                                 (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) as seats_available
-                            FROM Rides r
-                            JOIN Users u ON r.driver_id = u.id
-                            JOIN Vehicles v ON r.vehicle_id = v.id
-                            JOIN Brands br ON v.brand_id = br.id
-                            LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                            FROM rides r
+                            JOIN users u ON r.driver_id = u.id
+                            JOIN vehicles v ON r.vehicle_id = v.id
+                            JOIN brands br ON v.brand_id = br.id
+                            LEFT JOIN bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                             {$baseWhereSql}
                             GROUP BY r.id, r.driver_id, r.vehicle_id, r.departure_city, r.arrival_city, r.departure_address, r.arrival_address,
                                     r.departure_time, r.estimated_arrival_time, r.price_per_seat, r.seats_offered, r.ride_status, r.driver_message, r.is_eco_ride,
@@ -278,10 +278,10 @@ class SearchFilterService
                 $nextDateWhereSql = "WHERE " . implode(" AND ", $nextDateWhereConditions);
 
                 $sqlNextDate = "SELECT DATE(r.departure_time) as next_ride_date
-                                FROM Rides r
-                                JOIN Users u ON r.driver_id = u.id
-                                JOIN Vehicles v ON r.vehicle_id = v.id
-                                LEFT JOIN Bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
+                                FROM rides r
+                                JOIN users u ON r.driver_id = u.id
+                                JOIN vehicles v ON r.vehicle_id = v.id
+                                LEFT JOIN bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                                 {$nextDateWhereSql}
                                 GROUP BY r.id, r.seats_offered
                                 HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed

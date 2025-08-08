@@ -162,11 +162,6 @@ class RideService
         if ($ride->getDriverId()) {
             $driver = $this->userService->findById($ride->getDriverId());
             if ($driver) {
-                // TODO: Charger les avis pour ce conducteur via un ReviewService.
-                // $reviews = $this->reviewService->findByDriverId($driver->getId());
-                // $driver->setReviews($reviews);
-                
-                // J'attache l'objet User complet à mon objet Ride.
                 $ride->setDriver($driver);
             }
         }
@@ -305,7 +300,7 @@ class RideService
             $pdo->beginTransaction();
 
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
 
             if (!$ride) {
                 throw new Exception("Le trajet n'existe pas.");
@@ -318,7 +313,7 @@ class RideService
             }
 
             $ride->setRideStatus('ongoing');
-            $this->db->execute("UPDATE Rides SET ride_status = :ride_status WHERE id = :id", [
+            $this->db->execute("UPDATE rides SET ride_status = :ride_status WHERE id = :id", [
                 'ride_status' => $ride->getRideStatus(),
                 'id' => $ride->getId()
             ]);
@@ -347,7 +342,7 @@ class RideService
             $pdo->beginTransaction();
 
             /** @var Ride $ride */
-            $ride = $this->db->fetchOne("SELECT * FROM Rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
+            $ride = $this->db->fetchOne("SELECT * FROM rides WHERE id = :id FOR UPDATE", ['id' => $rideId], Ride::class);
 
             if (!$ride) {
                 throw new Exception("Le trajet n'existe pas.");
@@ -361,14 +356,14 @@ class RideService
 
             // Mettre à jour le statut du trajet à 'completed_pending_confirmation'
             $ride->setRideStatus('completed_pending_confirmation');
-            $this->db->execute("UPDATE Rides SET ride_status = :ride_status, total_net_credits_earned = 0 WHERE id = :id", [
+            $this->db->execute("UPDATE rides SET ride_status = :ride_status, total_net_credits_earned = 0 WHERE id = :id", [
                 'ride_status' => $ride->getRideStatus(),
                 'id' => $ride->getId()
             ]);
 
             // Récupérer toutes les réservations confirmées pour ce trajet
             /** @var \App\Models\Booking[] $bookings */
-            $bookings = $this->db->fetchAll("SELECT * FROM Bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], \App\Models\Booking::class) ?? [];
+            $bookings = $this->db->fetchAll("SELECT * FROM bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE", ['ride_id' => $rideId], \App\Models\Booking::class) ?? [];
 
             // Enregistrer la fin du trajet dans MongoDB (ride_analytics)
             $this->mongoLogService->logRideAnalytics($rideId, count($bookings));
@@ -384,7 +379,7 @@ class RideService
 
                     // Mettre à jour le statut de la réservation et stocker le token
                     $this->db->execute(
-                        "UPDATE Bookings SET booking_status = :booking_status, confirmation_token = :token, token_expires_at = :expires_at, credits_transferred_for_this_booking = FALSE WHERE id = :id",
+                        "UPDATE bookings SET booking_status = :booking_status, confirmation_token = :token, token_expires_at = :expires_at, credits_transferred_for_this_booking = FALSE WHERE id = :id",
                         [
                             'booking_status' => 'confirmed_pending_passenger_confirmation',
                             'token' => $confirmationToken,

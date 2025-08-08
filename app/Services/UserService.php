@@ -206,7 +206,7 @@ class UserService
      */
     public function getUserRolesArray(int $userId): array
     {
-        $sql = "SELECT r.name FROM Roles r JOIN UserRoles ur ON r.id = ur.role_id WHERE ur.user_id = :user_id";
+        $sql = "SELECT r.name FROM roles r JOIN userroles ur ON r.id = ur.role_id WHERE ur.user_id = :user_id";
         $params = ['user_id' => $userId];
         error_log("UserService: getUserRolesArray SQL: " . $sql . " Params: " . print_r($params, true));
         $results = $this->db->fetchAll($sql, $params, \PDO::FETCH_COLUMN);

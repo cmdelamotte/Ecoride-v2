@@ -62,7 +62,7 @@ class VehicleManagementService
             $columns = implode(', ', array_keys($insertData));
             $placeholders = ':' . implode(', :', array_keys($insertData));
 
-            $sql = "INSERT INTO Vehicles ($columns) VALUES ($placeholders)";
+            $sql = "INSERT INTO vehicles ($columns) VALUES ($placeholders)";
             
             $rowCount = $this->db->execute($sql, $insertData);
 
@@ -139,7 +139,7 @@ class VehicleManagementService
             }
             $setClause = implode(', ', $setParts);
 
-            $sql = "UPDATE Vehicles SET {$setClause} WHERE id = :id";
+            $sql = "UPDATE vehicles SET {$setClause} WHERE id = :id";
             $updateData['id'] = $vehicle->getId(); // J'ajoute l'id du véhicule à mettre à jour.
 
             $rowCount = $this->db->execute($sql, $updateData);
@@ -178,7 +178,7 @@ class VehicleManagementService
                 return ['success' => false, 'error' => 'Véhicule non trouvé ou non autorisé.', 'status' => 404];
             }
 
-            $rowCount = $this->db->execute("DELETE FROM Vehicles WHERE id = :id", ['id' => $vehicleId]);
+            $rowCount = $this->db->execute("DELETE FROM vehicles WHERE id = :id", ['id' => $vehicleId]);
 
             if ($rowCount > 0) {
                 return ['success' => true, 'message' => 'Véhicule supprimé avec succès.', 'status' => 200];
