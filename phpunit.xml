@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <!-- Section pour la configuration de la couverture de code -->
+    <coverage>
+        <!-- On génère un rapport HTML très visuel dans le dossier tests/coverage -->
+        <report>
+            <html outputDirectory="tests/coverage"/>
+        </report>
+    </coverage>
+
+    <!-- On dit à PHPUnit quels fichiers sources il doit surveiller pour la couverture -->
+    <source>
+        <directory>app</directory>
+        <!-- On peut exclure des dossiers qui n'ont pas vocation à être testés unitairement -->
+        <exclude>
+            <directory>app/Views</directory>
+            <file>app/routes.php</file>
+            <directory>app/Exceptions</directory>
+        </exclude>
+    </source>
+
+    <!-- On peut définir des variables d'environnement spécifiques aux tests -->
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+    </php>
+</phpunit>
