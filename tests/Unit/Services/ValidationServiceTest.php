@@ -4,12 +4,11 @@ namespace Tests\Unit\Services;
 
 use App\Services\ValidationService;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ValidationServiceTest extends TestCase
 {
-    /**
-     * @dataProvider provideValidPasswords
-     */
+    #[DataProvider('provideValidPasswords')]
     public function test_validate_password_returns_no_errors_for_a_valid_password(string $password)
     {
         // Act: Appelle la méthode statique avec un mot de passe valide et une confirmation identique.
@@ -27,9 +26,7 @@ class ValidationServiceTest extends TestCase
         $this->assertEquals('Les mots de passe ne correspondent pas.', $errors['confirm_password']);
     }
 
-    /**
-     * @dataProvider provideInvalidPasswords
-     */
+    #[DataProvider('provideInvalidPasswords')]
     public function test_validate_password_returns_error_for_invalid_passwords(string $password, string $errorMessage)
     {
         $errors = ValidationService::validatePassword($password, $password);
@@ -68,9 +65,7 @@ class ValidationServiceTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideSimpleData
-     */
+    #[DataProvider('provideSimpleData')]
     public function test_simple_data_provider_works(int $a, int $b, int $expectedSum)
     {
         $this->assertEquals($expectedSum, $a + $b);
