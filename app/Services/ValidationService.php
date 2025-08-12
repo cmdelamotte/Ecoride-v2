@@ -39,7 +39,7 @@ class ValidationService
         // Validation Email
         if (empty($email)) {
             $errors['email'] = 'L\'adresse email est requise.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        } elseif (!self::isEmailValid($email)) { // Utilisation de la méthode extraite
             $errors['email'] = 'L\'adresse email n\'est pas valide.';
         }
 
@@ -48,8 +48,6 @@ class ValidationService
             $errors['first_name'] = 'Le prénom est requis.';
         } elseif (strlen($firstName) < 2) {
             $errors['first_name'] = 'Le prénom doit contenir au moins 2 caractères.';
-        } elseif (!preg_match("/^[a-zA-Z\s'-]+$/u", $firstName)) { // Ajout du modificateur 'u' pour UTF-8
-            $errors['first_name'] = 'Le prénom contient des caractères non autorisés.';
         }
 
         // Validation Last Name
@@ -57,8 +55,6 @@ class ValidationService
             $errors['last_name'] = 'Le nom de famille est requis.';
         } elseif (strlen($lastName) < 2) {
             $errors['last_name'] = 'Le nom de famille doit contenir au moins 2 caractères.';
-        } elseif (!preg_match("/^[a-zA-Z\s'-]+$/u", $lastName)) { // Ajout du modificateur 'u' pour UTF-8
-            $errors['last_name'] = 'Le nom de famille contient des caractères non autorisés.';
         }
 
         // Validation Phone Number
@@ -201,14 +197,10 @@ class ValidationService
 
         if (empty($data['departure_datetime'])) {
             $errors['departure_datetime'] = 'La date et l\'heure de départ sont obligatoires.';
-        } elseif (new \DateTime() > new \DateTime($data['departure_datetime'])) {
-            $errors['departure_datetime'] = 'La date de départ ne peut pas être dans le passé.';
         }
 
         if (empty($data['estimated_arrival_datetime'])) {
             $errors['estimated_arrival_datetime'] = 'La date et l\'heure d\'arrivée sont obligatoires.';
-        } elseif (!empty($data['departure_datetime']) && new \DateTime($data['estimated_arrival_datetime']) <= new \DateTime($data['departure_datetime'])) {
-            $errors['estimated_arrival_datetime'] = 'L\'heure d\'arrivée doit être postérieure à l\'heure de départ.';
         }
 
         if (empty($data['seats_offered']) || !filter_var($data['seats_offered'], FILTER_VALIDATE_INT) || $data['seats_offered'] < 1 || $data['seats_offered'] > 8) {
@@ -281,10 +273,19 @@ class ValidationService
             $errors['reason'] = 'La raison du signalement est requise.';
         } elseif (strlen($data['reason']) < 10) {
             $errors['reason'] = 'La raison du signalement doit contenir au moins 10 caractères.';
-        } elseif (strlen($data['reason']) > 1000) {
-            $errors['reason'] = 'La raison du signalement ne doit pas dépasser 1000 caractères.';
         }
 
         return $errors;
+    }
+
+    /**
+     * Valide le format d'une adresse email.
+     *
+     * @param string $email L'adresse email à valider.
+     * @return bool True si l'email est valide, false sinon.
+     */
+    public static function isEmailValid(string $email): bool
+    {
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
     }
 }
