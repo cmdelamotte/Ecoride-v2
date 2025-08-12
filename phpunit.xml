@@ -16,16 +16,17 @@
     </testsuites>
 
     <!-- Section pour la configuration de la couverture de code -->
-    <coverage>
-        <!-- On génère un rapport HTML très visuel dans le dossier tests/coverage -->
+    <!-- <coverage>
         <report>
             <html outputDirectory="tests/coverage"/>
         </report>
-    </coverage>
+    </coverage> -->
 
     <!-- On dit à PHPUnit quels fichiers sources il doit surveiller pour la couverture -->
     <source>
-        <directory>app</directory>
+        <include>
+            <directory>app</directory>
+        </include>
         <!-- On peut exclure des dossiers qui n'ont pas vocation à être testés unitairement -->
         <exclude>
             <directory>app/Views</directory>
