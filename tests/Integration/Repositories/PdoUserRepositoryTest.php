@@ -5,6 +5,7 @@ namespace Tests\Integration\Repositories;
 use App\Core\Database;
 use App\Models\User;
 use App\Repositories\PdoUserRepository;
+use Tests\Integration\Database\SqliteTestBootstrap;
 use Tests\TestCase;
 
 class PdoUserRepositoryTest extends TestCase
@@ -13,52 +14,8 @@ class PdoUserRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        // Prépare une base SQLite en mémoire conforme (autant que possible) au schéma physique
-        $pdo = Database::getInstance()->getConnection();
-
-        // users
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                first_name TEXT NOT NULL,
-                last_name TEXT NOT NULL,
-                username TEXT NOT NULL UNIQUE,
-                email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                phone_number TEXT NOT NULL,
-                birth_date TEXT NOT NULL,
-                profile_picture_path TEXT NULL,
-                address TEXT NULL,
-                credits NUMERIC NOT NULL DEFAULT 0.00,
-                account_status TEXT NOT NULL DEFAULT "active",
-                driver_pref_smoker INTEGER NOT NULL DEFAULT 0,
-                driver_pref_animals INTEGER NOT NULL DEFAULT 0,
-                driver_pref_custom TEXT NULL,
-                functional_role TEXT NOT NULL DEFAULT "passenger",
-                driver_rating REAL NOT NULL DEFAULT 0.0,
-                reset_token TEXT NULL,
-                reset_token_expires_at TEXT NULL,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )'
-        );
-
-        // roles
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS roles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE
-            )'
-        );
-
-        // userroles (table de jonction)
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS userroles (
-                user_id INTEGER NOT NULL,
-                role_id INTEGER NOT NULL,
-                PRIMARY KEY (user_id, role_id)
-            )'
-        );
+        // Charger le schéma SQLite commun de tests
+        SqliteTestBootstrap::migrate();
     }
 
     public function test_create_and_find_user(): void
