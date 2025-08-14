@@ -22,33 +22,44 @@ class Database
 
     /**
      * Le constructeur est privé pour empêcher l'instanciation directe.
-     * Il initialise la connexion PDO en utilisant les variables d'environnement.
+     * Initialise la connexion PDO en utilisant les variables d'environnement.
+     * Si DB_CONNECTION=sqlite est défini (ex. en tests), utilise SQLite (ex: ':memory:').
      */
     private function __construct()
     {
         // Je récupère les informations de connexion depuis les variables d'environnement
         // pour garder la configuration séparée du code et sécurisée.
-        $host = getenv('DB_HOST');
-        $db   = getenv('DB_NAME');
-        $user = getenv('DB_USER');
-        $pass = getenv('DB_PASS');
-        $charset = 'utf8mb4';
-
-        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-        $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            // Le mode de fetch par défaut est maintenant géré par les méthodes fetchOne/fetchAll.
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, 
-            PDO::ATTR_EMULATE_PREPARES   => false,
-        ];
+        $driver = getenv('DB_CONNECTION') ?: 'mysql';
 
         try {
-            $this->pdo = new PDO($dsn, $user, $pass, $options);
+            if (strtolower($driver) === 'sqlite') {
+                // Mode tests: SQLite. Exemple: DB_DATABASE=':memory:' pour une base en mémoire
+                $databasePath = getenv('DB_DATABASE') ?: ':memory:';
+                $dsn = 'sqlite:' . $databasePath; // Produit 'sqlite::memory:' si DB_DATABASE=':memory:'
+                $options = [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ];
+                $this->pdo = new PDO($dsn, null, null, $options);
+            } else {
+                // Mode normal: MySQL/MariaDB
+                $host = getenv('DB_HOST');
+                $db   = getenv('DB_NAME');
+                $user = getenv('DB_USER');
+                $pass = getenv('DB_PASS');
+                $charset = 'utf8mb4';
+
+                $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+                $options = [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ];
+                $this->pdo = new PDO($dsn, $user, $pass, $options);
+            }
         } catch (PDOException $e) {
-            // En cas d'erreur de connexion, je loggue l'erreur et j'arrête l'application
-            // de manière propre pour éviter d'exposer des informations sensibles.
             Logger::error("Database connection error: " . $e->getMessage());
-            // En production, un message plus générique serait affiché.
             die("Erreur de connexion à la base de données.");
         }
     }
