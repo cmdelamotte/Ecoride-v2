@@ -10,6 +10,8 @@ use App\Models\Ride;
 use App\Services\RideService;
 use App\Services\UserService;
 use App\Services\EmailService; // Ajout de l'import pour EmailService
+use App\Repositories\BookingRepositoryInterface;
+use App\Repositories\PdoBookingRepository;
 use \PDO;
 use \Exception;
 
@@ -24,13 +26,15 @@ class BookingService
     private RideService $rideService;
     private UserService $userService;
     private EmailService $emailService; // Ajout de la propriété pour EmailService
+    private BookingRepositoryInterface $bookingRepository;
 
-    public function __construct()
+    public function __construct(?BookingRepositoryInterface $bookingRepository = null)
     {
         $this->db = Database::getInstance();
         $this->rideService = new RideService();
         $this->userService = new UserService();
         $this->emailService = new EmailService(); // Initialisation de EmailService
+        $this->bookingRepository = $bookingRepository ?? new PdoBookingRepository($this->db);
     }
 
     /**
@@ -70,22 +74,14 @@ class BookingService
             }
 
             // Étape 3: Vérifier les places disponibles.
-            $bookedSeats = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed'",
-                ['ride_id' => $rideId]
-            );
+            $bookedSeats = $this->bookingRepository->countConfirmedByRideId($rideId);
 
             if ($bookedSeats >= $ride->getSeatsOffered()) {
                 throw new Exception("Désolé, il n'y a plus de places disponibles pour ce trajet.");
             }
             
             // Étape 4: Vérifier si l'utilisateur a déjà réservé.
-            $existingBooking = $this->db->fetchColumn(
-                "SELECT COUNT(*) FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id",
-                ['ride_id' => $rideId, 'user_id' => $userId]
-            );
-
-            if ($existingBooking > 0) {
+            if ($this->bookingRepository->existsByRideAndUser($rideId, $userId)) {
                 throw new Exception("Vous avez déjà réservé une place pour ce trajet.");
             }
 
@@ -97,15 +93,7 @@ class BookingService
                        ->setSeatsBooked(1) // Par défaut, 1 place par réservation
                        ->setBookingStatus('confirmed');
 
-            $this->db->execute(
-                "INSERT INTO bookings (user_id, ride_id, seats_booked, booking_status) VALUES (:user_id, :ride_id, :seats_booked, :booking_status)",
-                [
-                    'user_id' => $newBooking->getUserId(),
-                    'ride_id' => $newBooking->getRideId(),
-                    'seats_booked' => $newBooking->getSeatsBooked(),
-                    'booking_status' => $newBooking->getBookingStatus()
-                ]
-            );
+            $this->bookingRepository->insert($newBooking);
 
             // 5b. Débiter les crédits du passager.
             $newCredits = $user->getCredits() - $ride->getPricePerSeat();
@@ -228,11 +216,7 @@ class BookingService
      */
     public function getBookingByRideAndUser(int $rideId, int $userId): ?Booking
     {
-        return $this->db->fetchOne(
-            "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
-            ['ride_id' => $rideId, 'user_id' => $userId],
-            Booking::class
-        );
+        return $this->bookingRepository->findByRideAndUser($rideId, $userId);
     }
 
         /**
@@ -243,10 +227,6 @@ class BookingService
      */
     public function getBookingByToken(string $token): ?Booking
     {
-        return $this->db->fetchOne(
-            "SELECT * FROM bookings WHERE confirmation_token = :token",
-            ['token' => $token],
-            Booking::class
-        );
+        return $this->bookingRepository->findByToken($token);
     }
 }

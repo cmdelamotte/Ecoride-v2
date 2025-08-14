@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Models\Booking;
+
+interface BookingRepositoryInterface
+{
+    /**
+     * Retourne une réservation confirmée pour un couple (rideId, userId).
+     */
+    public function findByRideAndUser(int $rideId, int $userId): ?Booking;
+
+    /**
+     * Retourne une réservation par son token de confirmation.
+     */
+    public function findByToken(string $token): ?Booking;
+
+    /**
+     * Compte les réservations confirmées pour un trajet.
+     */
+    public function countConfirmedByRideId(int $rideId): int;
+
+    /**
+     * Indique si un utilisateur a déjà réservé ce trajet.
+     */
+    public function existsByRideAndUser(int $rideId, int $userId): bool;
+
+    /**
+     * Insère une réservation et retourne l'identifiant créé.
+     */
+    public function insert(Booking $booking): int;
+}
+
+
