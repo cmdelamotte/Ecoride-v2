@@ -21,16 +21,40 @@ class EmailService
     public function __construct()
     {
         $this->mailer = new PHPMailer(true);
+        $this->mailer->CharSet = 'UTF-8';
+
+        // En environnement de tests, éviter toute configuration SMTP stricte
+        if ((getenv('APP_ENV') ?: '') === 'testing') {
+            // Définit un expéditeur par défaut valide pour éviter les erreurs PHPMailer
+            $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
+            return;
+        }
+
         // Configuration SMTP (à récupérer depuis les variables d'environnement)
-        $this->mailer->isSMTP();
-        $this->mailer->Host       = getenv('SMTP_HOST');
-        $this->mailer->SMTPAuth   = true;
-        $this->mailer->Username   = getenv('SMTP_USERNAME');
-        $this->mailer->Password   = getenv('SMTP_PASSWORD');
-        $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // ou ENCRYPTION_STARTTLS
-        $this->mailer->Port       = (int)getenv('SMTP_PORT');
-        $this->mailer->CharSet    = 'UTF-8';
-        $this->mailer->setFrom(getenv('SMTP_USERNAME'), 'EcoRide');
+        $smtpHost = getenv('SMTP_HOST') ?: '';
+        $smtpUser = getenv('SMTP_USERNAME') ?: '';
+        $smtpPass = getenv('SMTP_PASSWORD') ?: '';
+        $smtpPort = (int)(getenv('SMTP_PORT') ?: 0);
+
+        if ($smtpHost !== '' && $smtpUser !== '' && $smtpPort > 0) {
+            $this->mailer->isSMTP();
+            $this->mailer->Host       = $smtpHost;
+            $this->mailer->SMTPAuth   = true;
+            $this->mailer->Username   = $smtpUser;
+            $this->mailer->Password   = $smtpPass;
+            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // ou ENCRYPTION_STARTTLS
+            $this->mailer->Port       = $smtpPort;
+            try {
+                $this->mailer->setFrom($smtpUser, 'EcoRide');
+            } catch (PHPMailerException $e) {
+                // Fallback silencieux si l'adresse n'est pas valide
+                $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
+                Logger::error('EmailService: adresse expéditeur invalide, fallback no-reply@localhost. ' . $e->getMessage());
+            }
+        } else {
+            // Fallback sans SMTP si env incomplet
+            $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
+        }
     }
 
     /**

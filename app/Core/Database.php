@@ -19,6 +19,7 @@ class Database
 {
     private static ?self $instance = null;
     private PDO $pdo;
+        private bool $isSqlite = false;
 
     /**
      * Le constructeur est privé pour empêcher l'instanciation directe.
@@ -42,6 +43,7 @@ class Database
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ];
                 $this->pdo = new PDO($dsn, null, null, $options);
+                $this->isSqlite = true;
             } else {
                 // Mode normal: MySQL/MariaDB
                 $host = getenv('DB_HOST');
@@ -89,7 +91,7 @@ class Database
     public function fetchOne(string $query, array $params = [], mixed $fetchMode = 'stdClass'): mixed
     {
         try {
-            $stmt = $this->pdo->prepare($query);
+            $stmt = $this->pdo->prepare($this->normalizeQuery($query));
             $stmt->execute($params);
 
             // Je gère différents modes de récupération.
@@ -129,7 +131,7 @@ class Database
     public function fetchAll(string $query, array $params = [], mixed $fetchMode = 'stdClass'): array
     {
         try {
-            $stmt = $this->pdo->prepare($query);
+            $stmt = $this->pdo->prepare($this->normalizeQuery($query));
             $stmt->execute($params);
 
             // Je gère différents modes de récupération pour fetchAll.
@@ -159,7 +161,7 @@ class Database
     public function fetchColumn(string $query, array $params = []): mixed
     {
         try {
-            $stmt = $this->pdo->prepare($query);
+            $stmt = $this->pdo->prepare($this->normalizeQuery($query));
             $stmt->execute($params);
             return $stmt->fetchColumn();
         } catch (PDOException $e) {
@@ -178,7 +180,7 @@ class Database
     public function execute(string $query, array $params = []): int
     {
         try {
-            $stmt = $this->pdo->prepare($query);
+            $stmt = $this->pdo->prepare($this->normalizeQuery($query));
             $stmt->execute($params);
             return $stmt->rowCount();
         } catch (PDOException $e) {
@@ -205,6 +207,18 @@ class Database
     public function getConnection(): PDO
     {
         return $this->pdo;
+    }
+
+    /**
+     * Adapte certaines syntaxes non supportées par SQLite (ex: FOR UPDATE).
+     */
+    private function normalizeQuery(string $query): string
+    {
+        if ($this->isSqlite) {
+            // Supprimer les clauses FOR UPDATE qui ne sont pas supportées par SQLite
+            return preg_replace('/\s+FOR\s+UPDATE\b/i', '', $query) ?? $query;
+        }
+        return $query;
     }
 
     /**
