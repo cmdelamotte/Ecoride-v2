@@ -16,15 +16,11 @@ class AvatarService
 
     /**
      * Constructeur de la classe AvatarService.
-     * Assure que le répertoire de téléchargement existe.
+	 * L'initialisation lourde est différée à l'upload pour éviter des effets de bord.
      */
     public function __construct()
     {
-        // Vérifie si le répertoire de téléchargement existe, sinon le crée.
-        // Cela garantit que le service peut toujours stocker les fichiers.
-        if (!is_dir($this->uploadDir)) {
-            mkdir($this->uploadDir, 0775, true);
-        }
+		// Ne rien faire ici pour éviter des mkdir() sur des requêtes qui n'en ont pas besoin
     }
 
     /**
@@ -36,6 +32,9 @@ class AvatarService
      */
     public function handleUpload(array $file): ?string
     {
+		// S'assurer que le dossier d'upload existe avant toute opération disque
+		$this->ensureUploadDirExists();
+
         // Vérifie si un fichier a été réellement téléchargé et s'il n'y a pas d'erreur.
         if (!isset($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) {
             Logger::error("AvatarService: Erreur de téléchargement ou fichier manquant.");
@@ -69,4 +68,17 @@ class AvatarService
             return null;
         }
     }
+
+	/**
+	 * Crée le répertoire d'upload si nécessaire, sans émettre de warnings.
+	 */
+	private function ensureUploadDirExists(): void
+	{
+		if (!is_dir($this->uploadDir)) {
+			// Le @ supprime les warnings en cas de permissions insuffisantes; on loggue plutôt.
+			if (!@mkdir($this->uploadDir, 0775, true) && !is_dir($this->uploadDir)) {
+				Logger::error('AvatarService: Impossible de créer le répertoire de téléchargement: ' . $this->uploadDir);
+			}
+		}
+	}
 }

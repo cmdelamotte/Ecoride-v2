@@ -122,6 +122,19 @@ class Router
         }
 
         // ---------------------------------------------------------------------
+        // Vérification CSRF minimale pour requêtes mutantes (POST)
+        // ---------------------------------------------------------------------
+        if (strtoupper($method) === 'POST') {
+            // Exemptions possibles: endpoints publics spécifiques si nécessaire
+            $csrfToken = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+            if (!\App\Helpers\CsrfHelper::validateToken(is_string($csrfToken) ? $csrfToken : null)) {
+                header('HTTP/1.1 419 Page Expired');
+                echo 'Invalid CSRF token.';
+                exit();
+            }
+        }
+
+        // ---------------------------------------------------------------------
         // Appel du contrôleur et de la méthode
         // ---------------------------------------------------------------------
         $controllerName = "App\\Controllers\\" . $foundRoute['controller'];

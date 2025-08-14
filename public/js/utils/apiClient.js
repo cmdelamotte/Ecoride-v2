@@ -11,6 +11,7 @@ async function callApi(endpoint, method = 'GET', data = null) {
         method: method,
         headers: {
             'Accept': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
         credentials: 'same-origin' // Important pour envoyer les cookies de session
     };

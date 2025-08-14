@@ -46,6 +46,8 @@ class AuthController extends Controller
         $result = $this->authService->attemptLogin($_POST);
 
         if ($result['success']) {
+            // Sécurité session: empêche la fixation de session
+            session_regenerate_id(true);
             $user = $result['user'];
             $_SESSION['user_id'] = $user->getId();
             $_SESSION['username'] = $user->getUsername();

@@ -10,6 +10,7 @@
         <div class="row justify-content-center">
             <div class="col-12 col-md-8 col-lg-6">
                 <form id="edit-password-form" action="/account/update-password" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(\App\Helpers\CsrfHelper::getToken()) ?>">
                     <div class="row g-3">
 
                         <?php if (isset($success)): ?>

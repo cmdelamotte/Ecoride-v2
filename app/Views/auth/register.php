@@ -10,6 +10,7 @@
         <div class="row justify-content-center">
             <div class="col-12 col-md-10 col-lg-8">
                 <form action="/register" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(\App\Helpers\CsrfHelper::getToken()) ?>">
                     <div class="row g-3">
                         <?php 
                         // Affiche uniquement les erreurs qui ne sont pas déjà affichées sous un champ spécifique
