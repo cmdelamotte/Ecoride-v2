@@ -98,7 +98,7 @@ $pageTitle = 'Publier un nouveau trajet';
                                 <i class="bi bi-coin me-2"></i>
                                 <input type="number" class="form-control-custom flex-grow-1" id="price-per-seat" name="price_per_seat" placeholder="Prix par passager (crédits)" aria-label="Prix par passager en crédits" min="2" step="0.5" required>
                             </div>
-                            <small class="form-text text-muted ms-1">La plateforme prélève 2 crédits par trajet.</small>
+                            <small class="form-text text-muted ms-1">La plateforme prélève 2 crédits par passager.</small>
                             <div class="invalid-feedback">Le prix doit être d'au moins 2 crédits.</div>
                         </div>
 
