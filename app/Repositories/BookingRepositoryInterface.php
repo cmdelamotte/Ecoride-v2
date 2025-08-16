@@ -45,6 +45,11 @@ interface BookingRepositoryInterface
      * Récupère une réservation confirmée pour un couple (rideId, userId) avec verrouillage FOR UPDATE.
      */
     public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking;
+
+    /**
+     * Supprime une réservation par son identifiant.
+     */
+    public function delete(int $bookingId): bool;
 }
 
 

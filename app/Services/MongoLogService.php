@@ -19,6 +19,7 @@ class MongoLogService
     private Collection $commissionsCollection;
     private Collection $platformStatsCollection;
     private Collection $rideAnalyticsCollection;
+    private Collection $cancellationsCollection;
 
     public function __construct()
     {
@@ -27,6 +28,7 @@ class MongoLogService
         $this->commissionsCollection = $mongoDatabase->selectCollection('commissions');
         $this->platformStatsCollection = $mongoDatabase->selectCollection('platform_stats');
         $this->rideAnalyticsCollection = $mongoDatabase->selectCollection('ride_analytics');
+        $this->cancellationsCollection = $mongoDatabase->selectCollection('cancellations');
     }
 
     /**
@@ -127,6 +129,25 @@ class MongoLogService
             'timestamp' => new \MongoDB\BSON\UTCDateTime(),
         ];
         return $this->_logToCollection($this->rideAnalyticsCollection, $document, "Ride analytics for ride #{$rideId} (passengers: {$passengersCount})");
+    }
+
+    /**
+     * Enregistre une annulation de réservation dans la collection 'cancellations'.
+     *
+     * @param int $rideId L'ID du trajet.
+     * @param int $userId L'ID de l'utilisateur qui annule.
+     * @param string $cancellationType Le type d'annulation ('cancelled_by_passenger' ou 'cancelled_by_driver').
+     * @return bool True en cas de succès, false sinon.
+     */
+    public function logCancellation(int $rideId, int $userId, string $cancellationType): bool
+    {
+        $document = [
+            'ride_id' => $rideId,
+            'user_id' => $userId,
+            'cancellation_type' => $cancellationType,
+            'timestamp' => new \MongoDB\BSON\UTCDateTime(),
+        ];
+        return $this->_logToCollection($this->cancellationsCollection, $document, "Cancellation for ride #{$rideId} by user #{$userId} ({$cancellationType})");
     }
 
     /**

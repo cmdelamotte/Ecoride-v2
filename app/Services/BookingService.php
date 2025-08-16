@@ -10,6 +10,7 @@ use App\Models\Ride;
 use App\Services\RideService;
 use App\Services\UserService;
 use App\Services\EmailService; // Ajout de l'import pour EmailService
+use App\Services\MongoLogService;
 use App\Repositories\BookingRepositoryInterface;
 use App\Repositories\PdoBookingRepository;
 use App\Repositories\RideRepositoryInterface;
@@ -29,6 +30,7 @@ class BookingService
     private RideService $rideService;
     private UserService $userService;
     private EmailService $emailService; // Ajout de la propriété pour EmailService
+    private MongoLogService $mongoLogService;
     private BookingRepositoryInterface $bookingRepository;
     private RideRepositoryInterface $rideRepository;
     private UserRepositoryInterface $userRepository;
@@ -41,6 +43,7 @@ class BookingService
         $this->rideService = new RideService();
         $this->userService = new UserService();
         $this->emailService = new EmailService(); // Initialisation de EmailService
+        $this->mongoLogService = new MongoLogService();
         $this->bookingRepository = $bookingRepository ?? new PdoBookingRepository();
         $this->rideRepository = $rideRepository ?? new PdoRideRepository();
         $this->userRepository = $userRepository ?? new PdoUserRepository();
@@ -174,9 +177,12 @@ class BookingService
                         // Envoyer l'email de notification d'annulation au passager
                         $this->emailService->sendRideCancellationEmailToPassenger($passenger, $ride, $refundAmount);
                     }
-                    // Mettre à jour le statut de la réservation
-                    $this->bookingRepository->updateStatus($booking->getId(), 'cancelled_by_driver');
-                    Logger::info("Driver cancellation: Booking #{$booking->getId()} status updated successfully");
+                    // Logger l'annulation dans MongoDB
+                    $this->mongoLogService->logCancellation($rideId, $passenger->getId(), 'cancelled_by_driver');
+                    
+                    // Supprimer la réservation de la base de données
+                    $this->bookingRepository->delete($booking->getId());
+                    Logger::info("Driver cancellation: Booking #{$booking->getId()} deleted successfully");
                 }
 
                 // Mettre à jour le statut du trajet
@@ -197,8 +203,11 @@ class BookingService
                 $newUserCredits = $oldUserCredits + $refundAmount;
                 $this->userRepository->updateCredits($userId, $newUserCredits);
                 
-                // Mettre à jour le statut de la réservation
-                $this->bookingRepository->updateStatus($booking->getId(), 'cancelled_by_passenger');
+                // Logger l'annulation dans MongoDB
+                $this->mongoLogService->logCancellation($rideId, $userId, 'cancelled_by_passenger');
+                
+                // Supprimer la réservation de la base de données
+                $this->bookingRepository->delete($booking->getId());
             }
 
             $pdo->commit();

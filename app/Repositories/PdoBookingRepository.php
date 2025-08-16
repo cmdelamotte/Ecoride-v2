@@ -90,6 +90,11 @@ class PdoBookingRepository implements BookingRepositoryInterface
             Booking::class
         );
     }
+
+    public function delete(int $bookingId): bool
+    {
+        return $this->db->execute("DELETE FROM bookings WHERE id = :id", ['id' => $bookingId]) > 0;
+    }
 }
 
 
