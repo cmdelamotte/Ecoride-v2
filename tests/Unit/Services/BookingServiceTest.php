@@ -31,6 +31,7 @@ class BookingServiceTest extends TestCase
             public function updateStatus(int $bookingId, string $newStatus): bool { return true; }
             public function findConfirmedByRideIdForUpdate(int $rideId): array { return []; }
             public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking { return null; }
+            public function delete(int $bookingId): bool { return true; }
         };
 
         $fakeRideRepo = new class implements RideRepositoryInterface {
@@ -76,6 +77,7 @@ class BookingServiceTest extends TestCase
             public function updateStatus(int $bookingId, string $newStatus): bool { return true; }
             public function findConfirmedByRideIdForUpdate(int $rideId): array { return []; }
             public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking { return null; }
+            public function delete(int $bookingId): bool { return true; }
         };
 
         $fakeRideRepo = new class implements RideRepositoryInterface {
