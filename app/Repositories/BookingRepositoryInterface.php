@@ -30,6 +30,21 @@ interface BookingRepositoryInterface
      * Insère une réservation et retourne l'identifiant créé.
      */
     public function insert(Booking $booking): int;
+
+    /**
+     * Met à jour le statut d'une réservation.
+     */
+    public function updateStatus(int $bookingId, string $newStatus): bool;
+
+    /**
+     * Récupère toutes les réservations confirmées pour un trajet avec verrouillage FOR UPDATE.
+     */
+    public function findConfirmedByRideIdForUpdate(int $rideId): array;
+
+    /**
+     * Récupère une réservation confirmée pour un couple (rideId, userId) avec verrouillage FOR UPDATE.
+     */
+    public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking;
 }
 
 

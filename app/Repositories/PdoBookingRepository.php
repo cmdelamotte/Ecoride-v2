@@ -7,8 +7,12 @@ use App\Models\Booking;
 
 class PdoBookingRepository implements BookingRepositoryInterface
 {
-    public function __construct(private Database $db)
+    private Database $db;
+
+    public function __construct(?Database $database = null)
     {
+        // Permettre l'injection d'une connexion custom (tests) tout en conservant un défaut sûr
+        $this->db = $database ?? Database::getInstance();
     }
 
     public function findByRideAndUser(int $rideId, int $userId): ?Booking
@@ -57,6 +61,34 @@ class PdoBookingRepository implements BookingRepositoryInterface
             ]
         );
         return $rowCount > 0 ? (int)$this->db->lastInsertId() : 0;
+    }
+
+    public function updateStatus(int $bookingId, string $newStatus): bool
+    {
+        $sql = "UPDATE bookings SET booking_status = :booking_status WHERE id = :id";
+        $params = [
+            ':booking_status' => $newStatus,
+            ':id' => $bookingId,
+        ];
+        return $this->db->execute($sql, $params) > 0;
+    }
+
+    public function findConfirmedByRideIdForUpdate(int $rideId): array
+    {
+        return $this->db->fetchAll(
+            "SELECT * FROM bookings WHERE ride_id = :ride_id AND booking_status = 'confirmed' FOR UPDATE",
+            ['ride_id' => $rideId],
+            Booking::class
+        );
+    }
+
+    public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking
+    {
+        return $this->db->fetchOne(
+            "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed' FOR UPDATE",
+            ['ride_id' => $rideId, 'user_id' => $userId],
+            Booking::class
+        );
     }
 }
 

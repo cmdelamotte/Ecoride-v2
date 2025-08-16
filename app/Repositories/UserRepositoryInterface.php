@@ -40,6 +40,11 @@ interface UserRepositoryInterface
      * Met à jour la note moyenne du conducteur.
      */
     public function updateDriverRating(int $driverId, float $newRating): bool;
+
+    /**
+     * Met à jour les crédits d'un utilisateur.
+     */
+    public function updateCredits(int $userId, int $newCredits): bool;
 }
 
 

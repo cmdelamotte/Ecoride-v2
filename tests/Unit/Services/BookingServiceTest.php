@@ -4,6 +4,8 @@ namespace Tests\Unit\Services;
 
 use App\Models\Booking;
 use App\Repositories\BookingRepositoryInterface;
+use App\Repositories\RideRepositoryInterface;
+use App\Repositories\UserRepositoryInterface;
 use App\Services\BookingService;
 use Tests\TestCase;
 
@@ -18,7 +20,7 @@ class BookingServiceTest extends TestCase
             ->setSeatsBooked(1)
             ->setBookingStatus('confirmed');
 
-        $repo = new class($expected) implements BookingRepositoryInterface {
+        $fakeRepo = new class($expected) implements BookingRepositoryInterface {
             private $expected;
             public function __construct($expected) { $this->expected = $expected; }
             public function findByRideAndUser(int $rideId, int $userId): ?Booking { return $this->expected; }
@@ -26,9 +28,28 @@ class BookingServiceTest extends TestCase
             public function countConfirmedByRideId(int $rideId): int { return 0; }
             public function existsByRideAndUser(int $rideId, int $userId): bool { return false; }
             public function insert(Booking $booking): int { return 0; }
+            public function updateStatus(int $bookingId, string $newStatus): bool { return true; }
+            public function findConfirmedByRideIdForUpdate(int $rideId): array { return []; }
+            public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking { return null; }
         };
 
-        $service = new BookingService($repo);
+        $fakeRideRepo = new class implements RideRepositoryInterface {
+            public function findByIdForUpdate(int $rideId): ?\App\Models\Ride { return null; }
+            public function updateStatus(int $rideId, string $newStatus): bool { return true; }
+        };
+
+        $fakeUserRepo = new class implements UserRepositoryInterface {
+            public function findById(int $id): ?\App\Models\User { return null; }
+            public function findByEmailOrUsername(string $identifier): ?\App\Models\User { return null; }
+            public function create(\App\Models\User $user): int|false { return 1; }
+            public function updateFields(int $userId, array $fields): bool { return true; }
+            public function delete(int $id): bool { return true; }
+            public function getUserRolesArray(int $userId): array { return ['ROLE_USER']; }
+            public function updateDriverRating(int $driverId, float $newRating): bool { return true; }
+            public function updateCredits(int $userId, int $newCredits): bool { return true; }
+        };
+
+        $service = new BookingService($fakeRepo, $fakeRideRepo, $fakeUserRepo);
         $result = $service->getBookingByRideAndUser(5, 3);
 
         $this->assertInstanceOf(Booking::class, $result);
@@ -44,7 +65,7 @@ class BookingServiceTest extends TestCase
             ->setSeatsBooked(1)
             ->setBookingStatus('confirmed_pending_passenger_confirmation');
 
-        $repo = new class($expected) implements BookingRepositoryInterface {
+        $fakeRepo = new class($expected) implements BookingRepositoryInterface {
             private $expected;
             public function __construct($expected) { $this->expected = $expected; }
             public function findByRideAndUser(int $rideId, int $userId): ?Booking { return null; }
@@ -52,14 +73,31 @@ class BookingServiceTest extends TestCase
             public function countConfirmedByRideId(int $rideId): int { return 0; }
             public function existsByRideAndUser(int $rideId, int $userId): bool { return false; }
             public function insert(Booking $booking): int { return 0; }
+            public function updateStatus(int $bookingId, string $newStatus): bool { return true; }
+            public function findConfirmedByRideIdForUpdate(int $rideId): array { return []; }
+            public function findByRideAndUserForUpdate(int $rideId, int $userId): ?Booking { return null; }
         };
 
-        $service = new BookingService($repo);
+        $fakeRideRepo = new class implements RideRepositoryInterface {
+            public function findByIdForUpdate(int $rideId): ?\App\Models\Ride { return null; }
+            public function updateStatus(int $rideId, string $newStatus): bool { return true; }
+        };
+
+        $fakeUserRepo = new class implements UserRepositoryInterface {
+            public function findById(int $id): ?\App\Models\User { return null; }
+            public function findByEmailOrUsername(string $identifier): ?\App\Models\User { return null; }
+            public function create(\App\Models\User $user): int|false { return 1; }
+            public function updateFields(int $userId, array $fields): bool { return true; }
+            public function delete(int $id): bool { return true; }
+            public function getUserRolesArray(int $userId): array { return ['ROLE_USER']; }
+            public function updateDriverRating(int $driverId, float $newRating): bool { return true; }
+            public function updateCredits(int $userId, int $newCredits): bool { return true; }
+        };
+
+        $service = new BookingService($fakeRepo, $fakeRideRepo, $fakeUserRepo);
         $result = $service->getBookingByToken('any');
 
         $this->assertInstanceOf(Booking::class, $result);
         $this->assertSame(11, $result->getId());
     }
 }
-
-

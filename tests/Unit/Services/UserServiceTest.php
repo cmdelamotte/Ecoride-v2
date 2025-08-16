@@ -21,6 +21,7 @@ class UserServiceTest extends TestCase
             public function delete(int $id): bool { return true; }
             public function getUserRolesArray(int $userId): array { return ['ROLE_USER']; }
             public function updateDriverRating(int $driverId, float $newRating): bool { return true; }
+            public function updateCredits(int $userId, int $newCredits): bool { return true; }
         };
 
         $service = new UserService($fakeRepo);
@@ -51,6 +52,7 @@ class UserServiceTest extends TestCase
             public function delete(int $id): bool { return true; }
             public function getUserRolesArray(int $userId): array { return []; }
             public function updateDriverRating(int $driverId, float $newRating): bool { return true; }
+            public function updateCredits(int $userId, int $newCredits): bool { return true; }
         };
 
         $service = new UserService($fakeRepo);

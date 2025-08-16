@@ -106,6 +106,16 @@ class PdoUserRepository implements UserRepositoryInterface
         ];
         return $this->db->execute($sql, $params) > 0;
     }
+
+    public function updateCredits(int $userId, int $newCredits): bool
+    {
+        $sql = "UPDATE users SET credits = :credits WHERE id = :id";
+        $params = [
+            ':credits' => $newCredits,
+            ':id' => $userId,
+        ];
+        return $this->db->execute($sql, $params) > 0;
+    }
 }
 
 
