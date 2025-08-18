@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Core\Database;
 use App\Services\UserService;
 use App\Services\ValidationService;
+use App\Services\UserRoleService;
 use PDO;
 
 /**
@@ -69,11 +70,15 @@ class AuthService
         // 4. Créer l'utilisateur via le UserService
         // La méthode create du UserService attend maintenant un objet User.
         $userId = $this->userService->create($user);
-
+ 
         if ($userId) {
             // Si la création réussit, je mets à jour l'ID de l'objet User
             // et je le retourne pour la session.
             $user->setId($userId);
+
+            // Attribuer le rôle système par défaut à tout nouvel inscrit
+            (new UserRoleService())->assignRoleToUser($userId, 'ROLE_USER');
+
             return ['success' => true, 'user' => $user];
         } else {
             return ['success' => false, 'errors' => ['general' => 'Une erreur est survenue lors de la création du compte.']];
