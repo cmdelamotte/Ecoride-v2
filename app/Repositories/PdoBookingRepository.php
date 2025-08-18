@@ -18,7 +18,7 @@ class PdoBookingRepository implements BookingRepositoryInterface
     public function findByRideAndUser(int $rideId, int $userId): ?Booking
     {
         return $this->db->fetchOne(
-            "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id AND booking_status = 'confirmed'",
+            "SELECT * FROM bookings WHERE ride_id = :ride_id AND user_id = :user_id",
             ['ride_id' => $rideId, 'user_id' => $userId],
             Booking::class
         );

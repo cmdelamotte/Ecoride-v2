@@ -73,19 +73,26 @@ class UserService
         // Conserver la logique de comparaison locale, mais déléguer la persistance au repository
         $existingUser = $this->findById($user->getId());
         if (!$existingUser) {
+            \App\Core\Logger::warning('UserService.update: user not found id=' . (string)$user->getId());
             return false;
         }
+
         $updateData = [];
         $reflectionClass = new \ReflectionClass($user);
         $properties = $reflectionClass->getProperties(\ReflectionProperty::IS_PRIVATE);
+
         foreach ($properties as $property) {
             $propertyName = $property->getName();
+
+            // Colonnes à ignorer
             if (in_array($propertyName, ['id', 'created_at', 'updated_at', 'system_role'])) {
                 continue;
             }
+
             $property->setAccessible(true);
             $newValue = $property->getValue($user);
             $oldValue = $property->getValue($existingUser);
+
             if ($newValue !== $oldValue) {
                 if (is_bool($newValue)) {
                     $updateData[$propertyName] = (int)$newValue;
@@ -97,9 +104,11 @@ class UserService
                 }
             }
         }
+
         if (empty($updateData)) {
             return false;
         }
+
         return $this->userRepository->updateFields($user->getId(), $updateData);
     }
 
