@@ -165,12 +165,21 @@ export const createRideCard = (ride) => {
             contactPassengersInfo.classList.remove('d-none');
             ride.passengers_details.forEach(passenger => {
                 const li = createElement('li', [], {}, '');
-                // Utilisation de innerHTML temporaire, à modifier pour la mise en prod
-                                li.innerHTML = `
-                    <strong>${simpleEscapeHtml(passenger.username)}</strong> (${passenger.seats_booked} place(s))<br>
-                    <i class="bi bi-telephone-fill me-2"></i> <a href="tel:${simpleEscapeHtml(passenger.phone_number)}">${simpleEscapeHtml(passenger.phone_number)}</a><br>
-                    <i class="bi bi-envelope-fill me-2"></i> <a href="mailto:${simpleEscapeHtml(passenger.email)}">Envoyer un email</a>
-                `;
+                    const strongUsername = createElement('strong', [], {}, passenger.username);
+                    li.appendChild(strongUsername);
+                    li.appendChild(document.createTextNode(` (${passenger.seats_booked} place(s))`));
+                    li.appendChild(createElement('br'));
+
+                    const phoneIcon = createElement('i', ['bi', 'bi-telephone-fill', 'me-2']);
+                    const phoneLink = createElement('a', [], { href: `tel:${passenger.phone_number}` }, passenger.phone_number);
+                    li.appendChild(phoneIcon);
+                    li.appendChild(phoneLink);
+                    li.appendChild(createElement('br'));
+
+                    const emailIcon = createElement('i', ['bi', 'bi-envelope-fill', 'me-2']);
+                    const emailLink = createElement('a', [], { href: `mailto:${passenger.email}` }, 'Envoyer un email');
+                    li.appendChild(emailIcon);
+                    li.appendChild(emailLink);
                 passengersContactList.appendChild(li);
             });
         }
@@ -180,8 +189,8 @@ export const createRideCard = (ride) => {
             contactDriverInfo.classList.remove('d-none');
             driverPhoneLink.href = `tel:${ride.driver_phone}`;
             driverPhoneLink.textContent = ride.driver_phone;
-            // Utilisation de innerHTML temporaire, à modifier pour la mise en prod
-            driverEmailText.innerHTML = `<a href="mailto:${ride.driver_email}">Envoyer un email</a>`;
+            const emailLink = createElement('a', [], { href: `mailto:${ride.driver_email}` }, 'Envoyer un email');
+            driverEmailText.appendChild(emailLink);
         }
     }
 
