@@ -34,7 +34,7 @@ export const createPendingReviewCard = (reviewData) => {
     const ratingTextEl = card.querySelector('.review-rating-text');
     if (ratingStarsEl && ratingTextEl) {
         const rating = reviewData.rating;
-        ratingStarsEl.innerHTML = ''
+        ratingStarsEl.replaceChildren();
         for (let i = 0; i < 5; i++) {
             const starClass = i < rating ? 'bi-star-fill text-warning' : 'bi-star';
             ratingStarsEl.appendChild(createElement('i', ['bi', ...starClass.split(' ')], {}));

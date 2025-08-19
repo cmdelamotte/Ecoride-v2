@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Je remplis le tableau des employés.
      */
     const renderEmployeesTable = (employees) => {
-        employeesTableBody.innerHTML = '';
+        employeesTableBody.replaceChildren();
         if (employees.length === 0) {
             document.getElementById('no-employees-message').classList.remove('d-none');
             return;
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Je remplis le tableau des utilisateurs.
      */
     const renderUsersTable = (users) => {
-        usersTableBody.innerHTML = '';
+        usersTableBody.replaceChildren();
         if (users.length === 0) {
             document.getElementById('no-users-message').classList.remove('d-none');
             return;
