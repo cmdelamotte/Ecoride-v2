@@ -52,8 +52,12 @@ class RideSearchController extends Controller
             }
             $this->jsonResponse($results, 200);
         } else {
-            // Si le service retourne une erreur de validation, utilise le code 400 Bad Request
-            $statusCode = isset($results['errors']) ? 400 : 500;
+            // Si le service retourne une erreur (y compris de validation), utilise le code 400 Bad Request
+            // ou 500 pour les erreurs internes non spécifiées.
+            $statusCode = 400; // Par défaut pour les erreurs client/validation
+            if (isset($results['message']) && strpos($results['message'], 'erreur technique') !== false) {
+                $statusCode = 500; // Pour les erreurs internes du service
+            }
             $this->jsonResponse($results, $statusCode);
         }
     }
