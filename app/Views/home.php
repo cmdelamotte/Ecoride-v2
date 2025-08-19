@@ -14,13 +14,13 @@
     <div class="container">
         <form id="search-form">
             <div class="row g-3"> <div class="col-lg col-md-6 col-12">
-                    <div class="form-input-custom d-flex align-items-center"> <i class="bi bi-geo-alt me-2"></i> <input id="search-form-departure" type="text" class="form-control-custom flex-grow-1" placeholder="Départ" aria-label="Lieu de départ" required> </div>
+                    <div class="form-input-custom d-flex align-items-center"> <i class="bi bi-geo-alt me-2"></i> <input id="search-form-departure" type="text" class="form-control-custom flex-grow-1" placeholder="Départ" aria-label="Lieu de départ" required pattern="[A-Za-zÀ-ÿ\s\-']+" title="Le nom de la ville ne peut contenir que des lettres, espaces, tirets et apostrophes."> </div>
                 </div>
 
                 <div class="col-lg col-md-6 col-12">
                     <div class="form-input-custom d-flex align-items-center">
                         <i class="bi bi-flag me-2"></i>
-                        <input id="search-form-destination" type="text" class="form-control-custom flex-grow-1" placeholder="Destination" aria-label="Lieu de destination" required>
+                        <input id="search-form-destination" type="text" class="form-control-custom flex-grow-1" placeholder="Destination" aria-label="Lieu de destination" required pattern="[A-Za-zÀ-ÿ\s\-']+" title="Le nom de la ville ne peut contenir que des lettres, espaces, tirets et apostrophes.">
                     </div>
                 </div>
 
