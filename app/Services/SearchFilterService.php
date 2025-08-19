@@ -43,6 +43,23 @@ class SearchFilterService
         $arrivalCity = trim($filters['arrival_city'] ?? '');
         $dateStr = trim($filters['date'] ?? '');
 
+        // Validation des formats de ville
+        $cityPattern = '/^[A-Za-zÀ-ÿ\s\-]+$/u';
+        if (!preg_match($cityPattern, $departureCity)) {
+            return [
+                'success' => false,
+                'message' => 'Le format de la ville de départ est invalide.',
+                'rides' => [], 'totalRides' => 0, 'page' => 1, 'limit' => 5, 'totalPages' => 0, 'nextAvailableDate' => null
+            ];
+        }
+        if (!preg_match($cityPattern, $arrivalCity)) {
+            return [
+                'success' => false,
+                'message' => "Le format de la ville d'arrivée est invalide.",
+                'rides' => [], 'totalRides' => 0, 'page' => 1, 'limit' => 5, 'totalPages' => 0, 'nextAvailableDate' => null
+            ];
+        }
+
         // Vérification des paramètres obligatoires
         if (empty($departureCity) || empty($arrivalCity) || empty($dateStr)) {
             return [

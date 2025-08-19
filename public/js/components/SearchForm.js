@@ -38,6 +38,7 @@ export class SearchForm {
 
     validateForm() {
         if (!this.form.checkValidity()) {
+            this.form.reportValidity();
             return false;
         }
 
