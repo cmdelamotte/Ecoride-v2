@@ -61,10 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
      * Charge les véhicules de l'utilisateur et les ajoute au menu déroulant.
      */
     async function loadUserVehicles() {
+        while (vehicleSelect.firstChild) {
+            vehicleSelect.removeChild(vehicleSelect.firstChild);
+        }
         try {
             const data = await apiClient.getUserVehicles();
             if (data.success && data.vehicles.length > 0) {
-                vehicleSelect.innerHTML = '<option selected disabled value="">Choisissez votre véhicule</option>';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Choisissez votre véhicule';
+                defaultOption.selected = true;
+                defaultOption.disabled = true;
+                vehicleSelect.appendChild(defaultOption);
                 data.vehicles.forEach(vehicle => {
                     const option = document.createElement('option');
                     option.value = vehicle.id;
@@ -72,11 +80,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     vehicleSelect.appendChild(option);
                 });
             } else {
-                vehicleSelect.innerHTML = '<option selected disabled value="">Aucun véhicule trouvé. Veuillez en ajouter un.</option>';
+                const noVehicleOption = document.createElement('option');
+                noVehicleOption.value = '';
+                noVehicleOption.textContent = 'Aucun véhicule trouvé. Veuillez en ajouter un.';
+                noVehicleOption.selected = true;
+                noVehicleOption.disabled = true;
+                vehicleSelect.appendChild(noVehicleOption);
             }
         } catch (error) {
             console.error('Erreur lors du chargement des véhicules:', error);
-            vehicleSelect.innerHTML = '<option selected disabled value="">Erreur de chargement</option>';
+                            const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = 'Erreur de chargement';
+                errorOption.selected = true;
+                errorOption.disabled = true;
+                vehicleSelect.appendChild(errorOption);
         }
     }
 
