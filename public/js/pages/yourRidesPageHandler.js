@@ -38,7 +38,7 @@ let currentAllPage = 1;
  * @param {string} end La date/heure de fin (format ISO).
  * @returns {string} La durée formatée (ex: "2h30") ou "N/A".
  */
-const calculateDuration = (start, end) => {
+export const calculateDuration = (start, end) => {
     const departure = new Date(start.replace(' ', 'T'));
     const arrival = new Date(end.replace(' ', 'T'));
     const durationMs = arrival - departure;
@@ -55,7 +55,7 @@ const calculateDuration = (start, end) => {
  * @param {object} ride Les données du trajet.
  * @returns {HTMLElement} L'élément HTML de la carte de trajet.
  */
-const createRideCard = (ride) => {
+export const createRideCard = (ride) => {
     const card = rideCardTemplate.content.cloneNode(true);
 
     // Remplir les données de la carte
