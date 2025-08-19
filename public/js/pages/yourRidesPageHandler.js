@@ -3,6 +3,7 @@ import { displayFlashMessage } from '../utils/displayFlashMessage.js';
 import { createElement, clearChildren } from '../utils/domHelpers.js';
 import { Pagination } from '../components/Pagination.js';
 import { ReviewModalHandler } from '../components/reviewModalHandler.js';
+import { simpleEscapeHtml } from '../utils/htmlSanitizer.js';
 
 // Sélecteurs des conteneurs de trajets
 const upcomingRidesContainer = document.querySelector('#upcoming-rides .rides-list-container');
@@ -165,10 +166,10 @@ export const createRideCard = (ride) => {
             ride.passengers_details.forEach(passenger => {
                 const li = createElement('li', [], {}, '');
                 // Utilisation de innerHTML temporaire, à modifier pour la mise en prod
-                li.innerHTML = `
-                    <strong>${passenger.username}</strong> (${passenger.seats_booked} place(s))<br>
-                    <i class="bi bi-telephone-fill me-2"></i> <a href="tel:${passenger.phone_number}">${passenger.phone_number}</a><br>
-                    <i class="bi bi-envelope-fill me-2"></i> <a href="mailto:${passenger.email}">Envoyer un email</a>
+                                li.innerHTML = `
+                    <strong>${simpleEscapeHtml(passenger.username)}</strong> (${passenger.seats_booked} place(s))<br>
+                    <i class="bi bi-telephone-fill me-2"></i> <a href="tel:${simpleEscapeHtml(passenger.phone_number)}">${simpleEscapeHtml(passenger.phone_number)}</a><br>
+                    <i class="bi bi-envelope-fill me-2"></i> <a href="mailto:${simpleEscapeHtml(passenger.email)}">Envoyer un email</a>
                 `;
                 passengersContactList.appendChild(li);
             });
