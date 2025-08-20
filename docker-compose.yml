@@ -58,6 +58,20 @@ services:
     networks:
       - ecoride-net
 
+  backup:
+    build:
+      context: ./docker/backup
+    container_name: ecoride-backup
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      - mysql
+    networks:
+      - ecoride-net
+
 volumes:
   mysql-data:
   mongo-data:

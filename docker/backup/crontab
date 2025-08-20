@@ -1,0 +1,7 @@
+# Définition de la tâche planifiée
+# Minute (0-59), Heure (0-23), Jour du mois (1-31), Mois (1-12), Jour de la semaine (0-6)
+
+# Exécute le script de sauvegarde tous les jours à 3h00 du matin.
+0 3 * * * /bin/sh /app/backup.sh >> /var/log/cron.log 2>&1
+
+# Une ligne vide est nécessaire à la fin du fichier pour cron
