@@ -21,7 +21,6 @@ class RequestHelper
         // Vérifie que la requête est de type POST pour des raisons de sécurité.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             self::jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
-            exit();
         }
 
         // Récupère le corps de la requête et le décode du format JSON.
@@ -33,7 +32,6 @@ class RequestHelper
         // Vérifie si l'utilisateur est authentifié.
         if (!$userId) {
             self::jsonResponse(['success' => false, 'error' => 'Utilisateur non authentifié'], 401);
-            exit();
         }
 
         // Retourne l'ID de l'utilisateur et les données de la requête.
@@ -46,11 +44,16 @@ class RequestHelper
      * @param array $response Le tableau de données à encoder en JSON.
      * @param int $statusCode Le code de statut HTTP à envoyer avec la réponse.
      */
-    private static function jsonResponse(array $response, int $statusCode = 200): void
+    public static function jsonResponse(array $response, int $statusCode = 200): void
     {
+        // Ces lignes sont communes aux deux modes (normal et test).
         http_response_code($statusCode);
         header('Content-Type: application/json');
         echo json_encode($response);
-        exit();
+
+        // Seulement en mode normal, on arrête l'exécution.
+        if (getenv('APP_ENV') !== 'testing') {
+            exit();
+        }
     }
 }

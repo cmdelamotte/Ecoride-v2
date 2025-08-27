@@ -2,8 +2,7 @@
 
 namespace App\Core;
 
-use App\Core\Database;
-use PDO;
+use App\Helpers\RequestHelper;
 
 /**
  * Classe de base pour tous les contrôleurs de l'application.
@@ -60,15 +59,10 @@ class Controller
      * @param mixed $data Les données à encoder en JSON.
      * @param int $statusCode Le code de statut HTTP de la réponse (par défaut 200 OK).
      */
-    protected function jsonResponse($data, $statusCode = 200)
+    protected function jsonResponse(array $data, int $statusCode = 200): void
     {
-        // Définit l'en-tête HTTP pour indiquer que la réponse est au format JSON.
-        header('Content-Type: application/json');
-        // Définit le code de statut HTTP de la réponse (ex: 200 OK, 400 Bad Request, 500 Internal Server Error).
-        http_response_code($statusCode);
-        // Encode les données PHP en une chaîne JSON et l'affiche.
-        echo json_encode($data);
-        // Termine l'exécution du script pour s'assurer qu'aucune autre sortie n'est envoyée.
-        exit();
+        // Délègue l'envoi de la réponse JSON au helper centralisé.
+        // La logique de test-awareness est maintenant gérée dans RequestHelper::jsonResponse.
+        RequestHelper::jsonResponse($data, $statusCode);
     }
 }
