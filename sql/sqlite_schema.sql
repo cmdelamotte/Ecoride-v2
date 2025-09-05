@@ -39,7 +39,17 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS userroles (
   user_id INTEGER NOT NULL,
   role_id INTEGER NOT NULL,
-  PRIMARY KEY (user_id, role_id)
+  PRIMARY KEY (user_id, role_id),
+  CONSTRAINT `fk_userroles_user`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_userroles_role`
+    FOREIGN KEY (`role_id`)
+    REFERENCES `roles` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS vehicles (
@@ -54,7 +64,17 @@ CREATE TABLE IF NOT EXISTS vehicles (
   is_electric INTEGER NOT NULL DEFAULT 0,
   energy_type TEXT NULL,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_vehicles_user`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_vehicles_brand`
+    FOREIGN KEY (`brand_id`)
+    REFERENCES `brands` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS rides (
@@ -74,7 +94,18 @@ CREATE TABLE IF NOT EXISTS rides (
   driver_message TEXT NULL,
   is_eco_ride INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT `fk_rides_driver`
+    FOREIGN KEY (`driver_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_rides_vehicle`
+    FOREIGN KEY (`vehicle_id`)
+    REFERENCES `vehicles` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -89,7 +120,19 @@ CREATE TABLE IF NOT EXISTS bookings (
   credits_transferred_for_this_booking INTEGER DEFAULT 0,
   booking_date TEXT DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT `fk_bookings_user`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_bookings_ride`
+    FOREIGN KEY (`ride_id`)
+    REFERENCES `rides` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `uq_user_ride_booking` UNIQUE (`user_id`, `ride_id`)
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
@@ -102,7 +145,21 @@ CREATE TABLE IF NOT EXISTS reviews (
   review_status TEXT NOT NULL DEFAULT 'pending_approval',
   submission_date TEXT DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT `fk_reviews_ride`
+    FOREIGN KEY (`ride_id`)
+    REFERENCES `rides` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_reviews_author`
+    FOREIGN KEY (`author_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_reviews_driver`
+    FOREIGN KEY (`driver_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `uq_author_ride_review` UNIQUE (`author_id`, `ride_id`)
 );
 
 CREATE TABLE IF NOT EXISTS reports (
@@ -114,7 +171,21 @@ CREATE TABLE IF NOT EXISTS reports (
   report_status TEXT NOT NULL DEFAULT 'new',
   submission_date TEXT DEFAULT CURRENT_TIMESTAMP,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT `fk_reports_ride`
+    FOREIGN KEY (`ride_id`)
+    REFERENCES `rides` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_reports_reporter`
+    FOREIGN KEY (`reporter_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_reports_reported_driver`
+    FOREIGN KEY (`reported_driver_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `uq_reporter_ride_report` UNIQUE (`reporter_id`, `ride_id`)
 );
 
 

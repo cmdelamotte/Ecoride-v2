@@ -127,7 +127,7 @@ class BookingServiceIntegrationTest extends TestCase
 
     public function test_booking_creation_and_retrieval(): void
     {
-        [$driverId, $vehicleId, $rideId, $passengerId] = $this->createTestData();
+        [, , $rideId, $passengerId] = $this->createTestData();
 
         // Créer une réservation
         $booking = (new Booking())
@@ -161,7 +161,7 @@ class BookingServiceIntegrationTest extends TestCase
             ->setBookingStatus('pending');
 
         $bookingId = $this->bookingRepo->insert($booking);
-
+ 
         // Vérifier le statut initial
         $foundBooking = $this->bookingRepo->findByRideAndUser($rideId, $passengerId);
         $this->assertSame('pending', $foundBooking->getBookingStatus());
@@ -177,7 +177,7 @@ class BookingServiceIntegrationTest extends TestCase
 
     public function test_booking_confirmation_count(): void
     {
-        [$driverId, $vehicleId, $rideId, $passengerId] = $this->createTestData();
+        [, , $rideId, $passengerId] = $this->createTestData();
 
         // Créer plusieurs réservations confirmées
         

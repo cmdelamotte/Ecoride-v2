@@ -124,8 +124,6 @@ CREATE TABLE IF NOT EXISTS `rides` (
     FOREIGN KEY (`vehicle_id`)
     REFERENCES `vehicles` (`id`)
     ON DELETE RESTRICT -- Prevent deleting a vehicle if it's associated with planned/ongoing rides
-                       -- (Or SET NULL if vehicle_id can be NULL and you want to keep the ride info
-                       -- but mark it as 'vehicle unavailable', though this complicates logic)
     ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 

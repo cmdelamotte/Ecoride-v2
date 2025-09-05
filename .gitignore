@@ -18,3 +18,5 @@ debug_log.txt
 *~
 .DS_Store
 /backups/
+
+.prod.env

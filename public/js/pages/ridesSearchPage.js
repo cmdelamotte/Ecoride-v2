@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         noResultsMessage.appendChild(searchNextDateButton);
                     } else {
-                         noResultsMessage.textContent = messageText;
+                        noResultsMessage.textContent = messageText;
                     }
                     noResultsMessage.classList.remove('d-none');
                 }
