@@ -143,7 +143,7 @@ class Router
         // ---------------------------------------------------------------------
         // Appel du contrôleur et de la méthode
         // ---------------------------------------------------------------------
-        $controllerName = "App\\Controllers\ বিলম্ব" . $foundRoute['controller'];
+        $controllerName = "App\\Controllers\\" . $foundRoute['controller'];
         $methodName = $foundRoute['method'];
 
         // Vérifie si la classe du contrôleur existe.
