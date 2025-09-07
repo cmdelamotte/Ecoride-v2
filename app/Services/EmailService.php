@@ -44,16 +44,11 @@ class EmailService
             $this->mailer->Password   = $smtpPass;
             $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // ou ENCRYPTION_STARTTLS
             $this->mailer->Port       = $smtpPort;
-            try {
-                $this->mailer->setFrom($smtpUser, 'EcoRide');
-            } catch (PHPMailerException $e) {
-                // Fallback silencieux si l'adresse n'est pas valide
-                $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
-                Logger::error('EmailService: adresse expéditeur invalide, fallback no-reply@localhost. ' . $e->getMessage());
-            }
+            $this->mailer->setFrom(getenv('MAIL_FROM_ADDRESS'), 'EcoRide');
         } else {
-            // Fallback sans SMTP si env incomplet
-            $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
+            // Si les variables d'environnement SMTP sont incomplètes,
+            // loggez une erreur et ne configurez pas l'envoi SMTP.
+            Logger::error('EmailService: Configuration SMTP incomplète. Veuillez vérifier SMTP_HOST, SMTP_USERNAME, SMTP_PORT, MAIL_FROM_ADDRESS dans le fichier .env.');
         }
     }
 
