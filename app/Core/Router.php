@@ -127,7 +127,7 @@ class Router
         // ---------------------------------------------------------------------
         if (strtoupper($method) === 'POST') {
             // Définir les routes POST publiques qui ne nécessitent pas de vérification CSRF
-            $publicPostRoutes = ['/contact/submit'];
+            $publicPostRoutes = ['/contact'];
 
             if (!in_array($uri, $publicPostRoutes)) {
                 $csrfToken = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
