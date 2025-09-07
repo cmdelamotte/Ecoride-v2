@@ -223,4 +223,38 @@ class EmailService
             throw $e;
         }
     }
+
+    /**
+     * Envoie un email depuis le formulaire de contact.
+     *
+     * @param array $data Les données du formulaire (name, email, subject, message).
+     * @throws PHPMailerException Si l'envoi de l'email échoue.
+     */
+    public function sendContactFormEmail(array $data): void
+    {
+        try {
+            $this->mailer->clearAllRecipients();
+            $this->mailer->addAddress(getenv('CONTACT_EMAIL_RECIPIENT'), 'Support EcoRide');
+            $this->mailer->addReplyTo($data['email'], $data['name']);
+            $this->mailer->Subject = 'Nouveau message de contact EcoRide: ' . htmlspecialchars($data['subject']);
+            $this->mailer->isHTML(true);
+
+            $emailBody = "Bonjour,<br><br>";
+            $emailBody .= "Vous avez reçu un nouveau message via le formulaire de contact EcoRide :<br><br>";
+            $emailBody .= "<strong>Nom :</strong> " . htmlspecialchars($data['name']) . "<br>";
+            $emailBody .= "<strong>Email :</strong> " . htmlspecialchars($data['email']) . "<br>";
+            $emailBody .= "<strong>Sujet :</strong> " . htmlspecialchars($data['subject']) . "<br>";
+            $emailBody .= "<strong>Message :</strong><br>" . nl2br(htmlspecialchars($data['message'])) . "<br><br>";
+            $emailBody .= "---<br>Ce message a été envoyé depuis le formulaire de contact du site EcoRide.";
+            
+            $this->mailer->Body = $emailBody;
+            $this->mailer->AltBody = strip_tags($emailBody);
+
+            $this->mailer->send();
+            Logger::info("Contact form email sent successfully from {$data['email']}");
+        } catch (PHPMailerException $e) {
+            Logger::error("PHPMailer Error while sending contact form email: " . $e->getMessage() . " (Mailer Error Info: " . $this->mailer->ErrorInfo . ")");
+            throw new \Exception("Le message n'a pas pu être envoyé. Veuillez réessayer plus tard.");
+        }
+    }
 }
