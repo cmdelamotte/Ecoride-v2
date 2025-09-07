@@ -42,7 +42,7 @@ class EmailService
             $this->mailer->SMTPAuth   = true;
             $this->mailer->Username   = $smtpUser;
             $this->mailer->Password   = $smtpPass;
-            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // ou ENCRYPTION_STARTTLS
+            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // ou ENCRYPTION_STARTTLS
             $this->mailer->Port       = $smtpPort;
             try {
                 $this->mailer->setFrom($smtpUser, 'EcoRide');
