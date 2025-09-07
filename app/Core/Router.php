@@ -9,9 +9,9 @@ use App\Helpers\CsrfHelper;
 /**
  * Classe Router
  * Gère le routage des requêtes HTTP vers les contrôleurs et méthodes appropriés.
- * Elle charge les définitions de routes, fait correspondre l'URI de la requête
+ * Elle charge les définitions de routes, fait correspondre l URI de la requête
  * et la méthode HTTP, gère les paramètres dynamiques, et applique les règles
- * d'authentification et d'autorisation basées sur les rôles.
+ * d authentification et d autorisation basées sur les rôles.
  */
 class Router
 {
@@ -22,29 +22,29 @@ class Router
 
     /**
      * Constructeur du Router.
-     * Charge les définitions de routes au moment de l'instanciation du routeur.
+     * Charge les définitions de routes au moment de l l instanciation du routeur.
      * Le fichier routes.php doit retourner un tableau de routes.
      */
     public function __construct()
     {
         // __DIR__ fait référence au répertoire du fichier actuel (app/Core).
-        // Nous remontons d'un niveau (à app/) puis nous allons chercher routes.php.
+        // Nous remontons d un niveau (à app/) puis nous allons chercher routes.php.
         $this->routes = require __DIR__ . '/../routes.php';
     }
 
     /**
      * Exécute le processus de routage.
-     * Analyse l'URI de la requête, la méthode HTTP, et tente de trouver une correspondance
+     * Analyse l URI de la requête, la méthode HTTP, et tente de trouver une correspondance
      * parmi les routes définies. Si une correspondance est trouvée, le contrôleur et la méthode
      * associés sont appelés. Gère également les erreurs 404 et les accès non autorisés.
      */
     public function run()
     {
-        // Récupère l'URI de la requête (ex: '/rides/123?param=value')
+        // Récupère l URI de la requête (ex: '/rides/123?param=value')
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        // Nettoie l'URI en supprimant les slashes de fin (ex: '/rides/' devient '/rides')
+        // Nettoie l URI en supprimant les slashes de fin (ex: '/rides/' devient '/rides')
         $uri = rtrim($uri, '/');
-        // Si l'URI est vide après nettoyage (ex: pour la racine), la définit à '/'
+        // Si l URI est vide après nettoyage (ex: pour la racine), la définit à '/'
         if (empty($uri)) {
             $uri = '/';
         }
@@ -63,17 +63,17 @@ class Router
             // {id} est remplacé par un groupe de capture pour les chiffres (\d+).
             // {slug} pourrait être remplacé par ([a-zA-Z0-9-]+) pour des slugs.
             $pattern = preg_replace('#/{([a-zA-Z0-9_]+)}#', '/([a-zA-Z0-9_]+)', $route['path']);
-            // Ajoute les ancres de début (^) et de fin ($) pour s'assurer que toute la chaîne correspond.
+            // Ajoute les ancres de début (^) et de fin ($) pour s assurer que toute la chaîne correspond.
             $pattern = '#^' . $pattern . '$#';
 
-            // Tente de faire correspondre l'URI de la requête avec le pattern de la route.
+            // Tente de faire correspondre l URI de la requête avec le pattern de la route.
             // Si une correspondance est trouvée, les valeurs capturées sont stockées dans $matches.
             if (preg_match($pattern, $uri, $matches)) {
                 // Vérifie si la méthode HTTP de la route correspond à la méthode de la requête.
-                // Si 'http_method' n'est pas définie dans la route, elle correspond à n'importe quelle méthode.
+                // Si 'http_method' n est pas définie dans la route, elle correspond à n importe quelle méthode.
                 if (!isset($route['http_method']) || strtoupper($route['http_method']) === $method) {
                     $foundRoute = $route;
-                    // Supprime le premier élément de $matches (qui est l'URI complète) pour ne garder que les paramètres capturés.
+                    // Supprime le premier élément de $matches (qui est l URI complète) pour ne garder que les paramètres capturés.
                     array_shift($matches);
                     $params = $matches;
                     break; // Une correspondance exacte a été trouvée, on arrête la boucle.
@@ -83,7 +83,7 @@ class Router
             }
         }
 
-        // Si aucune route correspondante n'a été trouvée
+        // Si aucune route correspondante n a été trouvée
         if ($foundRoute === null) {
             
             // Redirige vers la page 404 via le ErrorController.
@@ -92,13 +92,13 @@ class Router
         }
 
         // ---------------------------------------------------------------------
-        // Gestion de l'authentification et des rôles
+        // Gestion de l authentification et des rôles
         // ---------------------------------------------------------------------
         // Vérifie si la route nécessite une authentification.
         if (isset($foundRoute['auth']) && $foundRoute['auth'] === true) {
-            // Vérifie si l'utilisateur est connecté (exemple simple, à remplacer par une logique plus robuste).
+            // Vérifie si l utilisateur est connecté (exemple simple, à remplacer par une logique plus robuste).
             // Dans un vrai projet, cela impliquerait de vérifier une session, un token JWT, etc.
-            if (!isset($_SESSION['user_id'])) { // Supposons que l'ID utilisateur est stocké en session après connexion.
+            if (!isset($_SESSION['user_id'])) { // Supposons que l ID utilisateur est stocké en session après connexion.
                 // Redirige vers la page de connexion si non authentifié.
                 header('Location: /login');
                 exit();
@@ -123,21 +123,27 @@ class Router
         }
 
         // ---------------------------------------------------------------------
-        // Vérification CSRF minimale pour requêtes mutantes (POST)
+        // Vérification CSRF pour les requêtes POST, sauf pour les routes publiques
         // ---------------------------------------------------------------------
         if (strtoupper($method) === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
-            if (!CsrfHelper::validateToken(is_string($csrfToken) ? $csrfToken : null)) {
-                header('HTTP/1.1 419 Page Expired');
-                echo 'Invalid CSRF token.';
-                exit();
+            // Définir les routes POST publiques qui ne nécessitent pas de vérification CSRF
+            $publicPostRoutes = ['/contact/submit'];
+
+            if (!in_array($uri, $publicPostRoutes)) {
+                $csrfToken = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+                if (!CsrfHelper::validateToken(is_string($csrfToken) ? $csrfToken : null)) {
+                    // Utiliser un code 401 pour être plus cohérent avec le retour de la console
+                    header('HTTP/1.1 401 Unauthorized');
+                    echo 'Invalid CSRF token.';
+                    exit();
+                }
             }
         }
 
         // ---------------------------------------------------------------------
         // Appel du contrôleur et de la méthode
         // ---------------------------------------------------------------------
-        $controllerName = "App\\Controllers\\" . $foundRoute['controller'];
+        $controllerName = "App\\Controllers\ বিলম্ব" . $foundRoute['controller'];
         $methodName = $foundRoute['method'];
 
         // Vérifie si la classe du contrôleur existe.
@@ -156,7 +162,7 @@ class Router
             return;
         }
 
-        // Appelle la méthode du contrôleur avec les paramètres extraits de l'URI.
+        // Appelle la méthode du contrôleur avec les paramètres extraits de l URI.
         call_user_func_array([$controller, $methodName], $params);
     }
 
@@ -187,6 +193,6 @@ class Router
                 $errorController->internalError();
                 break;
         }
-        exit(); // Arrête l'exécution après avoir géré l'erreur.
+        exit(); // Arrête l exécution après avoir géré l erreur.
     }
 }
