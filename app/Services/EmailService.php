@@ -26,7 +26,7 @@ class EmailService
         // En environnement de tests, éviter toute configuration SMTP stricte
         if ((getenv('APP_ENV') ?: '') === 'testing') {
             // Définit un expéditeur par défaut valide pour éviter les erreurs PHPMailer
-            $this->mailer->setFrom('no-reply@example.com', 'EcoRide');
+            
             return;
         }
 
