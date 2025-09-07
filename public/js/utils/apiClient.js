@@ -61,7 +61,7 @@ export const apiClient = {
     publishRide: (data) => callApi('/publish-ride', 'POST', data),
 
     // Contact
-    submitContactForm: (data) => callApi('/contact', 'POST', data),
+    submitContactForm: (data) => callApi('/contact/submit', 'POST', data),
 
     // Reports
     submitReport: (data) => callApi('/api/reports', 'POST', data),
