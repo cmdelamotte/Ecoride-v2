@@ -125,7 +125,7 @@ class Router
         // --------------------------------------------------------------------- 
         // Vérification CSRF pour les requêtes POST (TEMPORAIREMENT DÉSACTIVÉE POUR DÉBOGAGE)
         // --------------------------------------------------------------------- 
-        /*
+        
         if (strtoupper($method) === 'POST') {
             // Définir les routes POST publiques qui ne nécessitent pas de vérification CSRF
             $publicPostRoutes = ['/contact'];
@@ -140,7 +140,7 @@ class Router
                 }
             }
         }
-        */
+        
 
         // --------------------------------------------------------------------- 
         // Appel du contrôleur et de la méthode

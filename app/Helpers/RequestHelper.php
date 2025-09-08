@@ -39,6 +39,29 @@ class RequestHelper
     }
 
     /**
+     * Récupère le corps JSON d'une requête POST publique (sans exigence d'authentification).
+     *
+     * @return array Les données décodées du corps JSON.
+     */
+    public static function getPublicJsonData(): array
+    {
+        // Autoriser uniquement POST pour cohérence et sécurité.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            self::jsonResponse(['success' => false, 'error' => 'Méthode non autorisée'], 405);
+        }
+
+        // Décoder le JSON du corps de requête.
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        // Valider le format JSON attendu.
+        if (!is_array($data)) {
+            self::jsonResponse(['success' => false, 'error' => 'Données JSON invalides'], 400);
+        }
+
+        return $data;
+    }
+
+    /**
      * Envoie une réponse JSON et termine l'exécution du script.
      *
      * @param array $response Le tableau de données à encoder en JSON.

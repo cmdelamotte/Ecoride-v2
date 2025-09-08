@@ -35,13 +35,7 @@ class ContactController extends Controller
      */
     public function submit()
     {
-        $requestData = RequestHelper::getApiRequestData();
-        $data = $requestData['data'];
-
-        if (!$data) {
-            $this->jsonResponse(['success' => false, 'message' => 'Données invalides ou manquantes.'], 400);
-            return;
-        }
+        $data = RequestHelper::getPublicJsonData();
 
         try {
             $this->contactService->submitContactForm($data);
