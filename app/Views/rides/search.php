@@ -180,6 +180,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Modale dédiée pour visiteurs non connectés -->
+            <div class="modal fade" id="guestLoginModal" tabindex="-1" aria-labelledby="guestLoginModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="guestLoginModalLabel">Connexion requise</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Veuillez vous connecter ou vous inscrire pour réserver ce trajet.</p>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <a class="btn secondary-btn" id="guest-register-link" href="/register">S'inscrire</a>
+                            <a class="btn primary-btn" id="guest-login-link" href="/login">Se connecter</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 </section>
 
 <template id="ride-card-template">

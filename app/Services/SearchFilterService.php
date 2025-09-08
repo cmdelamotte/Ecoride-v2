@@ -140,14 +140,18 @@ class SearchFilterService
 
         try {
             // 3. Compter le nombre total de résultats pour la pagination
-            $countSql = "SELECT COUNT(DISTINCT r.id) FROM rides r
+            // IMPORTANT: utiliser un sous-select pour compter les lignes après GROUP BY/HAVING
+            $countSql = "SELECT COUNT(*) FROM (
+                SELECT r.id
+                FROM rides r
                 JOIN users u ON r.driver_id = u.id
                 JOIN vehicles v ON r.vehicle_id = v.id
                 LEFT JOIN bookings b ON r.id = b.ride_id AND b.booking_status = 'confirmed'
                 {$baseWhereSql}
                 GROUP BY r.id, r.seats_offered
-                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed";
-
+                HAVING (r.seats_offered - COALESCE(SUM(b.seats_booked), 0)) >= :seats_needed
+            ) AS sub";
+ 
             $totalRides = $this->db->fetchColumn(
                 $countSql,
                 array_merge($queryParams, [':seats_needed' => $seatsNeeded])

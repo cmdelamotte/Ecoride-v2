@@ -19,6 +19,55 @@ const confirmBookingBtn = document.getElementById('confirm-booking-btn');
 
 let currentRideId = null;
 
+function isAuthenticated() {
+    const authMeta = document.querySelector('meta[name="auth-status"]');
+    return !!authMeta && authMeta.getAttribute('content') === 'authenticated';
+}
+
+function stripParticipateDataAttributes(root = document) {
+    const buttons = root.querySelectorAll('.participate-button');
+    buttons.forEach(btn => {
+        if (btn.hasAttribute('data-bs-toggle')) btn.removeAttribute('data-bs-toggle');
+        if (btn.hasAttribute('data-bs-target')) btn.removeAttribute('data-bs-target');
+    });
+}
+
+function setupGuestMutationObserver() {
+    const container = document.getElementById('ride-results-container') || document.body;
+    const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.matches && node.matches('.participate-button')) {
+                        stripParticipateDataAttributes(node.parentElement || node);
+                    } else {
+                        const innerButtons = node.querySelectorAll ? node.querySelectorAll('.participate-button') : [];
+                        if (innerButtons.length) stripParticipateDataAttributes(node);
+                    }
+                }
+            });
+        }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    // Nettoyage initial
+    stripParticipateDataAttributes(container);
+}
+
+function openGuestLoginModal() {
+    // Mettre à jour les liens avec redirect=URL courante
+    const redirect = encodeURIComponent(window.location.href);
+    const loginLink = document.getElementById('guest-login-link');
+    const registerLink = document.getElementById('guest-register-link');
+    if (loginLink) loginLink.href = `/login?redirect=${redirect}`;
+    if (registerLink) registerLink.href = `/register?redirect=${redirect}`;
+
+    const modalEl = document.getElementById('guestLoginModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+}
+
 /**
  * Prépare et affiche la modale de confirmation avec les détails du trajet.
  * @param {object} rideData - Les données du trajet à afficher.
@@ -90,24 +139,46 @@ async function handleConfirmBooking() {
  * Ajoute les écouteurs d'événements nécessaires.
  */
 export function initBookingHandler() {
-    // Écouteur sur le bouton de confirmation final dans la modale
-    confirmBookingBtn.addEventListener('click', handleConfirmBooking);
+    // Mode invité: empêcher l'auto-ouverture de la modale Bootstrap et afficher une modale dédiée
+    if (!isAuthenticated()) {
+        // Supprimer les attributs data-bs-* pour éviter tout "flash"
+        stripParticipateDataAttributes(document);
+        // Observer les nouvelles cartes insérées et nettoyer leurs attributs
+        setupGuestMutationObserver();
+        // Intercepter le clic avant Bootstrap (capture = true)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.participate-button');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openGuestLoginModal();
+        }, true);
+    }
+
+    // Écouteur sur le bouton de confirmation final dans la modale (utilisateurs connectés)
+    confirmBookingBtn?.addEventListener('click', handleConfirmBooking);
 
     // Bootstrap déclenche des événements sur la modale. Nous pouvons les utiliser
     // pour savoir quand la modale est sur le point de s'afficher.
-    confirmationModalEl.addEventListener('show.bs.modal', function (event) {
+    confirmationModalEl?.addEventListener('show.bs.modal', function (event) {
+        // Si invité, ne jamais laisser s'ouvrir cette modale (filet de sécurité)
+        if (!isAuthenticated()) {
+            event.preventDefault();
+            openGuestLoginModal();
+            return;
+        }
         // event.relatedTarget est le bouton qui a déclenché la modale
         const button = event.relatedTarget;
         
         // Récupérer les données du trajet stockées sur le bouton ou sa carte parente
-        const rideCard = button.closest('.ride-card');
+        const rideCard = button?.closest('.ride-card');
         if (rideCard && rideCard.dataset.ride) {
             const rideData = JSON.parse(rideCard.dataset.ride);
             populateAndShowModal(rideData);
         } else {
             console.error("Impossible de récupérer les données du trajet pour la modale.");
             // Empêcher la modale de s'ouvrir si les données sont manquantes
-            event.preventDefault(); 
+            event.preventDefault();
         }
     });
 }

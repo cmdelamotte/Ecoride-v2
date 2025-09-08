@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearChildren(noResultsMessage);
         noResultsMessage.classList.add('d-none');
 
+        const MIN_LOADING_MS = 800;
+        const startTs = performance.now();
         loadingIndicator.classList.remove('d-none');
 
         try {
@@ -109,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             newSearchParams.set('date', data.nextAvailableDate);
                             newSearchParams.set('page', '1');
                             window.history.pushState({ date: data.nextAvailableDate }, "", `?${newSearchParams.toString()}`);
-                            fetchAndDisplayRides(newSearchParams); 
+                            fetchAndDisplayRides(newSearchParams);
                         };
                         noResultsMessage.appendChild(searchNextDateButton);
                     } else {
@@ -126,6 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
             noResultsMessage.textContent = "Une erreur de communication est survenue.";
             noResultsMessage.classList.remove('d-none');
         } finally {
+            const elapsed = performance.now() - startTs;
+            const remaining = MIN_LOADING_MS - elapsed;
+            if (remaining > 0) {
+                await new Promise(resolve => setTimeout(resolve, remaining));
+            }
             loadingIndicator.classList.add('d-none');
         }
     }

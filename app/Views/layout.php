@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecoride</title>
     <meta name="csrf-token" content="<?= htmlspecialchars(\App\Helpers\CsrfHelper::getToken()) ?>">
+    <?php $authStatus = isset($_SESSION['user_id']) ? 'authenticated' : 'guest'; ?>
+    <meta name="auth-status" content="<?= htmlspecialchars($authStatus) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
