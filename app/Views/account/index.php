@@ -178,6 +178,21 @@ $pageScripts = ['/js/pages/accountPage.js'];
                                             <input type="number" class="form-control-custom flex-grow-1" id="vehicle-seats" name="vehicle_seats" placeholder="Nombre de places disponibles" aria-label="Nombre de places disponibles" min="1" max="8" required>
                                         </div>
                                     </div>
+                                    <div class="col-12">
+                                        <label for="vehicle-energy-type" class="form-label">Type d'énergie</label>
+                                        <div class="form-input-custom d-flex align-items-center">
+                                            <select class="form-select-custom flex-grow-1" id="vehicle-energy-type" name="energy_type" aria-label="Type d'énergie">
+                                                <option value="">Sélectionnez un type d'énergie...</option>
+                                                <option value="Essence">Essence</option>
+                                                <option value="Diesel">Diesel</option>
+                                                <option value="Hybride">Hybride</option>
+                                                <option value="Électrique">Électrique</option>
+                                                <option value="GPL">GPL</option>
+                                                <option value="Hydrogène">Hydrogène</option>
+                                                <option value="Autre">Autre</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div class="col-12 mt-2">
                                         <div class="form-check form-check-custom-vehicle">
                                             <input class="form-check-input" type="checkbox" id="vehicle-electric" name="vehicle_electric">

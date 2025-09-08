@@ -77,10 +77,16 @@ export class VehicleForm {
             document.getElementById('vehicle-registration-date').value = vehicleData.registration_date || '';
             document.getElementById('vehicle-seats').value = vehicleData.passenger_capacity || '';
             document.getElementById('vehicle-electric').checked = vehicleData.is_electric || false;
+            const energyTypeEl = document.getElementById('vehicle-energy-type');
+            if (energyTypeEl) energyTypeEl.value = vehicleData.energy_type || '';
         } else {
             this.titleElement.textContent = "Ajouter un Véhicule";
             this.editingIdInput.value = "";
             this.brandSelect.value = "";
+            const energyTypeEl = document.getElementById('vehicle-energy-type');
+            if (energyTypeEl) energyTypeEl.value = '';
+            const electricEl = document.getElementById('vehicle-electric');
+            if (electricEl) electricEl.checked = false;
         }
         this.container.classList.remove('d-none');
         this.addBtn.classList.add('d-none');
