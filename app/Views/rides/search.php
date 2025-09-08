@@ -189,7 +189,11 @@
                     <div class="col-md-3 text-center text-md-start mb-2 mb-md-0">
                         <img alt="Photo de profil" class="rounded-circle mb-2 mx-auto d-block driver-profile-photo" width="50" height="50">
                         <span class="driver-username h5 card-title mb-1"></span>
-                        <p class="card-text mb-0"><i class="bi bi-star-fill text-warning"></i><span class="driver-rating"></span></p>
+                        <p class="card-text mb-0">
+                            <span class="driver-rating-stars" aria-hidden="true"></span>
+                            <span class="visually-hidden driver-rating-aria"></span>
+                            <span class="driver-rating-text"></span>
+                        </p>
                     </div>
                     <div class="col-md-6 mb-2 mb-md-0">
                         <p class="card-text mb-1"><span class="form-label">Ville de départ : </span><span class="ride-departure-location"></span></p>

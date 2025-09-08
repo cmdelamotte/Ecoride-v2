@@ -23,7 +23,29 @@ export class RideCard {
             driverPhotoEl.alt = 'Photo de profil par défaut';
         }
         card.querySelector('.driver-username').textContent = this.rideData.driver_username;
-        // Note: Le rating du driver n'est pas dans la recherche initiale, il sera chargé avec les détails
+
+        // Affichage dynamique de la note conducteur (étoiles + texte)
+        const starsEl = card.querySelector('.driver-rating-stars');
+        const textEl = card.querySelector('.driver-rating-text');
+        const ariaEl = card.querySelector('.driver-rating-aria');
+
+        let rating = parseFloat(this.rideData.driver_rating);
+        if (isNaN(rating)) rating = 0;
+        const rounded = Math.max(0, Math.min(5, Math.round(rating * 2) / 2));
+
+        if (starsEl) {
+            starsEl.innerHTML = this.renderStars(rounded);
+            const titleText = `${rounded.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}/5`;
+            starsEl.setAttribute('title', titleText);
+        }
+        if (textEl) {
+            const formatted = rounded.toLocaleString('fr-FR', { minimumFractionDigits: Number.isInteger(rounded) ? 0 : 1, maximumFractionDigits: 1 });
+            textEl.textContent = `${formatted}/5`;
+        }
+        if (ariaEl) {
+            ariaEl.textContent = `Note conducteur ${rounded}/5`;
+        }
+
         card.querySelector('.ride-departure-location').textContent = this.rideData.departure_city;
         card.querySelector('.ride-arrival-location').textContent = this.rideData.arrival_city;
         
@@ -83,6 +105,20 @@ export class RideCard {
         card.querySelector('.ride-arrival-address-details').textContent = this.rideData.arrival_address || '';
 
         return card;
+    }
+
+    // Génère 5 icônes d'étoiles selon une note arrondie au 0,5
+    renderStars(rating) {
+        const safe = isNaN(rating) ? 0 : Math.max(0, Math.min(5, Math.round(rating * 2) / 2));
+        const full = Math.floor(safe);
+        const half = safe - full >= 0.5 ? 1 : 0;
+        const empty = 5 - full - half;
+
+        const icons = [];
+        for (let i = 0; i < full; i++) icons.push('<i class="bi bi-star-fill text-warning"></i>');
+        if (half) icons.push('<i class="bi bi-star-half text-warning"></i>');
+        for (let i = 0; i < empty; i++) icons.push('<i class="bi bi-star text-warning"></i>');
+        return icons.join('');
     }
 
     async loadDetails() {

@@ -57,6 +57,7 @@ class RideHelper
             // Informations sur le conducteur (depuis l'objet User)
             'driver_id' => $driver ? $driver->getId() : null,
             'driver_username' => $driver ? $driver->getUsername() : 'N/A',
+            'driver_rating' => $driver ? $driver->getDriverRating() : null,
             'driver_photo' => $driver ? $driver->getProfilePicturePath() : null,
             'driver_pref_smoker' => $driver ? $driver->getDriverPrefSmoker() : null,
             'driver_pref_animals' => $driver ? $driver->getDriverPrefAnimals() : null,
@@ -122,6 +123,7 @@ class RideHelper
 
     'driver_id' => $driver ? $driver->getId() : null,
     'driver_username' => $driver ? $driver->getUsername() : 'N/A',
+    'driver_rating' => $driver ? $driver->getDriverRating() : null,
     'driver_photo' => $driver ? $driver->getProfilePicturePath() : null,
     'driver_pref_smoker' => $driver ? $driver->getDriverPrefSmoker() : null,
     'driver_pref_animals' => $driver ? $driver->getDriverPrefAnimals() : null,
