@@ -112,10 +112,10 @@ class AuthService
             return ['success' => false, 'error' => 'Identifiant ou mot de passe incorrect.'];
         }
 
-        // On pourrait ajouter une vérification du statut du compte ici (ex: banni, non activé)
-        // if ($user->getStatus() !== 'active') {
-        //     return ['success' => false, 'error' => 'Votre compte est inactif.'];
-        // }
+        // Ajout de la vérification du statut du compte
+        if ($user->getAccountStatus() !== 'active') {
+            return ['success' => false, 'error' => 'Votre compte est inactif ou suspendu. Veuillez contacter le support.'];
+        }
 
         return ['success' => true, 'user' => $user];
     }
