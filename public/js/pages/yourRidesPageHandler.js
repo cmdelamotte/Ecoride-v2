@@ -65,6 +65,13 @@ export const createRideCard = (ride) => {
     card.querySelector('.ride-date').textContent = new Date(ride.departure_time).toLocaleDateString('fr-FR');
     card.querySelector('.ride-time').textContent = new Date(ride.departure_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     card.querySelector('.ride-duration').textContent = calculateDuration(ride.departure_time, ride.estimated_arrival_time); // AJOUT
+
+    // Nouvelles infos adresses
+    const depAddrEl = card.querySelector('.ride-departure-address');
+    if (depAddrEl) depAddrEl.textContent = ride.departure_address || '';
+    const arrAddrEl = card.querySelector('.ride-arrival-address');
+    if (arrAddrEl) arrAddrEl.textContent = ride.arrival_address || '';
+
     card.querySelector('.ride-vehicle-details').textContent = `${ride.vehicle_brand_name} ${ride.vehicle_model}`; // AJOUT
     // Gérer le rôle (conducteur/passager) et l'affichage du prix
     const priceLabelEl = card.querySelector('.price-label');

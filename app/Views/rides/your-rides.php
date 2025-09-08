@@ -113,15 +113,21 @@
             <div class="row">
                 <div class="col-md-8">
                     <h5 class="card-title mb-1 ride-title"></h5> <p class="card-text mb-1 ride-datetime">
-                        <i class="bi bi-calendar3 me-1"></i> <span class="ride-date"></span> 
+                        <i class="bi bi-calendar3 me-1"></i> <span class="ride-date"></span>
                         <i class="bi bi-dot"></i> <i class="bi bi-clock me-1"></i> <span class="ride-time"></span>
                     </p>
-                    <p class="card-text mb-1 ride-duration-info"> 
+                    <p class="card-text mb-1 ride-duration-info">
                         <i class="bi bi-hourglass-split me-1"></i> <span class="form-label">Durée estimée :</span> <span class="ride-duration"></span>
+                    </p>
+                    <p class="card-text mb-1 ride-departure-address-line">
+                        <span class="form-label">Adresse de départ :</span> <span class="ride-departure-address"></span>
+                    </p>
+                    <p class="card-text mb-1 ride-arrival-address-line">
+                        <span class="form-label">Adresse d'arrivée :</span> <span class="ride-arrival-address"></span>
                     </p>
                     <div class="role-specific-info">
                         <p class="card-text mb-1 passenger-view-driver-info d-none">
-                            <span class="form-label">Chauffeur :</span> <span class="ride-driver-name"></span> 
+                            <span class="form-label">Chauffeur :</span> <span class="ride-driver-name"></span>
                             (<i class="bi bi-star-fill text-warning"></i> <span class="ride-driver-rating"></span>)
                         </p>
                         <p class="card-text mb-1 ride-vehicle-info">
