@@ -89,4 +89,33 @@ class ReviewService
             Review::class
         );
     }
+    /**
+     * Récupère les derniers avis approuvés pour un conducteur.
+     *
+     * @param int $driverId ID du conducteur
+     * @param int $limit Nombre d'avis à retourner (par défaut 2)
+     * @return array Tableau associatif: [ [rating, comment, submission_date, author_username], ... ]
+     */
+    public function getLatestApprovedByDriverId(int $driverId, int $limit = 2): array
+    {
+        $sql = "SELECT r.rating,
+                       r.comment,
+                       r.created_at AS submission_date,
+                       u.username AS author_username
+                FROM reviews r
+                JOIN users u ON u.id = r.author_id
+                WHERE r.driver_id = :driver_id
+                  AND r.review_status = 'approved'
+                ORDER BY r.created_at DESC
+                LIMIT :limit";
+
+        $pdo = $this->db->getConnection();
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':driver_id', $driverId, \PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        return $rows;
+    }
 }

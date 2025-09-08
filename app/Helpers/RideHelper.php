@@ -29,13 +29,21 @@ class RideHelper
 
         $formattedReviews = [];
         foreach ($reviews as $review) {
-            $formattedReviews[] = [
-                'rating' => $review->getRating(),
-                'comment' => $review->getComment(),
-                'submission_date' => $review->getSubmissionDate(),
-                // TODO: Ajouter le nom de l'auteur si nécessaire
-                'author_username' => 'AuteurAnonyme' 
-            ];
+            if (is_array($review)) {
+                $formattedReviews[] = [
+                    'rating' => isset($review['rating']) ? (int)$review['rating'] : null,
+                    'comment' => $review['comment'] ?? '',
+                    'submission_date' => $review['submission_date'] ?? ($review['created_at'] ?? null),
+                    'author_username' => $review['author_username'] ?? 'Utilisateur'
+                ];
+            } elseif ($review instanceof \App\Models\Review) {
+                $formattedReviews[] = [
+                    'rating' => $review->getRating(),
+                    'comment' => $review->getComment(),
+                    'submission_date' => $review->getCreatedAt(),
+                    'author_username' => 'Utilisateur'
+                ];
+            }
         }
 
         return [
@@ -73,6 +81,11 @@ class RideHelper
             'vehicle_is_electric' => $vehicle ? $vehicle->getIsElectric() : false,
             'vehicle_energy_type' => $vehicle ? $vehicle->getEnergyType() : 'N/A',
             'vehicle_brand_name' => ($vehicle && $vehicle->getBrand()) ? $vehicle->getBrand()->getName() : 'N/A',
+
+            // Exposer les préférences du conducteur au niveau racine (utilisé par le front)
+            'driver_pref_smoker' => $driver ? $driver->getDriverPrefSmoker() : null,
+            'driver_pref_animals' => $driver ? $driver->getDriverPrefAnimals() : null,
+            'driver_pref_custom' => $driver ? $driver->getDriverPrefCustom() : null,
 
             // Avis sur le conducteur
             'reviews' => $formattedReviews

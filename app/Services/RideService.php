@@ -162,10 +162,15 @@ class RideService
         if ($ride->getDriverId()) {
             $driver = $this->userService->findById($ride->getDriverId());
             if ($driver) {
+                // Charger les 2 derniers avis approuvés pour ce conducteur
+                $reviewService = new \App\Services\ReviewService();
+                $latestApprovedReviews = $reviewService->getLatestApprovedByDriverId($driver->getId(), 2); // tableaux associatifs
+                // Attacher les avis au conducteur (le helper de sortie gérera le format)
+                $driver->setReviews($latestApprovedReviews);
                 $ride->setDriver($driver);
             }
         }
-
+        
         // 2b. Charger le véhicule (objet Vehicle) et sa marque (objet Brand).
         if ($ride->getVehicleId()) {
             // J'utilise la nouvelle méthode du VehicleService pour obtenir l'objet complet.
