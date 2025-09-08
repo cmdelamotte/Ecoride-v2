@@ -74,6 +74,11 @@ class EmailService
             $debugLevel = (int)(getenv('SMTP_DEBUG') ?: 0);
             $this->mailer->SMTPDebug = $debugLevel;
 
+            // Rediriger toute sortie de debug SMTP vers les logs serveur pour ne pas polluer les réponses JSON
+            $this->mailer->Debugoutput = static function ($str, $level) {
+                error_log("SMTP Debug[$level]: " . $str);
+            };
+
             // Timeout en secondes (connexion/lecture)
             $this->mailer->Timeout = (int)(getenv('SMTP_TIMEOUT') ?: 15);
         } else {

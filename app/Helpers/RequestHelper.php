@@ -46,10 +46,18 @@ class RequestHelper
      */
     public static function jsonResponse(array $response, int $statusCode = 200): void
     {
-        // Ces lignes sont communes aux deux modes (normal et test).
+        // Nettoyer toute sortie déjà mise en tampon pour éviter de polluer le JSON (ex: debug de libs)
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($response);
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         // Seulement en mode normal, on arrête l'exécution.
         if (getenv('APP_ENV') !== 'testing') {
