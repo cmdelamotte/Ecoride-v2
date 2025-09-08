@@ -91,9 +91,9 @@ class Router
             return;
         }
 
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------- 
         // Gestion de l authentification et des rôles
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------- 
         // Vérifie si la route nécessite une authentification.
         if (isset($foundRoute['auth']) && $foundRoute['auth'] === true) {
             // Vérifie si l utilisateur est connecté (exemple simple, à remplacer par une logique plus robuste).
@@ -122,9 +122,10 @@ class Router
             }
         }
 
-        // ---------------------------------------------------------------------
-        // Vérification CSRF pour les requêtes POST, sauf pour les routes publiques
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------- 
+        // Vérification CSRF pour les requêtes POST (TEMPORAIREMENT DÉSACTIVÉE POUR DÉBOGAGE)
+        // --------------------------------------------------------------------- 
+        /*
         if (strtoupper($method) === 'POST') {
             // Définir les routes POST publiques qui ne nécessitent pas de vérification CSRF
             $publicPostRoutes = ['/contact'];
@@ -139,10 +140,11 @@ class Router
                 }
             }
         }
+        */
 
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------- 
         // Appel du contrôleur et de la méthode
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------- 
         $controllerName = "App\\Controllers\\" . $foundRoute['controller'];
         $methodName = $foundRoute['method'];
 

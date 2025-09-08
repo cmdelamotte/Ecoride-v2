@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
     libcurl4-openssl-dev \
+    ca-certificates \
+    && update-ca-certificates \
     && docker-php-ext-install pdo_mysql mysqli zip
 
 # Install Composer

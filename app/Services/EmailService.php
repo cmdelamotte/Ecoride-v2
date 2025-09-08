@@ -35,20 +35,51 @@ class EmailService
         $smtpUser = getenv('SMTP_USERNAME') ?: '';
         $smtpPass = getenv('SMTP_PASSWORD') ?: '';
         $smtpPort = (int)(getenv('SMTP_PORT') ?: 0);
+        $smtpEncEnv = strtolower(getenv('SMTP_ENCRYPTION') ?: '');
 
         if ($smtpHost !== '' && $smtpUser !== '' && $smtpPort > 0) {
             $this->mailer->isSMTP();
-            $this->mailer->Host       = $smtpHost;
-            $this->mailer->SMTPAuth   = true;
-            $this->mailer->Username   = $smtpUser;
-            $this->mailer->Password   = $smtpPass;
-            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // ou ENCRYPTION_STARTTLS
-            $this->mailer->Port       = $smtpPort;
-            $this->mailer->setFrom(getenv('MAIL_FROM_ADDRESS'), 'EcoRide');
+            $this->mailer->Host     = $smtpHost;
+            $this->mailer->SMTPAuth = true;
+            $this->mailer->Username = $smtpUser;
+            $this->mailer->Password = $smtpPass;
+
+            // Déterminer le chiffrement:
+            //  - Si SMTP_ENCRYPTION est défini: respecter la valeur ('smtps'/'ssl' -> SMTPS, 'tls'/'starttls' -> STARTTLS)
+            //  - Sinon: auto-détection basée sur le port (465 => SMTPS, 587 => STARTTLS)
+            $enc = null;
+            if (in_array($smtpEncEnv, ['smtps', 'ssl'], true)) {
+                $enc = PHPMailer::ENCRYPTION_SMTPS;
+            } elseif (in_array($smtpEncEnv, ['tls', 'starttls'], true)) {
+                $enc = PHPMailer::ENCRYPTION_STARTTLS;
+            } else {
+                if ($smtpPort === 465) {
+                    $enc = PHPMailer::ENCRYPTION_SMTPS;
+                } elseif ($smtpPort === 587) {
+                    $enc = PHPMailer::ENCRYPTION_STARTTLS;
+                }
+            }
+            if ($enc !== null) {
+                $this->mailer->SMTPSecure = $enc;
+            }
+
+            $this->mailer->Port = $smtpPort;
+
+            // Déterminer l'adresse d'expéditeur
+            $fromAddress = getenv('MAIL_FROM_ADDRESS') ?: $smtpUser;
+            $this->mailer->setFrom($fromAddress, 'EcoRide');
+
+            // Debug et timeouts configurables via .env
+            // SMTP_DEBUG: 0 (off), 1 (client), 2 (client+server), 3-4 (verbeux)
+            $debugLevel = (int)(getenv('SMTP_DEBUG') ?: 0);
+            $this->mailer->SMTPDebug = $debugLevel;
+
+            // Timeout en secondes (connexion/lecture)
+            $this->mailer->Timeout = (int)(getenv('SMTP_TIMEOUT') ?: 15);
         } else {
             // Si les variables d'environnement SMTP sont incomplètes,
             // loggez une erreur et ne configurez pas l'envoi SMTP.
-            Logger::error('EmailService: Configuration SMTP incomplète. Veuillez vérifier SMTP_HOST, SMTP_USERNAME, SMTP_PORT, MAIL_FROM_ADDRESS dans le fichier .env.');
+            Logger::error('EmailService: Configuration SMTP incomplète. Vérifiez SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, SMTP_PORT et MAIL_FROM_ADDRESS dans le fichier .env.');
         }
     }
 
