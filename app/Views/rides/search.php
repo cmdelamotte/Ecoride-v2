@@ -30,7 +30,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg col-md-6 col-12">
+                <div class="col-lg col-md-6 col-12 d-none">
                     <div class="form-input-custom d-flex align-items-center">
                         <i class="bi bi-person me-2"></i>
                         <input id="search-form-passenger-numbers" type="number" class="form-control-custom flex-grow-1" placeholder="Passagers" aria-label="Nombre de passagers" min="1" value="1" required>
