@@ -122,7 +122,7 @@ class RideController extends Controller
 
         try {
             $this->rideService->finishRide($id, $userId);
-            $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été terminé avec succès et les crédits ont été transférés.']);
+            $this->jsonResponse(['success' => true, 'message' => 'Le trajet a été terminé. Les passagers vont recevoir un email pour confirmer le trajet et débloquer les fonds.']);
         } catch (Exception $e) {
             error_log("Error finishing ride #{$id} by user #{$userId}: " . $e->getMessage());
             $this->jsonResponse(['success' => false, 'message' => $e->getMessage()], 400);

@@ -32,6 +32,7 @@ export function displayFlashMessage(message, type = 'info', containerId = 'dynam
     alertDiv.appendChild(closeButton);
 
     // Insérer l'alerte dans le conteneur
+    container.classList.remove('d-none'); // NOUVEAU : S'assurer que le conteneur est visible
     container.appendChild(alertDiv);
 
     // Optionnel: masquer l'alerte après quelques secondes

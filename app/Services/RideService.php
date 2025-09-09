@@ -72,6 +72,10 @@ class RideService
             throw new Exception("Le véhicule sélectionné n'est pas valide ou ne vous appartient pas.", 403);
         }
 
+        if ($data['seats_offered'] > $vehicle->getPassengerCapacity()) {
+            throw new ValidationException(['seats_offered' => 'Le nombre de places offertes (' . $data['seats_offered'] . ') ne peut pas dépasser la capacité du véhicule (' .$vehicle->getPassengerCapacity() . ').']);
+        }
+
         // 3. Créer et hydrater l'objet Ride
         $ride = new Ride();
         $ride->setDriverId($driverId)

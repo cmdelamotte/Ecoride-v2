@@ -122,11 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 3000);
             }
         } catch (error) {
+            form.classList.add('was-validated'); // AJOUT : Force l'affichage des erreurs Bootstrap
+
             if (error.status === 422) { // Erreurs de validation
                 displayFormErrors(error.data.errors, form);
-                displayFlashMessage('#publish-ride-message', 'Veuillez corriger les erreurs dans le formulaire.', 'error');
+                displayFlashMessage('Veuillez corriger les erreurs dans le formulaire.', 'error', 'publish-ride-message');
             } else {
-                displayFlashMessage('#publish-ride-message', error.message || 'Une erreur est survenue.', 'error');
+                displayFlashMessage(error.message || 'Une erreur est survenue.', 'error', 'publish-ride-message'); // Correction ici aussi
             }
         } finally {
             setFormLoadingState(form, false);
